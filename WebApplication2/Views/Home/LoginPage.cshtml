@@ -1,0 +1,196 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Login Page</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <style>
+            html, body {
+                height: 100%;
+                margin: 0;
+                background-color: #071D37;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            /* TOP LEFT NAV */
+            .top-left-nav {
+                position: absolute;
+                top: 20px;
+                left: 20px;
+            }
+
+            .nav-icon-group {
+                display: flex;
+                gap: 12px;
+                align-items: center;
+                padding: 10px 14px;
+                border: 2px solid white;
+                border-radius: 12px;
+                text-decoration: none;
+                color: white;
+                transition: 0.2s ease;
+            }
+
+            .nav-icon-group i {
+                font-size: 18px;
+                color: white;
+            }
+
+            .nav-icon-group:hover {
+                background: rgba(255, 255, 255, 0.1);
+            }
+
+            /* LOGIN CARD */
+            .login-card {
+                width: 900px;
+                height: 550px;
+                display: flex;
+                border-radius: 5%;
+                overflow: hidden;
+                background: white;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            }
+
+            /* LEFT LOGO */
+            .login-left {
+                width: 50%;
+                background-image: url('/pictures/logo.png');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+            }
+
+            /* RIGHT SIDE */
+            .login-right {
+                width: 50%;
+                padding: 50px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            /* TITLE */
+            .login-title {
+                font-weight: 700;
+                color: #071D37;
+                text-align: center;
+                transform: translateY(-20px);
+                margin-bottom: 20px;
+            }
+
+            /* REGISTER */
+            .register-link {
+                color: #0d6efd;
+                font-weight: 600;
+                text-decoration: none;
+            }
+
+            .register-link:hover {
+                text-decoration: underline;
+            }
+    </style>
+</head>
+
+<body>
+
+    <!-- TOP LEFT ICONS -->
+    <div class="top-left-nav">
+        <a href="/Home/Index" class="nav-icon-group">
+            <i class="fa-solid fa-arrow-left"></i>
+            <i class="fa-solid fa-house"></i>
+        </a>
+    </div>
+
+    <!-- LOGIN CARD -->
+    <div class="login-card">
+
+        <!-- LEFT -->
+        <div class="login-left"></div>
+
+        <!-- RIGHT -->
+        <div class="login-right">
+
+            <h2 class="login-title">Login</h2>
+
+            <form asp-controller="Home" asp-action="Login">
+
+                <!-- Username -->
+                <div class="mb-3">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-control" placeholder="Enter username" />
+                </div>
+
+                <!-- Password -->
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+
+                    <div class="input-group">
+                        <input type="password"
+                               class="form-control"
+                               id="passwordInput"
+                               placeholder="Enter password" />
+
+                        <button class="btn btn-outline-secondary"
+                                type="button"
+                                onclick="togglePassword()">
+                            <i class="fa-solid fa-eye" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- LOGIN BUTTON -->
+                <div class="d-flex justify-content-center mt-3">
+                    <button type="submit" class="btn btn-primary px-5">
+                        Login
+                    </button>
+                </div>
+
+                <!-- REGISTER -->
+                <div class="text-center mt-3">
+                    <a href="#" class="register-link">
+                        Register
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <!-- PASSWORD TOGGLE SCRIPT -->
+    <script>
+            function togglePassword() {
+                const passwordInput = document.getElementById("passwordInput");
+                const eyeIcon = document.getElementById("eyeIcon");
+
+                if (passwordInput.type === "password") {
+                    passwordInput.type = "text";
+                    eyeIcon.classList.remove("fa-eye");
+                    eyeIcon.classList.add("fa-eye-slash");
+                } else {
+                    passwordInput.type = "password";
+                    eyeIcon.classList.remove("fa-eye-slash");
+                    eyeIcon.classList.add("fa-eye");
+                }
+            }
+    </script>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

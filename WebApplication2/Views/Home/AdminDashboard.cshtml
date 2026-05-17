@@ -1,0 +1,167 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Dashboard</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <style>
+
+            
+            html, body {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                width: 100%;
+                overflow: hidden;
+            }
+           
+            
+            body {
+                display: flex;
+                height: 100vh;
+                width: 100vw;
+                font-family: Arial, sans-serif;
+            }
+
+            
+            .sidebar {
+                flex: 0 0 20%;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                background-color: #071D37;
+                color: white;
+            }
+
+            
+            .sidebar-top {
+                flex: 0 0 40%;
+                padding: 20px;
+                border-bottom: 4px solid white;
+            }
+
+            
+            .sidebar-bottom {
+                flex: 0 0 75%;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-end;
+            }
+
+            
+            .main-content {
+                flex: 0 0 80%;
+                height: 100vh;
+                padding: 30px;
+                overflow-y: auto;
+                background-color: #f8f9fa;
+            }
+
+            
+            .sidebar .btn-light {
+                background: white;
+                color: #071D37;
+                border: none;
+            }
+
+                .sidebar .btn-light:hover {
+                    background: #e6e6e6;
+                }
+
+            
+            h3, h4 {
+                margin-top: 0;
+            }
+
+            .sidebar-profile {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+            }
+
+                .sidebar-profile i {
+                    font-size: 60px;
+                    color: white;
+                    margin-bottom: 10px;
+                    margin-left: -200px; /* 4 steps left */
+                    margin-top: 40px; /* 6 steps down */
+                }
+
+            .profile-text {
+                text-align: center;
+                color: white;
+                margin-left: -30px; /* 4 steps left */
+                margin-top: -55px; /* 6 steps down */
+            }
+
+                .profile-text small {
+                    display: block;
+                    opacity: 0.7;
+                    font-size: 12px;
+                }
+
+    </style>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+        <!-- TOP 40% -->
+        <div class="sidebar-top">
+            <div class="sidebar-profile">
+                <i class="fa-solid fa-user"></i>
+                <div class="profile-text">
+                    MR<br />
+                    Karabo Modau
+                </div>
+            </div>
+
+        </div>
+
+        <!-- BOTTOM 60% -->
+        <div class="sidebar-bottom">
+            <a>Testing</a>
+            <a class="btn btn-primary">Logout</a>
+
+        </div>
+
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content" id="mainContent">
+        <h3>Welcome</h3>
+        <p>Select a section from the sidebar.</p>
+    </div>
+
+    <!-- AJAX CONTENT LOADER -->
+    <script>
+            function loadSection(section) {
+
+                fetch('/Home/LoadDashboardSection?section=' + section)
+                    .then(res => res.text())
+                    .then(html => {
+                        document.getElementById("mainContent").innerHTML = html;
+                    });
+
+            }
+    </script>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
