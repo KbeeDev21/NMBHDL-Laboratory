@@ -41,20 +41,58 @@
         
         <div class="sidebar-bottom">
 
-            <a asp-controller="Home" asp-action="Index" class="sidebar-link">
-                <i class="fa-solid fa-flask"></i> View Test Requests & Results
+            <!-- VIEW TEST REQUESTS & RESULTS -->
+            <a href="#"
+               class="sidebar-link ajax-link"
+               data-url="@Url.Action("ViewTestRequests", "Patient")">
+
+                <i class="fa-solid fa-flask"></i>
+
+                View Test Requests & Results
+
             </a>
 
-            <a asp-controller="Admin" asp-action="Users" class="sidebar-link">
-                <i class="fa-solid fa-file-medical"></i> Medical History
-            </a>    
+            <!-- MEDICAL HISTORY -->
+            <a href="#"
+               class="sidebar-link ajax-link"
+               data-url="@Url.Action("MedicalHistory", "Patient")">
 
-            <a asp-controller="Admin" asp-action="Settings" class="sidebar-link">
-                <i class="fa-solid fa-lock"></i> Consent Management
+                <i class="fa-solid fa-file-medical"></i>
+
+                Medical History
+
             </a>
 
-            <a asp-controller="Admin" asp-action="Reports" class="sidebar-link">
-                <i class="fa-solid fa-chart-line"></i> Reports
+            <!-- CONSENT MANAGEMENT -->
+            <a href="#"
+               class="sidebar-link ajax-link"
+               data-url="@Url.Action("ConsentManagement", "Patient")">
+
+                <i class="fa-solid fa-lock"></i>
+
+                Consent Management
+
+            </a>
+
+            <a href="#"
+               class="sidebar-link ajax-link"
+               data-url="@Url.Action("TrackTestResults", "Patient")">
+
+                <i class="fa-solid fa-hourglass"></i>
+
+                Track Test Results
+
+            </a>
+
+            <!-- REPORTS -->
+            <a href="#"
+               class="sidebar-link ajax-link"
+               data-url="@Url.Action("PatientReports", "Patient")">
+
+                <i class="fa-solid fa-chart-line"></i>
+
+                Reports
+
             </a>
 
             <div class="sidebar-actions">
@@ -74,22 +112,136 @@
     </div>
 
     <!-- MAIN CONTENT -->
-    <div class="main-content" id="mainContent">
-        
-    </div>
+    <div class="main-content d-flex align-items-center justify-content-center vh-100" id="mainContent">
 
+        <div class="text-center">
+
+            <h1 class="display-5 fw-semibold mb-2"
+                style="letter-spacing: 0.5px;">
+
+                Welcome to Patient Dashboard
+
+            </h1>
+
+            
+
+        </div>
+
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+
+        let trendChartInstance = null;
+
+        function loadTrendChart() {
+
+        const canvas = document.getElementById("trendChart");
+        if (!canvas) return;
+
+        const ctx = canvas.getContext("2d");
+
+        // Destroy previous chart if it exists (prevents duplicates)
+        if (trendChartInstance) {
+        trendChartInstance.destroy();
+        }
+
+        // Predefined demo datasets
+        const datasets = {
+
+        cholesterol: [4.8, 5.1, 5.3, 5.0, 5.6, 5.4, 5.8, 5.5],
+        glucose: [4.2, 4.5, 4.1, 4.8, 5.0, 4.9, 5.2, 5.1],
+        haemoglobin: [13.1, 13.5, 13.8, 14.0, 13.7, 13.9, 14.2, 14.0]
+
+        };
+
+        const labels = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"];
+
+        const selected = document.getElementById("testTypeSelect")?.value || "cholesterol";
+
+        trendChartInstance = new Chart(ctx, {
+
+        type: 'line',
+
+        data: {
+
+        labels: labels,
+
+        datasets: [{
+
+        label: selected.toUpperCase() + " Trend",
+
+        data: datasets[selected],
+
+        borderColor: "#0d6efd",
+        backgroundColor: "rgba(13,110,253,0.1)",
+        fill: true,
+        tension: 0.4,
+        pointRadius: 5
+
+        }]
+
+        },
+
+        options: {
+
+        responsive: true,
+        maintainAspectRatio: false,
+
+        plugins: {
+        legend: {
+        display: true
+        }
+        },
+
+        scales: {
+        y: {
+        beginAtZero: false
+        }
+        }
+
+        }
+
+        });
+
+        }
+
+        // Auto-load after AJAX inject
+        function initTrendView() {
+        setTimeout(loadTrendChart, 100);
+        }
+
+    </script>
     <!-- AJAX CONTENT LOADER -->
     <script>
-            function loadSection(section) {
 
-                fetch('/Home/LoadDashboardSection?section=' + section)
-                    .then(res => res.text())
-                    .then(html => {
-                        document.getElementById("mainContent").innerHTML = html;
+            document.querySelectorAll(".ajax-link")
+                .forEach(link => {
+
+                    link.addEventListener("click", function (e) {
+
+                        e.preventDefault();
+
+                        const url = this.getAttribute("data-url");
+
+                        fetch(url)
+
+                            .then(response => response.text())
+
+                            .then(html => {
+
+                                document.getElementById("mainContent")
+                                        .innerHTML = html;
+
+                            });
+
                     });
 
-            }
+                });
+
     </script>
+    
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 

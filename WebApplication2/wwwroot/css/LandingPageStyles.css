@@ -68,3 +68,43 @@
 body {
     overflow-x: hidden;
 }
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* HERO MUST TAKE FULL SCREEN SPACE */
+.hero-section {
+    height: 100vh;
+    width: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+}
+
+/* DARK OVERLAY */
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 1;
+}
+
+/* ensure text above overlay */
+.hero-section .container {
+    z-index: 2;
+    position: relative;
+}
+
+/* IMPORTANT: prevents overlap when scrolling */
+section {
+    display: block;
+    width: 100%;
+}
+
+/* spacing between sections */
+#about, #services, #testimonials {
+    padding-top: 80px;
+    padding-bottom: 80px;
+}
