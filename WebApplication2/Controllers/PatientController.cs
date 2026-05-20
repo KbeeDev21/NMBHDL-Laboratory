@@ -21,9 +21,19 @@ namespace WebApplication2.Controllers
             return PartialView("_MedicalHistory");
         }
 
+        public IActionResult AddCondition()
+        {
+            return PartialView("_AddCondition");
+        }
+
         public IActionResult ConsentManagement()
         {
             return PartialView("_ConsentManagement");
+        }
+
+        public IActionResult GrantAccess()
+        {
+            return PartialView("_GrantAccess");
         }
 
         public IActionResult PatientReports()

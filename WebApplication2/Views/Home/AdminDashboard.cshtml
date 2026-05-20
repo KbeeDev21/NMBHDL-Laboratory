@@ -43,19 +43,19 @@
           
             <a href="#"
                class="sidebar-link ajax-link"
-               data-url="@Url.Action("AddMedicalConditions", "Admin")">
+               data-url="@Url.Action("ListMedicalConditions", "Admin")">
                 <i class="fa-solid fa-virus"></i> Medical Conditions
             </a>
 
             <a href="#"
                class="sidebar-link ajax-link"
-               data-url="@Url.Action("AddAllergies", "Admin")">
+               data-url="@Url.Action("ListAllergies", "Admin")">
                 <i class="fa-solid fa-hand-dots"></i> Allergies
             </a>
 
             <a href="#"
                class="sidebar-link ajax-link"
-               data-url="@Url.Action("AddMedication", "Admin")">
+               data-url="@Url.Action("ListMedication", "Admin")">
                 <i class="fa-solid fa-capsules"></i> Medication
             </a>
 
@@ -63,8 +63,13 @@
 
             <div class="sidebar-actions">
 
-                <a asp-controller="" asp-action="" class="sidebar-alert-btn">
-                    <i class="fa-solid fa-user-gear"></i> Profile Settings
+                <a href="#"
+                   class="sidebar-alert-btn ajax-link"
+                   data-url="@Url.Action("UpdateProfile", "Admin")">
+
+                    <i class="fa-solid fa-user-gear"></i>
+                    Profile Settings
+
                 </a>
 
                 <a asp-controller="" asp-action="" class="sidebar-primary-btn">
@@ -97,29 +102,27 @@
     <!-- AJAX CONTENT LOADER -->
     <script>
 
-        document.addEventListener("DOMContentLoaded", function () {
+                
 
-            document.querySelectorAll(".ajax-link").forEach(link => {
+            document.addEventListener("click", function (e) {
 
-                link.addEventListener("click", function (e) {
+                const link = e.target.closest(".ajax-link");
 
-                    e.preventDefault(); // STOP FULL PAGE REFRESH
+                if (!link) return;
 
-                    const url = this.dataset.url;
+                e.preventDefault();
 
-                    fetch(url)
-                        .then(res => res.text())
-                        .then(html => {
+                const url = link.dataset.url;
 
-                            document.getElementById("mainContent").innerHTML = html;
+                fetch(url)
+                    .then(res => res.text())
+                    .then(html => {
 
-                        });
+                        document.getElementById("mainContent").innerHTML = html;
 
-                });
+                    });
 
             });
-
-        });
 
     </script>
 

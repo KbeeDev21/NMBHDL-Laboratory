@@ -59,8 +59,13 @@
 
             <div class="sidebar-actions">
 
-                <a asp-controller="" asp-action="" class="sidebar-alert-btn">
-                    <i class="fa-solid fa-user-gear"></i> Profile Settings
+                <a href="#"
+                   class="sidebar-alert-btn ajax-link"
+                   data-url="@Url.Action("UpdateProfile", "Admin")">
+
+                    <i class="fa-solid fa-user-gear"></i>
+                    Profile Settings
+
                 </a>
 
                 <a asp-controller="" asp-action="" class="sidebar-primary-btn">
