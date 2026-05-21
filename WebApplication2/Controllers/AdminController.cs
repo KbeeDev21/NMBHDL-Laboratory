@@ -17,14 +17,34 @@ namespace WebApplication2.Controllers
             return PartialView("_AddMedicalCOnditions");
         }
 
+        public IActionResult ListMedicalConditions()
+        {
+            return PartialView("_ListMedicalCOnditions");
+        }
+
         public IActionResult AddAllergies()
         {
             return PartialView("_AddAllergies");
         }
 
+        public IActionResult ListAllergies()
+        {
+            return PartialView("_ListAllergies");
+        }
+
         public IActionResult AddMedication()
         {
             return PartialView("_AddMedication");
+        }
+
+        public IActionResult ListMedication()
+        {
+            return PartialView("_ListMedication");
+        }
+
+        public IActionResult UpdateProfile()
+        {
+            return PartialView("_UpdateProfile");
         }
     }
 }

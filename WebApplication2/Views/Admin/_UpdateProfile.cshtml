@@ -1,0 +1,164 @@
+﻿@{
+    Layout = null;
+}
+
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+
+        <div>
+            <h3 class="fw-semibold mb-1">Profile Settings</h3>
+            <small class="text-muted">
+                Update your account information and security settings
+            </small>
+        </div>
+
+        <span class="badge bg-warning-subtle text-warning px-3 py-2">
+            Account Management
+        </span>
+
+    </div>
+
+    <!-- Profile Card -->
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-body p-4">
+
+            <form class="row g-4">
+
+                <!-- First Name -->
+                <div class="col-md-6">
+
+                    <label class="form-label fw-medium">
+                        First Name
+                    </label>
+
+                    <input type="text"
+                           class="form-control form-control-lg"
+                           value="Karabo" />
+
+                </div>
+
+                <!-- Last Name -->
+                <div class="col-md-6">
+
+                    <label class="form-label fw-medium">
+                        Last Name
+                    </label>
+
+                    <input type="text"
+                           class="form-control form-control-lg"
+                           value="Modau" />
+
+                </div>
+
+                <!-- Email -->
+                <div class="col-md-6">
+
+                    <label class="form-label fw-medium">
+                        Email Address
+                    </label>
+
+                    <input type="email"
+                           class="form-control form-control-lg"
+                           value="karabo@example.com" />
+
+                </div>
+
+                <!-- Contact -->
+                <div class="col-md-6">
+
+                    <label class="form-label fw-medium">
+                        Contact Number
+                    </label>
+
+                    <input type="text"
+                           class="form-control form-control-lg"
+                           placeholder="Enter contact number" />
+
+                </div>
+
+                <!-- Current Password -->
+                <div class="col-md-4">
+
+                    <label class="form-label fw-medium">
+                        Current Password
+                    </label>
+
+                    <input type="password"
+                           class="form-control form-control-lg"
+                           placeholder="Current password" />
+
+                </div>
+
+                <!-- New Password -->
+                <div class="col-md-4">
+
+                    <label class="form-label fw-medium">
+                        New Password
+                    </label>
+
+                    <input type="password"
+                           class="form-control form-control-lg"
+                           placeholder="New password" />
+
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="col-md-4">
+
+                    <label class="form-label fw-medium">
+                        Confirm Password
+                    </label>
+
+                    <input type="password"
+                           class="form-control form-control-lg"
+                           placeholder="Confirm password" />
+
+                </div>
+
+                <!-- Password Requirements -->
+                <div class="col-12">
+
+                    <div class="alert alert-info mb-0">
+
+                        <strong>Password Requirements:</strong>
+
+                        <ul class="mb-0 mt-2">
+                            <li>Minimum 8 characters</li>
+                            <li>At least one uppercase letter</li>
+                            <li>At least one number</li>
+                            <li>At least one special character</li>
+                        </ul>
+
+                    </div>
+
+                </div>
+
+                <!-- Actions -->
+                <div class="col-12 d-flex justify-content-end gap-2 mt-3">
+
+                    <button type="reset"
+                            class="btn btn-light border px-4">
+
+                        Cancel
+
+                    </button>
+
+                    <button type="submit"
+                            class="btn btn-warning px-4">
+
+                        Save Changes
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>

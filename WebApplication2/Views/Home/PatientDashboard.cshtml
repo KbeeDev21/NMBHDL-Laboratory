@@ -97,8 +97,13 @@
 
             <div class="sidebar-actions">
 
-                <a asp-controller="" asp-action="" class="sidebar-alert-btn">
-                    <i class="fa-solid fa-user-gear"></i> Profile Settings
+                <a href="#"
+                   class="sidebar-alert-btn ajax-link"
+                   data-url="@Url.Action("UpdateProfile", "Admin")">
+
+                    <i class="fa-solid fa-user-gear"></i>
+                    Profile Settings
+
                 </a>
 
                 <a asp-controller="" asp-action="" class="sidebar-primary-btn">
@@ -216,29 +221,27 @@
     <!-- AJAX CONTENT LOADER -->
     <script>
 
-            document.querySelectorAll(".ajax-link")
-                .forEach(link => {
+                
 
-                    link.addEventListener("click", function (e) {
+        document.addEventListener("click", function (e) {
 
-                        e.preventDefault();
+        const link = e.target.closest(".ajax-link");
 
-                        const url = this.getAttribute("data-url");
+        if (!link) return;
 
-                        fetch(url)
+        e.preventDefault();
 
-                            .then(response => response.text())
+        const url = link.dataset.url;
 
-                            .then(html => {
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
 
-                                document.getElementById("mainContent")
-                                        .innerHTML = html;
+        document.getElementById("mainContent").innerHTML = html;
 
-                            });
+        });
 
-                    });
-
-                });
+        });
 
     </script>
     
