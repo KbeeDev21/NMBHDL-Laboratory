@@ -1,0 +1,169 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Test Type</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link href="~/css/dashboardstyles.css" rel="stylesheet" />
+    <style>
+        .main-content {
+            padding: 2rem;
+        }
+
+        .border-type {
+            border-left: 4px solid #0d6efd;
+            padding-left: 1rem;
+        }
+
+        .btn-type {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            color: #fff;
+        }
+
+            .btn-type:hover {
+                background-color: #0b5ed7;
+                border-color: #0b5ed7;
+                color: #fff;
+            }
+    </style>
+</head>
+<body>
+    <!-- SIDEBAR -->
+    <div class="sidebar" style="display:flex;flex-direction:column;height:100vh;">
+        <div class="sidebar-top">
+            <div class="sidebar-profile">
+                <i class="fa-solid fa-user"></i>
+                <div class="profile-info">
+                    <div class="profile-text">Mr</div>
+                    <div class="profile-text">Jodi Cunningham</div>
+                </div>
+            </div>
+            <div class="profile-role">
+                Laboratory Manager
+            </div>
+        </div>
+
+        <div class="sidebar-bottom" style="overflow-y:auto;flex:1;">
+            <div style="padding: 0.5rem 1rem; font-size: 0.7rem; text-transform: uppercase; color: #adb5bd; margin-top: 0.5rem;">
+                Management
+            </div>
+            <a asp-controller="LabManager" asp-action="TestCategoryIndex" class="sidebar-link">
+                <span style="color:#6f42c1">●</span> Test Categories
+            </a>
+            <a asp-controller="LabManager" asp-action="TestTypeIndex" class="sidebar-link">
+                <span style="color:#0d6efd">●</span> Test Types
+            </a>
+            <a asp-controller="LabManager" asp-action="SampleTypeIndex" class="sidebar-link">
+                <span style="color:#0dcaf0">●</span> Sample Types
+            </a>
+            <a asp-controller="LabManager" asp-action="ConsumableIndex" class="sidebar-link">
+                <span style="color:#dc3545">●</span> Consumables
+            </a>
+            <a asp-controller="LabManager" asp-action="SupplierIndex" class="sidebar-link">
+                <span style="color:#fd7e14">●</span> Suppliers
+            </a>
+            <a asp-controller="LabManager" asp-action="DoctorIndex" class="sidebar-link">
+                <span style="color:#198754">●</span> Doctors
+            </a>
+            <a asp-controller="LabManager" asp-action="TechnicianIndex" class="sidebar-link">
+                <span style="color:#6610f2">●</span> Technicians
+            </a>
+            <a asp-controller="LabManager" asp-action="OrderIndex" class="sidebar-link">
+                <span style="color:#e8590c">●</span> Orders
+            </a>
+
+            <div class="sidebar-actions">
+                <a href="#"
+                   class="sidebar-alert-btn ajax-link"
+                   data-url="@Url.Action("UpdateProfile", "Admin")">
+                    <i class="fa-solid fa-user-gear"></i>
+                    Profile Settings
+                </a>
+                <a asp-controller="Account" asp-action="Logout" class="sidebar-primary-btn">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container-fluid" style="max-width: 900px;">
+            <div class="mb-4 border-type">
+                <h2 class="h4 mb-0">Create Test Type</h2>
+                <small class="text-muted">Define a new laboratory test</small>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form asp-controller="LabManager" asp-action="TestTypeCreate" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Test Name <span class="text-danger">*</span></label>
+                                <input type="text" name="TestName" class="form-control" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
+                                <select name="CategoryId" class="form-select" required>
+                                    <option value="">Select category...</option>
+                                    <option value="1">Full Blood Count</option>
+                                    <option value="2">Coagulation Studies</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Sample Type Required <span class="text-danger">*</span></label>
+                                <select name="SampleTypeId" class="form-select" required>
+                                    <option value="">Select sample type...</option>
+                                    <option value="1">Whole blood</option>
+                                    <option value="2">Plasma</option>
+                                    <option value="3">Bone marrow</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Units of Measurement <span class="text-danger">*</span></label>
+                                <input type="text" name="Units" class="form-control" placeholder="e.g. g/dL, k/μL" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Normal Range – Min</label>
+                                <input type="number" step="0.01" name="NormalRangeMin" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Normal Range – Max</label>
+                                <input type="number" step="0.01" name="NormalRangeMax" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Turnaround Time (minutes) <span class="text-danger">*</span></label>
+                                <input type="number" name="TurnaroundTime" class="form-control" placeholder="e.g. 30" required />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Consumables Used</label>
+                                <div class="border rounded p-3" style="max-height: 160px; overflow-y: auto;">
+                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="Consumables" value="1" id="c1"><label class="form-check-label" for="c1">EDTA Tube</label></div>
+                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="Consumables" value="2" id="c2"><label class="form-check-label" for="c2">Citrate Tube</label></div>
+                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="Consumables" value="3" id="c3"><label class="form-check-label" for="c3">Reagent A</label></div>
+                                    <div class="form-check"><input class="form-check-input" type="checkbox" name="Consumables" value="4" id="c4"><label class="form-check-label" for="c4">Reagent B</label></div>
+                                </div>
+                                <div class="form-text">Select all consumables required to perform this test.</div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-type"><i class="fa-solid fa-check me-2"></i>Save Test Type</button>
+                            <a asp-controller="LabManager" asp-action="TestTypeIndex" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
