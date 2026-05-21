@@ -1,0 +1,76 @@
+﻿<div class="container-fluid p-4 text-start rounded" style="color: #ffffff; background-color: #071D37;">
+    
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1"><i class="fa-solid fa-file-pdf me-2 text-primary"></i>Biomedical Reporting Center</h2>
+        <p class="text-white-50 m-0 small">Compile chronological clinical metrics, export historical submission activity, and print verified diagnostic audit logs.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="p-4 h-100" style="background-color: #051425; border: 1px solid #16406d; border-radius: 14px;">
+                <h5 class="border-bottom border-secondary border-opacity-30 pb-2 mb-3 text-white">
+                    <i class="fa-solid fa-sliders me-2 text-primary"></i>Report Parameters
+                </h5>
+
+                <form method="get" action="/Home/ExportDoctorActivityReport" target="_blank" onsubmit="return validateReportDates()">
+                    <div class="mb-3">
+                        <label class="form-label small text-white-50 fw-semibold">Start Bound Date</label>
+                        <input type="date" id="reportStartDate" name="startDate" class="form-control bg-dark text-white border-secondary" value="@ViewBag.DefaultStartDate" required />
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small text-white-50 fw-semibold">End Bound Date</label>
+                        <input type="date" id="reportEndDate" name="endDate" class="form-control bg-dark text-white border-secondary" value="@ViewBag.DefaultEndDate" required />
+                    </div>
+
+                    <div class="alert alert-info bg-opacity-10 border-info border-opacity-20 text-info mb-4" style="font-size: 13px; background-color: #0c2b4e;">
+                        <i class="fa-solid fa-circle-info me-2"></i><strong>System Rule Note:</strong> Generating this report will compile all requisitions, sample barcodes, and priority profiles processed under your credentials during the selected timeframe into an official document format.
+                    </div>
+
+                    <button type="submit" class="btn btn-primary fw-bold w-100 py-2">
+                        <i class="fa-solid fa-file-invoice me-2"></i>Compile & Export PDF
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="p-4 h-100" style="background-color: #051425; border: 1px solid #16406d; border-radius: 14px;">
+                <h5 class="border-bottom border-secondary border-opacity-30 pb-2 mb-3 text-white">
+                    <i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i>Recent Reporting Summaries
+                </h5>
+
+                <div class="d-flex flex-column gap-3">
+                    <div class="p-3 d-flex justify-content-between align-items-center" style="background-color: #0c2b4e; border-radius: 8px; border: 1px solid #16406d;">
+                        <div>
+                            <div class="fw-bold text-white">Monthly Activity Requisition Sheet</div>
+                            <small class="text-white-50">Scope: 01 May 2026 – 21 May 2026 | 24 Batches Found</small>
+                        </div>
+                        <a href="/Home/ExportDoctorActivityReport?startDate=2026-05-01&endDate=2026-05-21" target="_blank" class="btn btn-sm btn-outline-light"><i class="fa-solid fa-download"></i></a>
+                    </div>
+
+                    <div class="p-3 d-flex justify-content-between align-items-center" style="background-color: #0c2b4e; border-radius: 8px; border: 1px solid #16406d;">
+                        <div>
+                            <div class="fw-bold text-white">Previous Calendar Month Summary</div>
+                            <small class="text-white-50">Scope: 01 Apr 2026 – 30 Apr 2026 | 45 Batches Found</small>
+                        </div>
+                        <a href="/Home/ExportDoctorActivityReport?startDate=2026-04-01&endDate=2026-04-30" target="_blank" class="btn btn-sm btn-outline-light"><i class="fa-solid fa-download"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function validateReportDates() {
+        const start = new Date(document.getElementById("reportStartDate").value);
+        const end = new Date(document.getElementById("reportEndDate").value);
+
+        if (start > end) {
+            alert("Business Validation Error: The Start Bound Date cannot be further ahead chronologically than the End Bound Date.");
+            return false;
+        }
+        return true;
+    }
+</script>

@@ -1,0 +1,172 @@
+﻿@model List<dynamic>
+
+<div class="container-fluid p-4 text-start rounded" style="color: #ffffff; background-color: #071D37;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="fa-solid fa-hospital-user me-2 text-primary"></i>Patient Registry Hub</h2>
+            <p class="text-white-50 m-0 small">Manage clinical records, review chronic profiles, and onboard new patients into the healthcare ecosystem.</p>
+        </div>
+        <div>
+            <button class="btn btn-primary fw-semibold px-4" onclick="openNewPatientModal()">
+                <i class="fa-solid fa-user-plus me-2"></i>Register New Patient
+            </button>
+        </div>
+    </div>
+
+    <div class="p-3 mb-4" style="background-color: #051425; border: 1px solid #16406d; border-radius: 12px;">
+        <div class="input-group">
+            <span class="input-group-text border-end-0" style="background-color: #0c2b4e; border-color: #16406d; color: #8da4be;">
+                <i class="fa-solid fa-filter-list me-1"></i> <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+            <input type="text" id="patientSearchInput" onkeyup="filterPatientTable()" class="form-control border-start-0 text-white" 
+                   placeholder="Instantly filter patient records by full name, South African ID number, or cellphone context..."
+                   style="background-color: #0c2b4e; border-color: #16406d;">
+        </div>
+    </div>
+
+    <div class="p-4" style="background-color: #051425; border: 1px solid #16406d; border-radius: 14px;">
+        <div class="table-responsive">
+            <table class="table table-hover m-0 align-middle" id="patientRegistryTable" style="background-color: #051425; border-color: #16406d;">
+                <thead>
+                    <tr class="text-white-50" style="border-bottom: 2px solid #16406d; font-size: 14px;">
+                        <th>Patient Identity Details</th>
+                        <th>Contact Information</th>
+                        <th>Chronic Medical Conditions</th>
+                        <th>Known Allergies</th>
+                        <th>Current Active Medication</th>
+                        <th class="text-center">Action Actions</th>
+                    </tr>
+                </thead>
+                <tbody style="font-size: 13px;">
+                    @foreach (var patient in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-white fs-6">@patient.Surname, @patient.FirstName</div>
+                                <small class="text-white-50">ID: <span class="fw-mono">@patient.IdNumber</span></small>
+                            </td>
+                            <td>
+                                <div><i class="fa-solid fa-phone me-1 text-white-50" style="font-size: 11px;"></i> @patient.Cellphone</div>
+                                <div class="text-white-50" style="font-size: 12px;"><i class="fa-solid fa-envelope me-1" style="font-size: 11px;"></i> @patient.Email</div>
+                            </td>
+                            <td>
+                                <span class="badge bg-black bg-opacity-40 border border-info border-opacity-20 text-info px-2 py-1">
+                                    <i class="fa-solid fa-heart-pulse me-1"></i> @patient.Conditions
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-black bg-opacity-40 border border-danger border-opacity-20 text-danger px-2 py-1">
+                                    <i class="fa-solid fa-hand me-1"></i> @patient.Allergies
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-black bg-opacity-40 border border-success border-opacity-20 text-success px-2 py-1">
+                                    <i class="fa-solid fa-capsules me-1"></i> @patient.Medication
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-primary px-3 fw-semibold" onclick="alert('Opening clinical case record history file for @patient.FirstName @patient.Surname')">
+                                    <i class="fa-solid fa-folder-open me-1"></i> View History
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="newPatientModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 2000;">
+    <div class="modal-box" style="width: 550px; background: #0c2b4e; border: 2px solid #16406d; padding: 25px; border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); color: white;">
+        
+        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-secondary border-opacity-30 pb-2">
+            <h5 class="mb-0 fw-bold text-white"><i class="fa-solid fa-user-plus me-2 text-primary"></i>Capture Clinical Patient Details</h5>
+            <button type="button" class="btn-close btn-close-white" onclick="closeNewPatientModal()"></button>
+        </div>
+
+        <form method="post" action="/Home/SubmitNewPatientRecord">
+            <div class="row g-2 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label small text-white-50">First Name</label>
+                    <input type="text" name="FirstName" class="form-control bg-dark text-white border-secondary" required placeholder="e.g. John" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small text-white-50">Surname Name</label>
+                    <input type="text" name="Surname" class="form-control bg-dark text-white border-secondary" required placeholder="e.g. Doe" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small text-white-50">South African ID Number</label>
+                <input type="text" name="IdNumber" maxlength="13" class="form-control bg-dark text-white border-secondary" required placeholder="Enter 13-digit identity number" />
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label small text-white-50">Cellphone Contact</label>
+                    <input type="text" name="Cellphone" class="form-control bg-dark text-white border-secondary" required placeholder="e.g. 0821234567" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small text-white-50">Email Address</label>
+                    <input type="email" name="Email" class="form-control bg-dark text-white border-secondary" required placeholder="e.g. john@me.com" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small text-white-50">Chronic Medical Conditions</label>
+                <textarea name="Conditions" class="form-control bg-dark text-white border-secondary" rows="2" placeholder="List any chronic illness illnesses or conditions..."></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small text-white-50">Known Clinical Allergies</label>
+                <textarea name="Allergies" class="form-control bg-dark text-white border-secondary" rows="2" placeholder="List drug, environmental, or food allergies..."></textarea>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label small text-white-50">Current Prescribed Active Medications</label>
+                <textarea name="Medication" class="form-control bg-dark text-white border-secondary" rows="2" placeholder="List active pharmacology agents and dosages..."></textarea>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-light w-50" onclick="closeNewPatientModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary w-50fw-bold">Save Patient Record</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function filterPatientTable() {
+        const input = document.getElementById("patientSearchInput");
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById("patientRegistryTable");
+        const tr = table.getElementsByTagName("tr");
+
+        for (let i = 1; i < tr.length; i++) {
+            let rowMatches = false;
+            const tdArray = tr[i].getElementsByTagName("td");
+            
+            // Scan across all columns inside a given row vector
+            for (let j = 0; j < tdArray.length - 1; j++) {
+                if (tdArray[j]) {
+                    if (tdArray[j].innerText.toLowerCase().indexOf(filter) > -1) {
+                        rowMatches = true;
+                        break;
+                    }
+                }
+            }
+            tr[i].style.display = rowMatches ? "" : "none";
+        }
+    }
+
+    function openNewPatientModal() {
+        document.getElementById("newPatientModal").style.display = "flex";
+    }
+
+    /* Standardized close routing parameter */
+    function closeNewPatientModal() {
+        document.getElementById("newPatientModal").style.display = "none";
+    }
+</script>

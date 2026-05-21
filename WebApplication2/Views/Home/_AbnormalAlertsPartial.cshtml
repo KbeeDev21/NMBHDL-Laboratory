@@ -1,0 +1,215 @@
+﻿@model List<dynamic>
+
+<div class="container-fluid p-4 text-start rounded" style="color: #ffffff; background-color: #071D37;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1">Clinical Diagnostic Dashboard</h2>
+            <p class="text-white-50 m-0 small">Real-time specimen monitoring & laboratory integration hub</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-danger px-3 py-2 fw-bold animate-pulse">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i> @ViewBag.CriticalAlertsCount Critical Abnormalities
+            </span>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="p-3 shadow-sm d-flex align-items-center justify-content-between" style="background-color: #0c2b4e; border: 1px solid #16406d; border-radius: 12px;">
+                <div>
+                    <div class="text-white-50 small text-uppercase fw-semibold mb-1">Active Batches</div>
+                    <h3 class="fw-bold m-0 text-white">@ViewBag.TotalActiveRequests</h3>
+                </div>
+                <div class="fs-3 text-primary"><i class="fa-solid fa-microscope"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="p-3 shadow-sm d-flex align-items-center justify-content-between" style="background-color: #3b0c15; border: 1px solid #7c1a2e; border-radius: 12px;">
+                <div>
+                    <div class="text-danger-50 small text-uppercase fw-semibold mb-1" style="color: #ff8b94;">Critical Alerts</div>
+                    <h3 class="fw-bold m-0 text-danger" style="color: #ff4d5a;">@ViewBag.CriticalAlertsCount</h3>
+                </div>
+                <div class="fs-3 text-danger" style="color: #ff4d5a;"><i class="fa-solid fa-radiation"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="p-3 shadow-sm d-flex align-items-center justify-content-between" style="background-color: #0c2b4e; border: 1px solid #16406d; border-radius: 12px;">
+                <div>
+                    <div class="text-white-50 small text-uppercase fw-semibold mb-1">Pending Lab Collection</div>
+                    <h3 class="fw-bold m-0 text-warning" style="color: #ffc107;">@ViewBag.PendingCollections</h3>
+                </div>
+                <div class="fs-3 text-warning" style="color: #ffc107;"><i class="fa-solid fa-vial-circle-check"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="p-3 shadow-sm d-flex align-items-center justify-content-between" style="background-color: #0c2b4e; border: 1px solid #16406d; border-radius: 12px;">
+                <div>
+                    <div class="text-white-50 small text-uppercase fw-semibold mb-1">TAT Compliance Rate</div>
+                    <h3 class="fw-bold m-0 text-success" style="color: #2ec4b6;">@ViewBag.TurnaroundCompliance</h3>
+                </div>
+                <div class="fs-3 text-success" style="color: #2ec4b6;"><i class="fa-solid fa-stopwatch"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-7">
+            <div class="p-10 h-100" style="background-color: #051425; border: 1px solid #16406d; border-radius: 14px; padding-bottom: 20px;">
+                <h6 class="text-white-50 fw-semibold mb-3 mt-2" style="margin-left: 20px; padding-top: 10px;"><i class="fa-solid fa-chart-line me-2"></i>Specimen Processing Volume Trends (Last 5 Days)</h6>
+                <div class="d-flex align-items-end justify-content-between pt-4 px-2" style="height: 190px;">
+                    <div class="d-flex flex-column align-items-center w-100">
+                        <span class="text-white-50 small mb-1">18</span>
+                        <div class="w-50 bg-primary opacity-50" style="height: 72px; border-radius: 4px 4px 0 0;"></div>
+                        <span class="text-white-50 small mt-2">17 May</span>
+                    </div>
+                    <div class="d-flex flex-column align-items-center w-100">
+                        <span class="text-white-50 small mb-1">29</span>
+                        <div class="w-50 bg-primary opacity-75" style="height: 116px; border-radius: 4px 4px 0 0;"></div>
+                        <span class="text-white-50 small mt-2">18 May</span>
+                    </div>
+                    <div class="d-flex flex-column align-items-center w-100">
+                        <span class="text-white-50 small mb-1">22</span>
+                        <div class="w-50 bg-primary opacity-50" style="height: 88px; border-radius: 4px 4px 0 0;"></div>
+                        <span class="text-white-50 small mt-2">19 May</span>
+                    </div>
+                    <div class="d-flex flex-column align-items-center w-100">
+                        <span class="text-white-50 small mb-1">35</span>
+                        <div class="w-50 bg-primary" style="height: 140px; border-radius: 4px 4px 0 0; background-color: #0d6efd !important;"></div>
+                        <span class="text-white-50 small mt-2">20 May</span>
+                    </div>
+                    <div class="d-flex flex-column align-items-center w-100">
+                        <span class="text-white-50 small mb-1">24</span>
+                        <div class="w-50 bg-info" style="height: 96px; border-radius: 4px 4px 0 0; background-color: #2ec4b6 !important;"></div>
+                        <span class="text-white-50 small mt-2">Today</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="p-3 h-100" style="background-color: #051425; border: 1px solid #16406d; border-radius: 14px;">
+                <h6 class="text-white-50 fw-semibold mb-3"><i class="fa-solid fa-chart-pie me-2"></i>Urgency Profile Share</h6>
+                <div class="d-flex flex-column justify-content-center h-100 pt-1">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between text-white-50 small mb-1">
+                            <span><i class="fa-solid fa-circle text-danger me-2 fs-6"></i>STAT (Emergency)</span>
+                            <span class="text-white fw-bold">35%</span>
+                        </div>
+                        <div class="progress" style="height: 8px; background-color: #0c2b4e;">
+                            <div class="progress-bar bg-danger" style="width: 35%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between text-white-50 small mb-1">
+                            <span><i class="fa-solid fa-circle text-warning me-2 fs-6"></i>Urgent Clinical Cases</span>
+                            <span class="text-white fw-bold">45%</span>
+                        </div>
+                        <div class="progress" style="height: 8px; background-color: #0c2b4e;">
+                            <div class="progress-bar bg-warning" style="width: 45%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between text-white-50 small mb-1">
+                            <span><i class="fa-solid fa-circle text-info me-2 fs-6"></i>Routine Health Screens</span>
+                            <span class="text-white fw-bold">20%</span>
+                        </div>
+                        <div class="progress" style="height: 8px; background-color: #0c2b4e;">
+                            <div class="progress-bar bg-info" style="width: 20%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="p-3 h-100" style="background-color: #051425; border: 1px solid #16406d; border-radius: 14px;">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <h6 class="text-white-50 fw-semibold m-0"><i class="fa-solid fa-list me-2"></i>Recent Test Requests Workflow Matrix</h6>
+                    <button class="btn btn-sm btn-outline-primary py-0 px-2 fw-semibold" style="font-size: 12px;">View All</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover m-0 align-middle" style="background-color: #051425; border-color: #16406d;">
+                        <thead>
+                            <tr class="text-white-50" style="border-bottom: 2px solid #16406d; font-size: 13px;">
+                                <th>Order ID</th>
+                                <th>Patient Record</th>
+                                <th>Test Profile panels</th>
+                                <th>Urgency</th>
+                                <th>Status Progress</th>
+                                <th>Timeline</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size: 13px;">
+                            @foreach(var req in ViewBag.RecentRequests)
+                            {
+                                string urgencyBadge = req.Urgency == "STAT" ? "bg-danger" : req.Urgency == "Urgent" ? "bg-warning text-dark" : "bg-info text-dark";
+                                string statusBadge = "bg-secondary text-white";
+
+                                if (req.Status == "In Progress") statusBadge = "bg-primary text-white";
+                                else if (req.Status == "Sample(s) Received") statusBadge = "bg-warning text-dark";
+                                else if (req.Status == "Completed") statusBadge = "bg-success text-white";
+                                else if (req.Status == "Released by doctor") statusBadge = "bg-info text-dark";
+
+                                <tr>
+                                    <td class="fw-bold text-white-50">@req.RequestNumber</td>
+                                    <td>
+                                        <div class="fw-bold text-white">@req.PatientName</div>
+                                        <div class="text-white-50 px-0" style="font-size: 11px;">ID: @req.IdNumber</div>
+                                    </td>
+                                    <td><span class="text-truncate d-inline-block" style="max-width: 150px;">@req.Tests</span></td>
+                                    <td><span class="badge @urgencyBadge px-2" style="font-size: 10px;">@req.Urgency</span></td>
+                                    <td><span class="badge @statusBadge px-2" style="font-size: 10px;">@req.Status</span></td>
+                                    <td class="text-white-50 small">@req.TimeElapsed</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="p-3 h-100" style="background-color: #051425; border: 1px solid #16406d; border-radius: 14px;">
+                <h6 class="text-white-50 fw-semibold mb-3"><i class="fa-solid fa-bell me-2"></i>Critical Highlight Stream (5 Days)</h6>
+                <div class="d-flex flex-column gap-2" style="max-height: 310px; overflow-y: auto;">
+                    @foreach (var alert in Model)
+                    {
+                        bool isHigh = alert.AlertLevel.Contains("High");
+                        string borderBorder = isHigh ? "border-left: 4px solid #dc3545;" : "border-left: 4px solid #ffc107;";
+                        string badgeBg = isHigh ? "bg-danger text-white" : "bg-warning text-dark";
+
+                        <div class="p-2 shadow-sm border border-secondary border-opacity-10 text-start" style="background-color: #0b1f35; border-radius: 6px; @borderBorder">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold text-white text-truncate" style="font-size: 12px; max-width: 160px;">@alert.Surname, @alert.FirstName</span>
+                                <span class="badge rounded-pill px-2 py-0.5" style="font-size: 9px; @badgeBg">@alert.AlertLevel</span>
+                            </div>
+                            <div class="text-white-50 mb-1" style="font-size: 12px;">
+                                <strong class="text-white">@alert.TestName</strong>: 
+                                <span class="text-warning fw-bold">@alert.ResultValue @alert.Unit</span> 
+                                <span style="font-size: 10px;">(@alert.RefRange)</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-white-50" style="font-size: 10px;">
+                                <span>@alert.Category</span>
+                                <span><i class="fa-regular fa-clock me-1"></i>@alert.Date</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .animate-pulse {
+        animation: pulseAnimation 2s infinite;
+    }
+    @@keyframes pulseAnimation {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.03); opacity: 0.9; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+</style>

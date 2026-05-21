@@ -1,0 +1,171 @@
+﻿<div class="container-fluid p-4 text-start rounded" style="color: #ffffff; background-color: #071D37;">
+    
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1"><i class="fa-solid fa-notes-medical me-2 text-primary"></i>Diagnostic Requisition Center</h2>
+        <p class="text-white-50 m-0 small">Log official diagnostic processing profiles, assign case priorities, and register collection tube barcodes.</p>
+    </div>
+
+    <form method="post" action="/Home/SubmitTestRequest" onsubmit="return validateRequisitionForm()">
+        <div class="row g-4">
+            
+            <div class="col-lg-6">
+                <div class="p-4 h-100" style="background-color: #051425; border: 1px solid #16406d; border-radius: 14px;">
+                    <h5 class="border-bottom border-secondary border-opacity-30 pb-2 mb-3 text-white">
+                        <i class="fa-solid fa-user-doctor me-2 text-primary"></i>1. Clinical Context Details
+                    </h5>
+
+                    <div class="mb-3">
+                        <label class="form-label small text-white-50 fw-semibold">Target Patient Profile</label>
+                        <select name="PatientId" id="reqPatient" class="form-select bg-dark text-white border-secondary" required>
+                            <option value="">-- Choose registered patient context registry record --</option>
+                            @foreach (var patient in ViewBag.PatientsList)
+                            {
+                                <option value="@patient.IdNumber">@patient.FullName (ID: @patient.IdNumber)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label small text-white-50 fw-semibold">Order Entry Timestamp</label>
+                            <input type="text" class="form-control bg-dark text-white-50 border-secondary" 
+                                   value="@DateTime.Now.ToString("dd MMM yyyy HH:mm")" readonly style="cursor: not-allowed;" />
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label small text-white-50 fw-semibold">Case Urgency Rating</label>
+                            <select name="Urgency" class="form-select bg-dark text-white border-secondary" required>
+                                <option value="Routine" selected>Routine (Standard TAT)</option>
+                                <option value="Urgent">Urgent (Prioritized Tracking)</option>
+                                <option value="STAT">STAT (Immediate Emergency Crisis)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label small text-white-50 fw-semibold">Clinical Observation Notes & Symptoms</label>
+                        <textarea name="ClinicalNotes" id="reqNotes" class="form-control bg-dark text-white border-secondary" rows="5" 
+                                  placeholder="Document primary clinical diagnosis parameters, specific haematology anomalies under suspicion, or current drug impact indications..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="p-4 h-100 d-flex flex-column justify-content-between" style="background-color: #051425; border: 1px solid #16406d; border-radius: 14px;">
+                    <div>
+                        <h5 class="border-bottom border-secondary border-opacity-30 pb-2 mb-3 text-white">
+                            <i class="fa-solid fa-vials me-2 text-primary"></i>2. Requested Profiles & Samples
+                        </h5>
+
+                        <label class="form-label small text-white-50 fw-semibold mb-2">Requested Pathology Investigation Panels (Check all required)</label>
+                        <div class="row g-2 mb-4 px-2">
+                            @foreach (string test in ViewBag.TestPanels)
+                            {
+                                <div class="col-sm-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input test-checkbox-item" type="checkbox" name="SelectedTests" value="@test" id="chk_@test.GetHashCode()">
+                                        <label class="form-check-input-label small text-white" for="chk_@test.GetHashCode()" style="cursor:pointer; margin-left:6px;">
+                                            @test
+                                        </label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label small text-white-50 fw-semibold m-0">Physical Sample Specimen Barcode Identifier Logs</label>
+                            <button type="button" class="btn btn-sm btn-outline-info py-0 px-2 fw-semibold" onclick="addNewBarcodeRow()" style="font-size: 11px;">
+                                <i class="fa-solid fa-plus me-1"></i> Add Secondary Tube
+                            </button>
+                        </div>
+
+                        <div id="barcodeInputsContainer" class="d-flex flex-column gap-2 mb-3" style="max-height: 160px; overflow-y: auto; padding-right: 4px;">
+                            <div class="input-group barcode-entry-row">
+                                <span class="input-group-text bg-secondary bg-opacity-20 border-secondary text-white-50" style="font-size: 13px;">
+                                    <i class="fa-solid fa-barcode me-1"></i> Tube #1
+                                </span>
+                                <input type="text" name="SampleBarcodes" class="form-control bg-dark text-white border-secondary barcode-input-value" 
+                                       placeholder="Scan or type sequence barcode alphanumeric tag (e.g., LAB990145)" required />
+                                <button type="button" class="btn btn-outline-danger" onclick="removeBarcodeRow(this)" disabled><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-top border-secondary border-opacity-30 pt-3 text-end">
+                        <button type="button" class="btn btn-outline-light px-4 me-2" onclick="loadSection('alerts')">Cancel</button>
+                        <button type="submit" class="btn btn-success fw-bold px-4">
+                            <i class="fa-solid fa-paper-plane me-2"></i>Transmit Requisition Batch
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+<script>
+    let tubeCounter = 1;
+
+    function addNewBarcodeRow() {
+        tubeCounter++;
+        const container = document.getElementById("barcodeInputsContainer");
+        
+        const rowDiv = document.createElement("div");
+        rowDiv.className = "input-group barcode-entry-row animate-slide-in";
+        rowDiv.innerHTML = `
+            <span class="input-group-text bg-secondary bg-opacity-20 border-secondary text-white-50" style="font-size: 13px;">
+                <i class="fa-solid fa-barcode me-1"></i> Tube #${tubeCounter}
+            </span>
+            <input type="text" name="SampleBarcodes" class="form-control bg-dark text-white border-secondary barcode-input-value" 
+                   placeholder="Scan or type sequence barcode alphanumeric tag" required />
+            <button type="button" class="btn btn-outline-danger" onclick="removeBarcodeRow(this)"><i class="fa-solid fa-trash-can"></i></button>
+        `;
+        container.appendChild(rowDiv);
+        
+        // Ensure initial master delete row becomes enabled if multiples exist
+        container.children[0].querySelector('button').removeAttribute('disabled');
+    }
+
+    function removeBarcodeRow(btnElement) {
+        const container = document.getElementById("barcodeInputsContainer");
+        btnElement.closest('.barcode-entry-row').remove();
+        tubeCounter--;
+
+        // Renumber labels sequentially
+        const rows = container.getElementsByClassName('barcode-entry-row');
+        for (let i = 0; i < rows.length; i++) {
+            rows[i].querySelector('.input-group-text').innerHTML = `<i class="fa-solid fa-barcode me-1"></i> Tube #${i + 1}`;
+        }
+
+        // If only one remains, block its deletion parameter
+        if (rows.length === 1) {
+            rows[0].querySelector('button').setAttribute('disabled', 'true');
+        }
+    }
+
+    function validateRequisitionForm() {
+        // Enforce checking at least one item profile
+        const checkboxes = document.querySelectorAll('.test-checkbox-item');
+        let checkedCount = 0;
+        checkboxes.forEach(chk => { if (chk.checked) checkedCount++; });
+
+        if (checkedCount === 0) {
+            alert("Business Validation Error: You must pick at least one diagnostic test type panel profile item to authorize a laboratory requisition order batch.");
+            return false;
+        }
+        
+        alert("Success! Transmitting sample specimen data packets down to laboratory testing pipeline queues.");
+        return true;
+    }
+</script>
+
+<style>
+    .animate-slide-in {
+        animation: slideInUp 0.2s ease-out;
+    }
+    @@keyframes slideInUp {
+        from { transform: translateY(8px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+</style>

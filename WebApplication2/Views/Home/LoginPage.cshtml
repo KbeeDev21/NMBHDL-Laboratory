@@ -149,18 +149,16 @@
 
             <form asp-controller="Home" asp-action="Login" method="post">
 
-               
                 <div class="mb-3">
                     <label class="form-label">Username</label>
-                    <input type="text" name="Username" class="form-control" placeholder="Enter username" />
+                    <input type="text" name="Username" class="form-control" placeholder="Enter username (e.g., doctor, admin)" required />
                 </div>
 
-  
                 <div class="mb-3">
                     <label class="form-label">Password</label>
-
                     <div class="input-group">
                         <input type="password"
+                               name="Password"
                                class="form-control"
                                id="passwordInput"
                                placeholder="Enter password" />
@@ -173,21 +171,19 @@
                     </div>
                 </div>
 
-             
                 <div class="d-flex justify-content-center mt-3">
                     <button type="submit" class="btn btn-primary px-5">
                         <i class="fa-solid fa-right-to-bracket"></i> Login
                     </button>
                 </div>
 
-                
                 <div class="text-center mt-3">
                     <a href="javascript:void(0)" class="register-link" onclick="openRegisterModal()">
                         <i class="fa-solid fa-person-circle-plus"></i> Register
                     </a>
                 </div>
 
-               <div class="text-center mt-3">
+                <div class="text-center mt-3">
                     <a href="javascript:void(0)" class="register-link" onclick="openForgotModal()">
                         <i class="fa-solid fa-circle-question"></i> Forgot Password?
                     </a>
