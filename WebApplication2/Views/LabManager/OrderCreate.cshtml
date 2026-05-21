@@ -1,0 +1,183 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Order</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link href="~/css/dashboardstyles.css" rel="stylesheet" />
+    <style>
+        .main-content {
+            padding: 2rem;
+        }
+
+        .border-order {
+            border-left: 4px solid #e8590c;
+            padding-left: 1rem;
+        }
+
+        .btn-order {
+            background-color: #e8590c;
+            border-color: #e8590c;
+            color: #fff;
+        }
+
+            .btn-order:hover {
+                background-color: #d04f0a;
+                border-color: #d04f0a;
+                color: #fff;
+            }
+
+        .stock-alert {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.375rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- SIDEBAR -->
+    <div class="sidebar" style="display:flex;flex-direction:column;height:100vh;">
+        <div class="sidebar-top">
+            <div class="sidebar-profile">
+                <i class="fa-solid fa-user"></i>
+                <div class="profile-info">
+                    <div class="profile-text">Mr</div>
+                    <div class="profile-text">Jodi Cunningham</div>
+                </div>
+            </div>
+            <div class="profile-role">
+                Laboratory Manager
+            </div>
+        </div>
+
+        <div class="sidebar-bottom" style="overflow-y:auto;flex:1;">
+            <div style="padding: 0.5rem 1rem; font-size: 0.7rem; text-transform: uppercase; color: #adb5bd; margin-top: 0.5rem;">
+                Management
+            </div>
+            <a asp-controller="LabManager" asp-action="TestCategoryIndex" class="sidebar-link">
+                <span style="color:#6f42c1">●</span> Test Categories
+            </a>
+            <a asp-controller="LabManager" asp-action="TestTypeIndex" class="sidebar-link">
+                <span style="color:#0d6efd">●</span> Test Types
+            </a>
+            <a asp-controller="LabManager" asp-action="SampleTypeIndex" class="sidebar-link">
+                <span style="color:#0dcaf0">●</span> Sample Types
+            </a>
+            <a asp-controller="LabManager" asp-action="ConsumableIndex" class="sidebar-link">
+                <span style="color:#dc3545">●</span> Consumables
+            </a>
+            <a asp-controller="LabManager" asp-action="SupplierIndex" class="sidebar-link">
+                <span style="color:#fd7e14">●</span> Suppliers
+            </a>
+            <a asp-controller="LabManager" asp-action="DoctorIndex" class="sidebar-link">
+                <span style="color:#198754">●</span> Doctors
+            </a>
+            <a asp-controller="LabManager" asp-action="TechnicianIndex" class="sidebar-link">
+                <span style="color:#6610f2">●</span> Technicians
+            </a>
+            <a asp-controller="LabManager" asp-action="OrderIndex" class="sidebar-link">
+                <span style="color:#e8590c">●</span> Orders
+            </a>
+
+            <div class="sidebar-actions">
+                <a href="#"
+                   class="sidebar-alert-btn ajax-link"
+                   data-url="@Url.Action("UpdateProfile", "Admin")">
+                    <i class="fa-solid fa-user-gear"></i>
+                    Profile Settings
+                </a>
+                <a asp-controller="Account" asp-action="Logout" class="sidebar-primary-btn">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container-fluid" style="max-width: 900px;">
+            <div class="mb-4 border-order">
+                <h2 class="h4 mb-0">Create Consumable Order</h2>
+                <small class="text-muted">Group low-stock consumables by supplier and place an order</small>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form asp-controller="LabManager" asp-action="OrderCreate" method="post">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Order Number</label>
+                                <input type="text" name="OrderNumber" class="form-control" value="ORD-2026-003" readonly />
+                                <div class="form-text">Auto-generated unique order number.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Supplier <span class="text-danger">*</span></label>
+                                <select name="SupplierId" class="form-select" required>
+                                    <option value="">Select supplier...</option>
+                                    <option value="1">MedSupply SA</option>
+                                    <option value="2">LabWare Pty</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="stock-alert"><i class="fa-solid fa-triangle-exclamation me-2 text-warning"></i><strong>Low Stock Alert</strong> – The following consumables are at or below reorder level (within 10%).</div>
+
+                        <div class="card border">
+                            <div class="card-header bg-light fw-semibold">Consumables to Order</div>
+                            <div class="card-body p-0">
+                                <table class="table mb-0 align-middle">
+                                    <thead><tr><th style="width:40px"><input type="checkbox" class="form-check-input" checked /></th><th>Consumable</th><th>Current Stock</th><th>Reorder Level</th><th>Qty to Order</th></tr></thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><input type="checkbox" name="OrderItems[0].Selected" class="form-check-input" value="true" checked /></td>
+                                            <td>EDTA Tube (4ml)</td>
+                                            <td>5</td>
+                                            <td>50</td>
+                                            <td><input type="number" name="OrderItems[0].Quantity" class="form-control form-control-sm" style="width:100px" value="100" /></td>
+                                            <input type="hidden" name="OrderItems[0].ConsumableId" value="1" />
+                                        </tr>
+                                        <tr>
+                                            <td><input type="checkbox" name="OrderItems[1].Selected" class="form-check-input" value="true" /></td>
+                                            <td>Citrate Tube (3ml)</td>
+                                            <td>120</td>
+                                            <td>40</td>
+                                            <td><input type="number" name="OrderItems[1].Quantity" class="form-control form-control-sm" style="width:100px" value="50" /></td>
+                                            <input type="hidden" name="OrderItems[1].ConsumableId" value="2" />
+                                        </tr>
+                                        <tr class="table-warning">
+                                            <td><input type="checkbox" name="OrderItems[2].Selected" class="form-check-input" value="true" checked /></td>
+                                            <td>Reagent A</td>
+                                            <td>18</td>
+                                            <td>20</td>
+                                            <td><input type="number" name="OrderItems[2].Quantity" class="form-control form-control-sm" style="width:100px" value="40" /></td>
+                                            <input type="hidden" name="OrderItems[2].ConsumableId" value="3" />
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mt-3 mb-0"><i class="fa-solid fa-circle-info me-2"></i>An email will be sent to the supplier automatically when the order is placed.</div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-order"><i class="fa-solid fa-paper-plane me-2"></i>Place Order</button>
+                            <a asp-controller="LabManager" asp-action="OrderIndex" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

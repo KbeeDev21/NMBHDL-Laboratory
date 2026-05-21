@@ -1,0 +1,128 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Doctor</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link href="~/css/dashboardstyles.css" rel="stylesheet" />
+    <style>
+        .main-content {
+            padding: 2rem;
+        }
+
+        .border-doc {
+            border-left: 4px solid #198754;
+            padding-left: 1rem;
+        }
+
+        .btn-doc {
+            background-color: #198754;
+            border-color: #198754;
+            color: #fff;
+        }
+
+            .btn-doc:hover {
+                background-color: #157347;
+                border-color: #157347;
+                color: #fff;
+            }
+    </style>
+</head>
+<body>
+    <!-- SIDEBAR -->
+    <div class="sidebar" style="display:flex;flex-direction:column;height:100vh;">
+        <div class="sidebar-top">
+            <div class="sidebar-profile">
+                <i class="fa-solid fa-user"></i>
+                <div class="profile-info">
+                    <div class="profile-text">Mr</div>
+                    <div class="profile-text">Jodi Cunningham</div>
+                </div>
+            </div>
+            <div class="profile-role">
+                Laboratory Manager
+            </div>
+        </div>
+
+        <div class="sidebar-bottom" style="overflow-y:auto;flex:1;">
+            <div style="padding: 0.5rem 1rem; font-size: 0.7rem; text-transform: uppercase; color: #adb5bd; margin-top: 0.5rem;">
+                Management
+            </div>
+            <a asp-controller="LabManager" asp-action="TestCategoryIndex" class="sidebar-link">
+                <span style="color:#6f42c1">●</span> Test Categories
+            </a>
+            <a asp-controller="LabManager" asp-action="TestTypeIndex" class="sidebar-link">
+                <span style="color:#0d6efd">●</span> Test Types
+            </a>
+            <a asp-controller="LabManager" asp-action="SampleTypeIndex" class="sidebar-link">
+                <span style="color:#0dcaf0">●</span> Sample Types
+            </a>
+            <a asp-controller="LabManager" asp-action="ConsumableIndex" class="sidebar-link">
+                <span style="color:#dc3545">●</span> Consumables
+            </a>
+            <a asp-controller="LabManager" asp-action="SupplierIndex" class="sidebar-link">
+                <span style="color:#fd7e14">●</span> Suppliers
+            </a>
+            <a asp-controller="LabManager" asp-action="DoctorIndex" class="sidebar-link">
+                <span style="color:#198754">●</span> Doctors
+            </a>
+            <a asp-controller="LabManager" asp-action="TechnicianIndex" class="sidebar-link">
+                <span style="color:#6610f2">●</span> Technicians
+            </a>
+            <a asp-controller="LabManager" asp-action="OrderIndex" class="sidebar-link">
+                <span style="color:#e8590c">●</span> Orders
+            </a>
+
+            <div class="sidebar-actions">
+                <a href="#"
+                   class="sidebar-alert-btn ajax-link"
+                   data-url="@Url.Action("UpdateProfile", "Admin")">
+                    <i class="fa-solid fa-user-gear"></i>
+                    Profile Settings
+                </a>
+                <a asp-controller="Account" asp-action="Logout" class="sidebar-primary-btn">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container-fluid" style="max-width: 700px;">
+            <div class="mb-4 border-doc">
+                <h2 class="h4 mb-0">Create Doctor</h2>
+                <small class="text-muted">Register a new doctor user. A password will be auto-generated and emailed.</small>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form asp-controller="LabManager" asp-action="DoctorCreate" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-6"><label class="form-label fw-semibold">Name <span class="text-danger">*</span></label><input type="text" name="Name" class="form-control" required /></div>
+                            <div class="col-md-6"><label class="form-label fw-semibold">Surname <span class="text-danger">*</span></label><input type="text" name="Surname" class="form-control" required /></div>
+                            <div class="col-md-6"><label class="form-label fw-semibold">HPCSA Number <span class="text-danger">*</span></label><input type="text" name="HPCSANumber" class="form-control" placeholder="e.g. MP0123456" required /><div class="form-text">Unique HPCSA registration number.</div></div>
+                            <div class="col-md-6"><label class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label><input type="email" name="Email" class="form-control" required /><div class="form-text">Used as username for login.</div></div>
+                            <div class="col-md-6"><label class="form-label fw-semibold">Contact Number <span class="text-danger">*</span></label><input type="tel" name="ContactNumber" class="form-control" required /></div>
+                        </div>
+                        <div class="alert alert-info mt-3 mb-0"><i class="fa-solid fa-circle-info me-2"></i>The doctor will receive an email with an auto-generated password and must change it on first login.</div>
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-doc"><i class="fa-solid fa-check me-2"></i>Register Doctor</button>
+                            <a asp-controller="LabManager" asp-action="DoctorIndex" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
