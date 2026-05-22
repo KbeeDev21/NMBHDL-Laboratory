@@ -1,0 +1,424 @@
+﻿@{
+    ViewData["Title"] = "Lab Technician Dashboard";
+    Layout = "_LabTechLayout";
+}
+
+<style>
+
+    body {
+        background-color: #071D37 !important;
+        color: #ffffff !important;
+    }
+
+    .main-dashboard {
+        padding: 40px;
+    }
+
+    h1 {
+        font-weight: 700;
+        margin-bottom: 30px;
+        color: white;
+    }
+
+    /* KPI Cards */
+    .metric-card {
+        background: #102B4E;
+        border-radius: 18px;
+        padding: 30px;
+        text-align: center;
+        border: 1px solid #1B3E68;
+        margin-bottom: 20px;
+        height: 100%;
+        transition: 0.2s ease;
+    }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            background: #163A63;
+            cursor: pointer;
+        }
+
+    .metric-number {
+        font-size: 3rem;
+        font-weight: bold;
+    }
+
+    /* Sections */
+    .section-card {
+        background: #102B4E;
+        border-radius: 18px;
+        padding: 30px;
+        border: 1px solid #1B3E68;
+        margin-top: 20px;
+    }
+
+    /* Priority Flags */
+    .priority-item {
+        background: #163A63;
+        border-radius: 12px;
+        padding: 14px 18px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s ease;
+    }
+
+    .priority-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .badge-pill {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .badge-stat {
+        background: #f4a261;
+        color: #000;
+    }
+
+    .badge-overdue {
+        background: #e9c46a;
+        color: #000;
+    }
+
+    .badge-routine {
+        background: #d9e6f2;
+        color: #0f172a;
+    }
+
+    /* Progress Bars */
+    .progress-row {
+        margin-bottom: 18px;
+    }
+
+    .progress {
+        height: 12px;
+        background: #0B2447;
+        border-radius: 10px;
+    }
+
+    /* Clickable Priority Links */
+    .priority-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+        .priority-link:hover {
+            text-decoration: none;
+            color: inherit;
+        }
+
+            .priority-link:hover .priority-item {
+                background: #1B3E68;
+                transform: translateX(4px);
+                cursor: pointer;
+            }
+
+    .text-secondary {
+        color: #b8c7d9 !important;
+    }
+
+</style>
+
+<div class="main-dashboard">
+
+    <h1>My Workload</h1>
+
+    <!-- KPI Cards -->
+    <div class="row g-4">
+
+        <div class="col-md-6">
+
+            <a asp-controller="LabTechnician"
+               asp-action="AssignedTests"
+               class="text-decoration-none">
+
+                <div class="metric-card">
+
+                    <div class="metric-number text-primary">
+                        47
+                    </div>
+
+                    <div>
+                        Tests Assigned
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+        <div class="col-md-6">
+
+            <a asp-controller="LabTechnician"
+               asp-action="AwaitingSelection"
+               class="text-decoration-none">
+
+                <div class="metric-card">
+
+                    <div class="metric-number text-warning">
+                        12
+                    </div>
+
+                    <div>
+                        Awaiting Selection
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+        <div class="col-md-6">
+
+            <a asp-controller="LabTechnician"
+               asp-action="VerificationQueue"
+               class="text-decoration-none">
+
+                <div class="metric-card">
+
+                    <div class="metric-number"
+                         style="color:#d97706;">
+
+                        8
+
+                    </div>
+
+                    <div>
+                        Awaiting Verification
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+        <div class="col-md-6">
+
+            <a asp-controller="LabTechnician"
+               asp-action="ReviewQueue"
+               class="text-decoration-none">
+
+                <div class="metric-card">
+
+                    <div class="metric-number text-success">
+                        19
+                    </div>
+
+                    <div>
+                        Awaiting Review
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- Priority Flags -->
+    <div class="section-card">
+
+        <h3 class="mb-4">
+            Priority Flags
+        </h3>
+
+        <a asp-controller="LabTechnician"
+           asp-action="TestDetail"
+           class="priority-link">
+
+            <div class="priority-item">
+
+                <div class="priority-left">
+
+                    <span class="badge-pill badge-stat">
+                        STAT
+                    </span>
+
+                    <span>
+                        FBC + Diff — Baloyi, T
+                    </span>
+
+                </div>
+
+                <span class="text-danger">
+                    45 min overdue
+                </span>
+
+            </div>
+
+        </a>
+
+        <a asp-controller="LabTechnician"
+           asp-action="TestDetail"
+           class="priority-link">
+
+            <div class="priority-item">
+
+                <div class="priority-left">
+
+                    <span class="badge-pill badge-stat">
+                        STAT
+                    </span>
+
+                    <span>
+                        PT/INR — Van Wyk, M
+                    </span>
+
+                </div>
+
+                <span class="text-warning">
+                    Due in 15 min
+                </span>
+
+            </div>
+
+        </a>
+
+        <a asp-controller="LabTechnician"
+           asp-action="TestDetail"
+           class="priority-link">
+
+            <div class="priority-item">
+
+                <div class="priority-left">
+
+                    <span class="badge-pill badge-overdue">
+                        Overdue
+                    </span>
+
+                    <span>
+                        Malaria Screen — Jacobs, L
+                    </span>
+
+                </div>
+
+                <span class="text-danger">
+                    Exceeded by 1h 10m
+                </span>
+
+            </div>
+
+        </a>
+
+        <a asp-controller="LabTechnician"
+           asp-action="TestDetail"
+           class="priority-link">
+
+            <div class="priority-item">
+
+                <div class="priority-left">
+
+                    <span class="badge-pill badge-routine">
+                        Routine
+                    </span>
+
+                    <span>
+                        ESR — Mkize, P
+                    </span>
+
+                </div>
+
+                <span class="text-secondary">
+                    Within TAT
+                </span>
+
+            </div>
+
+        </a>
+
+    </div>
+
+    <!-- Workload Progress -->
+    <div class="section-card">
+
+        <h3 class="mb-4">
+            Workload Progress
+        </h3>
+
+        <div class="progress-row">
+
+            <div class="d-flex justify-content-between mb-1">
+
+                <span>
+                    Selected
+                </span>
+
+                <span>
+                    28/47
+                </span>
+
+            </div>
+
+            <div class="progress">
+
+                <div class="progress-bar bg-primary"
+                     style="width:60%">
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="progress-row">
+
+            <div class="d-flex justify-content-between mb-1">
+
+                <span>
+                    Verified
+                </span>
+
+                <span>
+                    19/47
+                </span>
+
+            </div>
+
+            <div class="progress">
+
+                <div class="progress-bar bg-success"
+                     style="width:40%">
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="progress-row">
+
+            <div class="d-flex justify-content-between mb-1">
+
+                <span>
+                    Reviewed
+                </span>
+
+                <span>
+                    12/47
+                </span>
+
+            </div>
+
+            <div class="progress">
+
+                <div class="progress-bar bg-warning"
+                     style="width:25%">
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

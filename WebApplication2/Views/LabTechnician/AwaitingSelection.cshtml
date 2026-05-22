@@ -1,0 +1,290 @@
+﻿@{
+    Layout = "~/Views/Shared/_LabTechLayout.cshtml";
+    ViewData["Title"] = "Awaiting Selection";
+}
+
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+<link href="~/css/dashboardstyles.css" rel="stylesheet" />
+
+<style>
+
+    .page-container {
+        padding: 0;
+    }
+
+    .card-dark {
+        background: #102B4E;
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid #1B3E68;
+    }
+
+    .queue-card {
+        background: #163A63;
+        border-radius: 16px;
+        padding: 22px;
+        margin-bottom: 20px;
+        border-left: 4px solid #2563eb;
+        border: 1px solid #1B3E68;
+        transition: 0.2s ease;
+    }
+
+        .queue-card:hover {
+            background: #1B4B7A;
+            transform: translateX(4px);
+        }
+
+    .status-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        margin-right: 6px;
+        margin-top: 5px;
+        font-weight: 600;
+    }
+
+    .badge-stat {
+        background: #f4a261;
+        color: black;
+    }
+
+    .badge-routine {
+        background: #d9e6f2;
+        color: black;
+    }
+
+    .badge-overdue {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-dark-custom {
+        background: #163A63;
+        border: 1px solid #355C8A;
+        color: white !important;
+        border-radius: 12px;
+        padding: 10px 18px;
+        text-decoration: none;
+        transition: 0.2s ease;
+    }
+
+        .btn-dark-custom:hover {
+            background: #1B4B7A;
+            border-color: #4d79a8;
+        }
+
+    .text-muted {
+        color: #c5d3e0 !important;
+    }
+
+    .filter-box,
+    .form-control,
+    .form-select,
+    .form-control:focus,
+    .form-select:focus {
+        background: #0B2447;
+        color: white;
+        border: 1px solid #355C8A;
+        box-shadow: none;
+    }
+
+    h1,
+    h4,
+    p,
+    strong {
+        color: white;
+    }
+
+</style>
+
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+    <div class="page-container">
+
+        <div class="card-dark">
+
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <div>
+
+                    <h1>
+                        Awaiting Selection
+                    </h1>
+
+                    <p class="text-muted">
+                        Tests waiting for technician assignment and processing.
+                    </p>
+
+                </div>
+
+                <a asp-controller="Home"
+                   asp-action="LabTechnicianDashboard"
+                   class="btn-dark-custom">
+
+                    ← Dashboard
+
+                </a>
+
+            </div>
+
+            <!-- Filters -->
+            <div class="row g-3 mb-4">
+
+                <div class="col-md-3">
+
+                    <input class="form-control filter-box"
+                           placeholder="Search request number..." />
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <select class="form-select filter-box">
+
+                        <option>All Priorities</option>
+                        <option>STAT</option>
+                        <option>Routine</option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <select class="form-select filter-box">
+
+                        <option>All Categories</option>
+                        <option>Haematology</option>
+                        <option>Chemistry</option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <!-- Queue Item -->
+            <div class="queue-card">
+
+                <div class="d-flex justify-content-between align-items-start">
+
+                    <div>
+
+                        <h4>
+                            REQ-2026-00124
+                        </h4>
+
+                        <p class="mb-2">
+                            <strong>Patient:</strong>
+                            Baloyi, Thabo
+                        </p>
+
+                        <p class="mb-2">
+                            <strong>Test:</strong>
+                            FBC + Differential
+                        </p>
+
+                        <span class="status-badge badge-stat">
+                            STAT
+                        </span>
+
+                        <span class="status-badge badge-overdue">
+                            Nearing TAT Limit
+                        </span>
+
+                    </div>
+
+                    <div class="text-end">
+
+                        <p class="text-danger fw-bold">
+                            Due in 12 minutes
+                        </p>
+
+                        <a asp-controller="LabTechnician"
+                           asp-action="TestDetail"
+                           class="btn-dark-custom me-2">
+
+                            View Details
+
+                        </a>
+
+                        <a asp-controller="LabTechnician"
+                           asp-action="CaptureResults"
+                           class="btn-dark-custom">
+
+                            Select Test
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Queue Item -->
+            <div class="queue-card">
+
+                <div class="d-flex justify-content-between align-items-start">
+
+                    <div>
+
+                        <h4>
+                            REQ-2026-00125
+                        </h4>
+
+                        <p class="mb-2">
+                            <strong>Patient:</strong>
+                            Jacobs, Lerato
+                        </p>
+
+                        <p class="mb-2">
+                            <strong>Test:</strong>
+                            ESR
+                        </p>
+
+                        <span class="status-badge badge-routine">
+                            Routine
+                        </span>
+
+                    </div>
+
+                    <div class="text-end">
+
+                        <p class="text-success fw-bold">
+                            Within TAT
+                        </p>
+
+                        <a asp-controller="LabTechnician"
+                           asp-action="TestDetail"
+                           class="btn-dark-custom me-2">
+
+                            View Details
+
+                        </a>
+
+                        <a asp-controller="LabTechnician"
+                           asp-action="CaptureResults"
+                           class="btn-dark-custom">
+
+                            Select Test
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

@@ -1,0 +1,369 @@
+﻿@{
+    Layout = "~/Views/Shared/_LabTechLayout.cshtml";
+    ViewData["Title"] = "Test Detail";
+}
+
+<style>
+    body {
+        background-color: #071D37 !important;
+        color: white !important;
+    }
+
+    .page-container {
+        max-width: 1250px;
+        margin: 40px auto;
+    }
+
+    .card-dark {
+        background: #102B4E;
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid #1B3E68;
+    }
+
+    .info-box {
+        background: #163A63;
+        border-radius: 16px;
+        padding: 22px;
+        margin-bottom: 20px;
+        height: 100%;
+        border: 1px solid #1B3E68;
+        transition: 0.2s ease;
+    }
+
+        .info-box:hover {
+            background: #1B4B7A;
+        }
+
+    .info-label {
+        color: #c5d3e0;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: white;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        margin-right: 8px;
+        font-weight: 600;
+    }
+
+    .badge-urgent {
+        background: #f4a261;
+        color: black;
+    }
+
+    .badge-received {
+        background: #2563eb;
+        color: white;
+    }
+
+    .badge-overdue {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-dark-custom {
+        background: #163A63;
+        border: 1px solid #355C8A;
+        color: white !important;
+        border-radius: 12px;
+        padding: 10px 20px;
+        text-decoration: none;
+        transition: 0.2s ease;
+    }
+
+        .btn-dark-custom:hover {
+            background: #1B4B7A;
+            border-color: #4d79a8;
+        }
+
+    .progress {
+        height: 26px;
+        background: #0B2447;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid #355C8A;
+    }
+
+    .timeline-box {
+        background: #163A63;
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid #1B3E68;
+    }
+
+    .timeline-item {
+        padding: 14px 0;
+        border-bottom: 1px solid #355C8A;
+    }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+
+    .timeline-time {
+        color: #7db8ff;
+        font-weight: 700;
+        width: 90px;
+        display: inline-block;
+    }
+
+    .text-muted {
+        color: #c5d3e0 !important;
+    }
+
+    h1,
+    h4 {
+        color: white;
+    }
+</style>
+
+<div class="page-container">
+
+    <div class="card-dark">
+
+        <!-- Navigation -->
+        <a asp-controller="LabTechnician"
+           asp-action="StatUrgent"
+           class="text-info text-decoration-none">
+
+            ← Back to STAT Board
+
+        </a>
+
+        <!-- Header -->
+        <h1 class="mt-3">
+            NMB-2026-04-0862 — FBC
+        </h1>
+
+        <p class="text-muted">
+            Urgent • General Medicine • Dr. F. Abrahams
+        </p>
+
+        <!-- Status -->
+        <div class="mb-4">
+
+            <span class="status-badge badge-urgent">
+                Urgent
+            </span>
+
+            <span class="status-badge badge-received">
+                Received
+            </span>
+
+            <span class="status-badge badge-overdue">
+                TAT Breached
+            </span>
+
+        </div>
+
+        <!-- Information Grid -->
+        <div class="row">
+
+            <div class="col-md-4">
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Patient
+                    </div>
+
+                    <div class="info-value">
+                        Hendricks, Ayesha
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Age
+                    </div>
+
+                    <div class="info-value">
+                        30 Years
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Ward
+                    </div>
+
+                    <div class="info-value">
+                        General Medicine
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Requested At
+                    </div>
+
+                    <div class="info-value">
+                        09:20
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        TAT Target
+                    </div>
+
+                    <div class="info-value">
+                        90 min
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <div class="info-box">
+
+                    <div class="info-label">
+                        Elapsed
+                    </div>
+
+                    <div class="info-value text-danger">
+                        95 min
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Progress -->
+        <h4 class="mt-4">
+            TAT Progress
+        </h4>
+
+        <div class="progress mb-4">
+
+            <div class="progress-bar bg-danger"
+                 role="progressbar"
+                 style="width: 100%;">
+
+                95m / 90m
+
+            </div>
+
+        </div>
+
+        <!-- Timeline -->
+        <h4 class="mb-3">
+            Process Timeline
+        </h4>
+
+        <div class="timeline-box">
+
+            <div class="timeline-item">
+
+                <span class="timeline-time">
+                    09:20
+                </span>
+
+                Urgent request created
+
+            </div>
+
+            <div class="timeline-item">
+
+                <span class="timeline-time">
+                    09:45
+                </span>
+
+                Sample collected
+
+            </div>
+
+            <div class="timeline-item">
+
+                <span class="timeline-time">
+                    10:10
+                </span>
+
+                Sample received and queued
+
+            </div>
+
+            <div class="timeline-item">
+
+                <span class="timeline-time">
+                    10:42
+                </span>
+
+                Assigned to laboratory technician
+
+            </div>
+
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-4">
+
+            <a asp-controller="LabTechnician"
+               asp-action="Escalations"
+               class="btn-dark-custom me-2">
+
+                Escalate
+
+            </a>
+
+            <a asp-controller="LabTechnician"
+               asp-action="Reports"
+               class="btn-dark-custom me-2">
+
+                View Report
+
+            </a>
+
+            <a asp-controller="LabTechnician"
+               asp-action="CaptureResults"
+               class="btn-dark-custom">
+
+                Capture Results
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>

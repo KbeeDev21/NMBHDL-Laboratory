@@ -1,0 +1,144 @@
+﻿@{
+    Layout = "~/Views/Shared/_LabTechLayout.cshtml";
+    ViewData["Title"] = "Edit Profile";
+}
+
+<style>
+    body {
+        background-color: #071D37 !important;
+        color: white !important;
+    }
+
+    .page-container {
+        max-width: 900px;
+        margin: 50px auto;
+    }
+
+    .card-dark {
+        background: #102B4E;
+        border-radius: 20px;
+        padding: 35px;
+        border: 1px solid #1B3E68;
+    }
+
+    .form-control,
+    .form-control:focus {
+        background: #0B2447;
+        color: white;
+        border: 1px solid #355C8A;
+        box-shadow: none;
+    }
+
+    .btn-dark-custom {
+        background: #163A63;
+        border: 1px solid #355C8A;
+        color: white !important;
+        border-radius: 12px;
+        padding: 10px 20px;
+        text-decoration: none;
+        transition: 0.2s ease;
+    }
+
+        .btn-dark-custom:hover {
+            background: #1B4B7A;
+            border-color: #4d79a8;
+        }
+
+    label {
+        margin-bottom: 6px;
+        color: #c5d3e0;
+    }
+
+    h1 {
+        color: white;
+        font-weight: 700;
+    }
+
+    .text-muted {
+        color: #c5d3e0 !important;
+    }
+</style>
+
+<div class="page-container">
+
+    <div class="card-dark">
+
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+
+            <div>
+
+                <h1>Edit Profile</h1>
+
+                <p class="text-muted">
+                    Update technician profile information.
+                </p>
+
+            </div>
+
+            <a asp-controller="LabTechnician"
+               asp-action="Profile"
+               class="btn-dark-custom">
+
+                ← Profile
+
+            </a>
+
+        </div>
+
+        <!-- Form -->
+        <div class="mb-3">
+
+            <label class="form-label">
+                Full Name
+            </label>
+
+            <input class="form-control"
+                   value="Thabo Mokoena" />
+
+        </div>
+
+        <div class="mb-3">
+
+            <label class="form-label">
+                Email Address
+            </label>
+
+            <input class="form-control"
+                   value="thabo.mokoena@nmbhlab.co.za" />
+
+        </div>
+
+        <div class="mb-4">
+
+            <label class="form-label">
+                Contact Number
+            </label>
+
+            <input class="form-control"
+                   value="082 123 4567" />
+
+        </div>
+
+        <!-- Actions -->
+        <div>
+
+            <button class="btn-dark-custom me-2">
+
+                Save Changes
+
+            </button>
+
+            <a asp-controller="LabTechnician"
+               asp-action="Profile"
+               class="btn-dark-custom">
+
+                Cancel
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>

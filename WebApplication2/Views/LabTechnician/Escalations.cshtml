@@ -1,0 +1,218 @@
+﻿@{
+    Layout = "~/Views/Shared/_LabTechLayout.cshtml";
+    ViewData["Title"] = "Escalations";
+}
+
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+<link href="~/css/dashboardstyles.css" rel="stylesheet" />
+
+<style>
+
+    .page-container {
+        padding: 0;
+    }
+
+    .card-dark {
+        background: #102B4E;
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid #1B3E68;
+    }
+
+    .alert-card {
+        background: #163A63;
+        border-left: 5px solid #dc3545;
+        border-radius: 16px;
+        padding: 22px;
+        margin-bottom: 22px;
+        border: 1px solid #1B3E68;
+        transition: 0.2s ease;
+    }
+
+        .alert-card:hover {
+            background: #1B4B7A;
+            transform: translateX(4px);
+        }
+
+    .severity-high {
+        color: #ff8a8a;
+        font-weight: bold;
+    }
+
+    .btn-dark-custom {
+        background: #163A63;
+        border: 1px solid #355C8A;
+        color: white !important;
+        border-radius: 12px;
+        padding: 10px 20px;
+        text-decoration: none;
+        transition: 0.2s ease;
+    }
+
+        .btn-dark-custom:hover {
+            background: #1B4B7A;
+            border-color: #4d79a8;
+        }
+
+    .status-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        margin-right: 6px;
+        margin-top: 5px;
+        font-weight: 600;
+    }
+
+    .badge-stat {
+        background: #dc3545;
+        color: white;
+    }
+
+    .badge-urgent {
+        background: #f4a261;
+        color: black;
+    }
+
+    .text-muted {
+        color: #c5d3e0 !important;
+    }
+
+    h1,
+    h4,
+    p {
+        color: white;
+    }
+
+</style>
+
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+    <div class="page-container">
+
+        <div class="card-dark">
+
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <div>
+
+                    <h1>
+                        Active Escalations
+                    </h1>
+
+                    <p class="text-muted">
+                        Requests that have exceeded turnaround times and require immediate action.
+                    </p>
+
+                </div>
+
+                <a asp-controller="Home"
+                   asp-action="LabTechnicianDashboard"
+                   class="btn-dark-custom">
+
+                    ← Dashboard
+
+                </a>
+
+            </div>
+
+            <!-- Escalation Card -->
+            <div class="alert-card">
+
+                <h4>
+                    Hendricks, Ayesha — FBC
+                </h4>
+
+                <p>
+
+                    <span class="status-badge badge-urgent">
+                        Urgent
+                    </span>
+
+                    <span class="severity-high">
+                        5 minutes overdue
+                    </span>
+
+                </p>
+
+                <p>
+                    Requested by Dr. F. Abrahams • General Medicine
+                </p>
+
+                <a asp-controller="LabTechnician"
+                   asp-action="TestDetail"
+                   class="btn-dark-custom me-2">
+
+                    View Details
+
+                </a>
+
+                <button class="btn-dark-custom me-2">
+
+                    Notify Doctor
+
+                </button>
+
+                <button class="btn-dark-custom">
+
+                    Escalate to Manager
+
+                </button>
+
+            </div>
+
+            <!-- Escalation Card -->
+            <div class="alert-card">
+
+                <h4>
+                    Baloyi, Thabo — PT / INR
+                </h4>
+
+                <p>
+
+                    <span class="status-badge badge-stat">
+                        STAT
+                    </span>
+
+                    <span class="severity-high">
+                        12 minutes overdue
+                    </span>
+
+                </p>
+
+                <p>
+                    Requested by Dr. N. Jacobs • ICU
+                </p>
+
+                <a asp-controller="LabTechnician"
+                   asp-action="TestDetail"
+                   class="btn-dark-custom me-2">
+
+                    View Details
+
+                </a>
+
+                <button class="btn-dark-custom me-2">
+
+                    Notify Doctor
+
+                </button>
+
+                <button class="btn-dark-custom">
+
+                    Escalate to Manager
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

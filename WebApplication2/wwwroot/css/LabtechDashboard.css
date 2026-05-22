@@ -1,0 +1,116 @@
+﻿html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
+    font-family: Arial, sans-serif;
+    background: #e5e5e5;
+}
+
+body {
+    display: flex;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 270px;
+    height: 100vh;
+    background: #071D37;
+    position: fixed;
+    left: 0;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid rgba(255,255,255,0.1);
+    overflow-y: auto;
+}
+
+    .sidebar::-webkit-scrollbar {
+        display: none;
+    }
+
+/* TOP */
+.sidebar-top {
+    padding: 20px;
+    border-bottom: 3px solid white;
+    flex-shrink: 0;
+    min-height: 240px;
+}
+
+/* PROFILE */
+.sidebar-profile {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 40px;
+}
+
+    .sidebar-profile i {
+        font-size: 55px;
+        color: white;
+    }
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-text {
+    color: white;
+    line-height: 1.2;
+}
+
+.profile-role {
+    color: white;
+    font-size: 18px;
+    margin-top: 40px;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* NAV */
+.sidebar-bottom {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+}
+
+    .sidebar-bottom::-webkit-scrollbar {
+        display: none;
+    }
+
+.sidebar-section {
+    color: rgba(255,255,255,0.6);
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+.sidebar-link {
+    color: white;
+    text-decoration: none;
+    display: block;
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    transition: 0.2s ease;
+}
+
+    .sidebar-link:hover {
+        background: rgba(255,255,255,0.12);
+        color: white;
+    }
+
+/* MAIN */
+.main-content {
+    margin-left: 270px;
+    padding: 40px;
+    min-height: 100vh;
+    width: calc(100% - 270px);
+    background: #e5e5e5;
+}

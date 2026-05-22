@@ -1,0 +1,126 @@
+﻿@{
+    Layout = "~/Views/Shared/_LabTechLayout.cshtml";
+    ViewData["Title"] = "Verify Results";
+}
+
+<style>
+    body {
+        background-color: #111 !important;
+        color: #fff !important;
+    }
+
+    .page-container {
+        max-width: 1200px;
+        margin: 40px auto;
+    }
+
+    .card-dark {
+        background: #222;
+        border-radius: 18px;
+        padding: 30px;
+        border: 1px solid #333;
+    }
+
+    .result-card {
+        background: #2b2b2b;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-left: 4px solid #1d4ed8;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        margin-right: 5px;
+    }
+
+    .badge-awaiting {
+        background: #1d4ed8;
+        color: white;
+    }
+
+    .badge-abnormal {
+        background: #8b1e1e;
+        color: white;
+    }
+
+    .btn-dark-custom {
+        background: #222;
+        border: 1px solid #444;
+        color: white !important;
+        border-radius: 12px;
+        padding: 10px 20px;
+        text-decoration: none;
+    }
+
+        .btn-dark-custom:hover {
+            background: #2d2d2d;
+            border-color: #666;
+        }
+
+    .form-control,
+    .form-select,
+    .form-control:focus,
+    .form-select:focus {
+        background: #1a1a1a;
+        color: #fff;
+        border: 1px solid #444;
+        box-shadow: none;
+    }
+</style>
+
+<div class="page-container">
+    <div class="card-dark">
+        <a asp-controller="LabTechnician"
+           asp-action="Dashboard"
+           class="text-info text-decoration-none">
+            ← Back to Dashboard
+        </a>
+
+        <h1 class="mt-3">Verify Results</h1>
+        <p class="text-muted">
+            Review completed test results and approve or return them for correction.
+        </p>
+
+        <!-- Result Card -->
+        <div class="result-card">
+            <h4>Hendricks, Ayesha — Full Blood Count</h4>
+
+            <p>
+                <span class="status-badge badge-awaiting">Awaiting Verification</span>
+                <span class="status-badge badge-abnormal">Abnormal Result</span>
+            </p>
+
+            <p><strong>Haemoglobin:</strong> 8.7 g/dL</p>
+            <p><strong>White Cell Count:</strong> 14.2 x10⁹/L</p>
+            <p><strong>Platelets:</strong> 455 x10⁹/L</p>
+
+            <div class="mb-3">
+                <label class="form-label">Verification Decision</label>
+                <select class="form-select">
+                    <option>Verified</option>
+                    <option>To Be Reviewed</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Review Notes</label>
+                <textarea class="form-control" rows="4"
+                          placeholder="Enter any comments or concerns..."></textarea>
+            </div>
+
+            <button class="btn-dark-custom me-2">
+                Submit Verification
+            </button>
+
+            <a asp-controller="LabTechnician"
+               asp-action="TestDetail"
+               class="btn-dark-custom">
+                View Full Details
+            </a>
+        </div>
+    </div>
+</div>

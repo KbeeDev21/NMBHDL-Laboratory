@@ -4,15 +4,170 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
 
     <title>Lab Technician Dashboard</title>
 
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
     <link href="~/css/dashboardstyles.css" rel="stylesheet" />
+
+    <style>
+
+        .main-dashboard {
+            padding: 40px;
+            width: 100%;
+        }
+
+        h1 {
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: #071D37;
+        }
+
+        /* KPI Cards */
+        .metric-card {
+            background: #102B4E;
+            border-radius: 18px;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid #1B3E68;
+            margin-bottom: 20px;
+            height: 100%;
+            transition: 0.2s ease;
+        }
+
+            .metric-card:hover {
+                transform: translateY(-4px);
+                background: #163A63;
+                cursor: pointer;
+            }
+
+        .metric-number {
+            font-size: 3rem;
+            font-weight: bold;
+        }
+
+        /* Sections */
+        .section-card {
+            background: #102B4E;
+            border-radius: 18px;
+            padding: 30px;
+            border: 1px solid #1B3E68;
+            margin-top: 20px;
+        }
+
+        /* Priority Flags */
+        .priority-item {
+            background: #163A63;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .priority-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge-pill {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-stat {
+            background: #f4a261;
+            color: #000;
+        }
+
+        .badge-overdue {
+            background: #e9c46a;
+            color: #000;
+        }
+
+        .badge-routine {
+            background: #d9e6f2;
+            color: #0f172a;
+        }
+
+        /* Progress Bars */
+        .progress-row {
+            margin-bottom: 18px;
+        }
+
+        .progress {
+            height: 12px;
+            background: #0B2447;
+            border-radius: 10px;
+        }
+
+        /* Clickable Priority Links */
+        .priority-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+            .priority-link:hover {
+                text-decoration: none;
+                color: inherit;
+            }
+
+                .priority-link:hover .priority-item {
+                    background: #1B3E68;
+                    transform: translateX(4px);
+                    cursor: pointer;
+                }
+
+        .text-secondary {
+            color: #b8c7d9 !important;
+        }
+
+        /* Fix dark text visibility */
+        .section-card,
+        .section-card h3,
+        .section-card span,
+        .section-card div,
+        .metric-card,
+        .metric-card div,
+        .priority-item,
+        .priority-item span {
+            color: white;
+        }
+
+        /* Progress labels */
+        .progress-row span {
+            color: #dbeafe;
+        }
+
+        /* KPI card labels */
+        .metric-card div:last-child {
+            color: #dbeafe;
+            font-size: 1rem;
+        }
+
+        /* Priority flag text */
+        .priority-left span {
+            color: white;
+        }
+    </style>
+
 </head>
 
 <body>
@@ -20,15 +175,25 @@
     <!-- SIDEBAR -->
     <div class="sidebar">
 
-        
+        <!-- PROFILE -->
         <div class="sidebar-top">
+
             <div class="sidebar-profile">
+
                 <i class="fa-solid fa-user"></i>
 
                 <div class="profile-info">
-                    <div class="profile-text">Mr</div>
-                    <div class="profile-text">Keenen James</div>
+
+                    <div class="profile-text">
+                        Mr
+                    </div>
+
+                    <div class="profile-text">
+                        Keenen James
+                    </div>
+
                 </div>
+
             </div>
 
             <div class="profile-role">
@@ -37,39 +202,155 @@
 
         </div>
 
-       
-        
+        <!-- NAVIGATION -->
         <div class="sidebar-bottom">
 
-            <a asp-controller="Home" asp-action="Index" class="sidebar-link">
+            <div class="sidebar-section mt-4">
+                WORKFLOW
+            </div>
+
+            <a asp-controller="Home"
+               asp-action="LabTechnicianDashboard"
+               class="sidebar-link">
+
+                <i class="fa-solid fa-house me-2"></i>
                 Dashboard
+
             </a>
 
-            <a asp-controller="Admin" asp-action="Users" class="sidebar-link">
-                Users
+            <a asp-controller="LabTechnician"
+               asp-action="ReceiveSamples"
+               class="sidebar-link">
+
+                <i class="fa-solid fa-box-open me-2"></i>
+                Receive Samples
+
             </a>
 
-            <a asp-controller="Admin" asp-action="Reports" class="sidebar-link">
+            <a asp-controller="LabTechnician"
+               asp-action="AwaitingSelection"
+               class="sidebar-link">
+
+                <i class="fa-solid fa-clock me-2"></i>
+                Awaiting Selection
+
+            </a>
+
+            <a asp-controller="LabTechnician"
+               asp-action="AssignedTests"
+               class="sidebar-link">
+
+                <i class="fa-solid fa-vial me-2"></i>
+                Assigned Tests
+
+            </a>
+
+            <a asp-controller="LabTechnician"
+               asp-action="CaptureResults"
+               class="sidebar-link">
+
+                <i class="fa-solid fa-pen-to-square me-2"></i>
+                Capture Results
+
+            </a>
+
+            <a asp-controller="LabTechnician"
+               asp-action="VerificationQueue"
+               class="sidebar-link">
+
+                <i class="fa-solid fa-square-check me-2"></i>
+                Verification Queue
+
+            </a>
+
+            <a asp-controller="LabTechnician"
+               asp-action="ReviewQueue"
+               class="sidebar-link">
+
+                <i class="fa-solid fa-rotate me-2"></i>
+                Review Queue
+
+            </a>
+
+            <div class="sidebar-section mt-4">
+                MONITORING
+            </div>
+
+            <a asp-controller="LabTechnician"
+               asp-action="StatUrgent"
+               class="sidebar-link">
+
+                <i class="fa-solid fa-bolt me-2"></i>
+                STAT / Urgent
+
+            </a>
+
+            <a asp-controller="LabTechnician"
+               asp-action="Escalations"
+               class="sidebar-link">
+
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                Escalations
+
+            </a>
+
+            <a asp-controller="LabTechnician"
+               asp-action="Reports"
+               class="sidebar-link">
+
+                <i class="fa-solid fa-chart-column me-2"></i>
                 Reports
+
+            </a>
+            <div class="sidebar-section mt-4">
+                ACCOUNT
+            </div>
+            <a asp-controller="LabTechnician"
+               asp-action="Profile"
+               class="sidebar-link">
+
+                <i class="fa-solid fa-user me-2"></i>
+                My Profile
+
             </a>
 
-            <a asp-controller="Admin" asp-action="Settings" class="sidebar-link">
-                Settings
+            <a asp-controller="LabTechnician"
+               asp-action="EditProfile"
+               class="sidebar-link">
+
+                <i class="fa-solid fa-user-pen me-2"></i>
+                Edit Profile
+
             </a>
 
+            <a asp-controller="LabTechnician"
+               asp-action="ChangePassword"
+               class="sidebar-link">
+
+                <i class="fa-solid fa-key me-2"></i>
+                Change Password
+
+            </a>
+
+            <!-- ACTIONS -->
             <div class="sidebar-actions">
 
-                <a href="#"
-                   class="sidebar-alert-btn ajax-link"
-                   data-url="@Url.Action("UpdateProfile", "Admin")">
+                <a asp-controller="LabTechnician"
+                   asp-action="Profile"
+                   class="sidebar-alert-btn">
 
                     <i class="fa-solid fa-user-gear"></i>
                     Profile Settings
 
                 </a>
 
-                <a asp-controller="" asp-action="" class="sidebar-primary-btn">
-                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="sidebar-primary-btn">
+
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    Logout
+
                 </a>
 
             </div>
@@ -79,18 +360,301 @@
     </div>
 
     <!-- MAIN CONTENT -->
-    <div class="main-content d-flex align-items-center justify-content-center vh-100" id="mainContent">
+    <div class="main-content" id="mainContent">
 
-        <div class="text-center">
+        <div class="main-dashboard">
 
-            <h1 class="display-5 fw-semibold mb-2"
-                style="letter-spacing: 0.5px;">
+            <h1>My Workload</h1>
 
-                Welcome to Lab Technician Dashboard
+            <!-- KPI Cards -->
+            <div class="row g-4">
 
-            </h1>
+                <div class="col-md-6">
 
-            
+                    <a asp-controller="LabTechnician"
+                       asp-action="AssignedTests"
+                       class="text-decoration-none">
+
+                        <div class="metric-card">
+
+                            <div class="metric-number text-primary">
+                                47
+                            </div>
+
+                            <div>
+                                Tests Assigned
+                            </div>
+
+                        </div>
+
+                    </a>
+
+                </div>
+
+                <div class="col-md-6">
+
+                    <a asp-controller="LabTechnician"
+                       asp-action="AwaitingSelection"
+                       class="text-decoration-none">
+
+                        <div class="metric-card">
+
+                            <div class="metric-number text-warning">
+                                12
+                            </div>
+
+                            <div>
+                                Awaiting Selection
+                            </div>
+
+                        </div>
+
+                    </a>
+
+                </div>
+
+                <div class="col-md-6">
+
+                    <a asp-controller="LabTechnician"
+                       asp-action="VerificationQueue"
+                       class="text-decoration-none">
+
+                        <div class="metric-card">
+
+                            <div class="metric-number"
+                                 style="color:#d97706;">
+
+                                8
+
+                            </div>
+
+                            <div>
+                                Awaiting Verification
+                            </div>
+
+                        </div>
+
+                    </a>
+
+                </div>
+
+                <div class="col-md-6">
+
+                    <a asp-controller="LabTechnician"
+                       asp-action="ReviewQueue"
+                       class="text-decoration-none">
+
+                        <div class="metric-card">
+
+                            <div class="metric-number text-success">
+                                19
+                            </div>
+
+                            <div>
+                                Awaiting Review
+                            </div>
+
+                        </div>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+            <!-- Priority Flags -->
+            <div class="section-card">
+
+                <h3 class="mb-4">
+                    Priority Flags
+                </h3>
+
+                <a asp-controller="LabTechnician"
+                   asp-action="TestDetail"
+                   class="priority-link">
+
+                    <div class="priority-item">
+
+                        <div class="priority-left">
+
+                            <span class="badge-pill badge-stat">
+                                STAT
+                            </span>
+
+                            <span>
+                                FBC + Diff — Baloyi, T
+                            </span>
+
+                        </div>
+
+                        <span class="text-danger">
+                            45 min overdue
+                        </span>
+
+                    </div>
+
+                </a>
+
+                <a asp-controller="LabTechnician"
+                   asp-action="TestDetail"
+                   class="priority-link">
+
+                    <div class="priority-item">
+
+                        <div class="priority-left">
+
+                            <span class="badge-pill badge-stat">
+                                STAT
+                            </span>
+
+                            <span>
+                                PT/INR — Van Wyk, M
+                            </span>
+
+                        </div>
+
+                        <span class="text-warning">
+                            Due in 15 min
+                        </span>
+
+                    </div>
+
+                </a>
+
+                <a asp-controller="LabTechnician"
+                   asp-action="TestDetail"
+                   class="priority-link">
+
+                    <div class="priority-item">
+
+                        <div class="priority-left">
+
+                            <span class="badge-pill badge-overdue">
+                                Overdue
+                            </span>
+
+                            <span>
+                                Malaria Screen — Jacobs, L
+                            </span>
+
+                        </div>
+
+                        <span class="text-danger">
+                            Exceeded by 1h 10m
+                        </span>
+
+                    </div>
+
+                </a>
+
+                <a asp-controller="LabTechnician"
+                   asp-action="TestDetail"
+                   class="priority-link">
+
+                    <div class="priority-item">
+
+                        <div class="priority-left">
+
+                            <span class="badge-pill badge-routine">
+                                Routine
+                            </span>
+
+                            <span>
+                                ESR — Mkize, P
+                            </span>
+
+                        </div>
+
+                        <span class="text-secondary">
+                            Within TAT
+                        </span>
+
+                    </div>
+
+                </a>
+
+            </div>
+
+            <!-- Workload Progress -->
+            <div class="section-card">
+
+                <h3 class="mb-4">
+                    Workload Progress
+                </h3>
+
+                <div class="progress-row">
+
+                    <div class="d-flex justify-content-between mb-1">
+
+                        <span>
+                            Selected
+                        </span>
+
+                        <span>
+                            28/47
+                        </span>
+
+                    </div>
+
+                    <div class="progress">
+
+                        <div class="progress-bar bg-primary"
+                             style="width:60%">
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="progress-row">
+
+                    <div class="d-flex justify-content-between mb-1">
+
+                        <span>
+                            Verified
+                        </span>
+
+                        <span>
+                            19/47
+                        </span>
+
+                    </div>
+
+                    <div class="progress">
+
+                        <div class="progress-bar bg-success"
+                             style="width:40%">
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="progress-row">
+
+                    <div class="d-flex justify-content-between mb-1">
+
+                        <span>
+                            Reviewed
+                        </span>
+
+                        <span>
+                            12/47
+                        </span>
+
+                    </div>
+
+                    <div class="progress">
+
+                        <div class="progress-bar bg-warning"
+                             style="width:25%">
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
 
         </div>
 
@@ -98,18 +662,23 @@
 
     <!-- AJAX CONTENT LOADER -->
     <script>
-            function loadSection(section) {
 
-                fetch('/Home/LoadDashboardSection?section=' + section)
-                    .then(res => res.text())
-                    .then(html => {
-                        document.getElementById("mainContent").innerHTML = html;
-                    });
+        function loadSection(section) {
 
-            }
+            fetch('/Home/LoadDashboardSection?section=' + section)
+                .then(res => res.text())
+                .then(html => {
+
+                    document.getElementById("mainContent").innerHTML = html;
+
+                });
+
+        }
+
     </script>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
+
 </html>

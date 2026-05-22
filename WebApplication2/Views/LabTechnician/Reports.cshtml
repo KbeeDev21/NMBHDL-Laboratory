@@ -1,0 +1,354 @@
+﻿@{
+    Layout = "~/Views/Shared/_LabTechLayout.cshtml";
+    ViewData["Title"] = "TAT Performance Report";
+}
+
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+<link href="~/css/dashboardstyles.css" rel="stylesheet" />
+
+<style>
+
+    .page-container {
+        padding: 0;
+    }
+
+    .card-dark {
+        background: #102B4E;
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid #1B3E68;
+    }
+
+    .metric-card {
+        background: #163A63;
+        border-radius: 16px;
+        padding: 20px;
+        text-align: center;
+        height: 100%;
+        border: 1px solid #1B3E68;
+        transition: 0.2s ease;
+    }
+
+        .metric-card:hover {
+            transform: translateY(-3px);
+            background: #1B4B7A;
+        }
+
+    .metric-number {
+        font-size: 2.2rem;
+        font-weight: bold;
+    }
+
+    .form-control,
+    .form-control:focus {
+        background: #0B2447;
+        color: #fff;
+        border: 1px solid #355C8A;
+        box-shadow: none;
+    }
+
+    .btn-dark-custom {
+        background: #163A63;
+        border: 1px solid #355C8A;
+        color: white !important;
+        border-radius: 12px;
+        padding: 10px 20px;
+        text-decoration: none;
+        transition: 0.2s;
+    }
+
+        .btn-dark-custom:hover {
+            background: #1B4B7A;
+            border-color: #4d79a8;
+        }
+
+    table {
+        color: white !important;
+    }
+
+    th,
+    td {
+        border-color: #355C8A !important;
+        vertical-align: middle;
+    }
+
+    .table-dark {
+        --bs-table-bg: #163A63;
+        --bs-table-striped-bg: #1B4B7A;
+        --bs-table-hover-bg: #25598c;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .text-muted {
+        color: #c5d3e0 !important;
+    }
+
+    h1,
+    label {
+        color: white;
+    }
+
+</style>
+
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+    <div class="page-container">
+
+        <div class="card-dark">
+
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <div>
+
+                    <h1>
+                        TAT Performance Report
+                    </h1>
+
+                    <p class="text-muted mb-0">
+                        Analyze turnaround time compliance and export results to PDF.
+                    </p>
+
+                </div>
+
+                <a asp-controller="Home"
+                   asp-action="LabTechnicianDashboard"
+                   class="btn-dark-custom">
+
+                    ← Dashboard
+
+                </a>
+
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="row g-3 mb-4">
+
+                <div class="col-md-3">
+
+                    <div class="metric-card">
+
+                        <div class="metric-number text-success">
+                            94%
+                        </div>
+
+                        <div>
+                            TAT Compliance
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <div class="metric-card">
+
+                        <div class="metric-number text-primary">
+                            38m
+                        </div>
+
+                        <div>
+                            Average TAT
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <div class="metric-card">
+
+                        <div class="metric-number text-danger">
+                            4
+                        </div>
+
+                        <div>
+                            Breaches
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <div class="metric-card">
+
+                        <div class="metric-number text-warning">
+                            3
+                        </div>
+
+                        <div>
+                            At Risk
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Filters -->
+            <div class="row g-3 mb-4">
+
+                <div class="col-md-4">
+
+                    <label class="form-label">
+                        Start Date
+                    </label>
+
+                    <input type="date"
+                           class="form-control" />
+
+                </div>
+
+                <div class="col-md-4">
+
+                    <label class="form-label">
+                        End Date
+                    </label>
+
+                    <input type="date"
+                           class="form-control" />
+
+                </div>
+
+                <div class="col-md-4 d-flex align-items-end">
+
+                    <button class="btn-dark-custom me-2">
+
+                        Generate Report
+
+                    </button>
+
+                    <button class="btn-dark-custom">
+
+                        Export PDF
+
+                    </button>
+
+                </div>
+
+            </div>
+
+            <!-- Performance Table -->
+            <table class="table table-dark table-hover">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Test Type
+                        </th>
+
+                        <th>
+                            Target TAT
+                        </th>
+
+                        <th>
+                            Average TAT
+                        </th>
+
+                        <th>
+                            Compliance
+                        </th>
+
+                        <th>
+                            Breaches
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    <tr>
+
+                        <td>
+                            Full Blood Count
+                        </td>
+
+                        <td>
+                            90 min
+                        </td>
+
+                        <td>
+                            38 min
+                        </td>
+
+                        <td>
+                            96%
+                        </td>
+
+                        <td>
+                            1
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <td>
+                            PT / INR
+                        </td>
+
+                        <td>
+                            60 min
+                        </td>
+
+                        <td>
+                            42 min
+                        </td>
+
+                        <td>
+                            92%
+                        </td>
+
+                        <td>
+                            2
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <td>
+                            APTT
+                        </td>
+
+                        <td>
+                            60 min
+                        </td>
+
+                        <td>
+                            47 min
+                        </td>
+
+                        <td>
+                            89%
+                        </td>
+
+                        <td>
+                            1
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>

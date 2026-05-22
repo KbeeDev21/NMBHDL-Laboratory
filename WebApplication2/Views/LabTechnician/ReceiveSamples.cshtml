@@ -1,0 +1,262 @@
+﻿@{
+    Layout = "~/Views/Shared/_LabTechLayout.cshtml";
+    ViewData["Title"] = "Receive Samples";
+}
+
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+<link href="~/css/dashboardstyles.css" rel="stylesheet" />
+
+<style>
+    .page-container {
+        max-width: 1300px;
+        margin: 0 auto;
+    }
+
+    .card-dark {
+        background: #102B4E;
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid #1B3E68;
+    }
+
+    .section-box {
+        background: #163A63;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 22px;
+        border: 1px solid #1B3E68;
+    }
+
+    .form-control,
+    .form-select,
+    .form-control:focus,
+    .form-select:focus {
+        background: #0B2447;
+        color: white;
+        border: 1px solid #355C8A;
+        box-shadow: none;
+    }
+
+    .btn-dark-custom {
+        background: #163A63;
+        border: 1px solid #355C8A;
+        color: white !important;
+        border-radius: 12px;
+        padding: 10px 18px;
+        text-decoration: none;
+        transition: 0.2s;
+    }
+
+        .btn-dark-custom:hover {
+            background: #1B4B7A;
+            border-color: #4d79a8;
+        }
+
+    .status-badge {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .badge-received {
+        background: #198754;
+        color: white;
+    }
+
+    .text-muted {
+        color: #c5d3e0 !important;
+    }
+
+    h1,
+    h4,
+    label,
+    p,
+    strong {
+        color: white;
+    }
+</style>
+
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+    <div class="page-container">
+
+        <div class="card-dark">
+
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <div>
+
+                    <h1>Receive Samples</h1>
+
+                    <p class="text-muted">
+                        Capture received patient samples and update request status.
+                    </p>
+
+                </div>
+
+                <a asp-controller="Home"
+                   asp-action="LabTechnicianDashboard"
+                   class="btn-dark-custom">
+
+                    ← Dashboard
+
+                </a>
+
+            </div>
+
+            <!-- Sample Reception Form -->
+            <div class="section-box">
+
+                <h4 class="mb-4">
+                    Sample Reception Information
+                </h4>
+
+                <div class="row g-4">
+
+                    <div class="col-md-6">
+
+                        <label class="form-label">
+                            Request Number
+                        </label>
+
+                        <input class="form-control"
+                               value="REQ-2026-00124" />
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label class="form-label">
+                            Sample Barcode Number
+                        </label>
+
+                        <input class="form-control"
+                               value="BC-889213" />
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label class="form-label">
+                            Sample Type
+                        </label>
+
+                        <select class="form-select">
+
+                            <option>Whole Blood</option>
+                            <option>Plasma</option>
+                            <option>Serum</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label class="form-label">
+                            Technician Receiving Sample
+                        </label>
+
+                        <input class="form-control"
+                               value="Thabo Mokoena" />
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label class="form-label">
+                            Date Received
+                        </label>
+
+                        <input type="date"
+                               class="form-control" />
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <label class="form-label">
+                            Time Received
+                        </label>
+
+                        <input type="time"
+                               class="form-control" />
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Request Summary -->
+            <div class="section-box">
+
+                <h4 class="mb-3">
+                    Request Summary
+                </h4>
+
+                <p>
+                    <strong>Patient:</strong>
+                    Baloyi, Thabo
+                </p>
+
+                <p>
+                    <strong>Doctor:</strong>
+                    Dr. F. Abrahams
+                </p>
+
+                <p>
+                    <strong>Requested Tests:</strong>
+                    FBC + Differential, ESR
+                </p>
+
+                <p>
+                    <strong>Priority:</strong>
+                    STAT
+                </p>
+
+                <span class="status-badge badge-received">
+                    Samples Received
+                </span>
+
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-4">
+
+                <a asp-controller="LabTechnician"
+                   asp-action="AwaitingSelection"
+                   class="btn-dark-custom me-2">
+
+                    Save & Update Status
+
+                </a>
+
+                <button class="btn-dark-custom me-2">
+
+                    Print Barcode Label
+
+                </button>
+
+                <a asp-controller="LabTechnician"
+                   asp-action="TestDetail"
+                   class="btn-dark-custom">
+
+                    View Request Detail
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

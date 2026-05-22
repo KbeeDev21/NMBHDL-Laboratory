@@ -1,0 +1,301 @@
+﻿@{
+    Layout = "~/Views/Shared/_LabTechLayout.cshtml";
+    ViewData["Title"] = "Capture Results";
+}
+
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+<link href="~/css/dashboardstyles.css" rel="stylesheet" />
+
+<style>
+
+    .page-container {
+        padding: 0;
+    }
+
+    .card-dark {
+        background: #102B4E;
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid #1B3E68;
+    }
+
+    .section-title {
+        margin-bottom: 20px;
+        font-weight: 700;
+        color: white;
+    }
+
+    .info-box {
+        background: #163A63;
+        border-radius: 16px;
+        padding: 22px;
+        margin-bottom: 20px;
+        border: 1px solid #1B3E68;
+    }
+
+    .form-control,
+    .form-select,
+    .form-control:focus,
+    .form-select:focus {
+        background: #0B2447;
+        color: white;
+        border: 1px solid #355C8A;
+        box-shadow: none;
+    }
+
+    textarea.form-control {
+        resize: none;
+    }
+
+    .btn-dark-custom {
+        background: #163A63;
+        border: 1px solid #355C8A;
+        color: white !important;
+        border-radius: 12px;
+        padding: 10px 18px;
+        text-decoration: none;
+        transition: 0.2s ease;
+    }
+
+        .btn-dark-custom:hover {
+            background: #1B4B7A;
+            border-color: #4d79a8;
+        }
+
+    .abnormal {
+        color: #ff7b7b;
+        font-weight: bold;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        margin-right: 6px;
+        margin-top: 5px;
+        font-weight: 600;
+    }
+
+    .badge-stat {
+        background: #f4a261;
+        color: black;
+    }
+
+    .badge-processing {
+        background: #2563eb;
+        color: white;
+    }
+
+    .text-muted {
+        color: #c5d3e0 !important;
+    }
+
+    h1,
+    h4,
+    p,
+    strong,
+    label {
+        color: white;
+    }
+
+    label {
+        margin-bottom: 6px;
+    }
+
+</style>
+
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+    <div class="page-container">
+
+        <div class="card-dark">
+
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <div>
+
+                    <h1>
+                        Capture Results
+                    </h1>
+
+                    <p class="text-muted">
+                        Record laboratory test results and technician notes.
+                    </p>
+
+                </div>
+
+                <a asp-controller="Home"
+                   asp-action="LabTechnicianDashboard"
+                   class="btn-dark-custom">
+
+                    ← Dashboard
+
+                </a>
+
+            </div>
+
+            <!-- Test Information -->
+            <div class="info-box">
+
+                <h4>
+                    REQ-2026-00124
+                </h4>
+
+                <p>
+                    <strong>Patient:</strong>
+                    Baloyi, Thabo
+                </p>
+
+                <p>
+                    <strong>Test Type:</strong>
+                    Full Blood Count + Differential
+                </p>
+
+                <span class="status-badge badge-processing">
+                    In Progress
+                </span>
+
+                <span class="status-badge badge-stat">
+                    STAT
+                </span>
+
+            </div>
+
+            <!-- Clinical Information -->
+            <div class="info-box">
+
+                <h4 class="section-title">
+                    Clinical Information
+                </h4>
+
+                <p>
+                    <strong>Medical Conditions:</strong>
+                    Hypertension
+                </p>
+
+                <p>
+                    <strong>Allergies:</strong>
+                    Penicillin
+                </p>
+
+                <p>
+                    <strong>Medication:</strong>
+                    Amlodipine
+                </p>
+
+                <p>
+                    <strong>Doctor Notes:</strong>
+                    Rule out severe infection.
+                </p>
+
+            </div>
+
+            <!-- Result Entry -->
+            <div class="info-box">
+
+                <h4 class="section-title">
+                    Result Values
+                </h4>
+
+                <div class="row g-3">
+
+                    <div class="col-md-4">
+
+                        <label class="form-label">
+                            Haemoglobin
+                        </label>
+
+                        <input class="form-control"
+                               value="8.7 g/dL" />
+
+                        <small class="abnormal">
+                            Abnormal Low
+                        </small>
+
+                    </div>
+
+                    <div class="col-md-4">
+
+                        <label class="form-label">
+                            White Cell Count
+                        </label>
+
+                        <input class="form-control"
+                               value="14.2 x10⁹/L" />
+
+                        <small class="abnormal">
+                            Abnormal High
+                        </small>
+
+                    </div>
+
+                    <div class="col-md-4">
+
+                        <label class="form-label">
+                            Platelets
+                        </label>
+
+                        <input class="form-control"
+                               value="455 x10⁹/L" />
+
+                        <small class="abnormal">
+                            Abnormal High
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Notes -->
+            <div class="info-box">
+
+                <h4 class="section-title">
+                    Technician Notes
+                </h4>
+
+                <textarea class="form-control"
+                          rows="5"
+                          placeholder="Enter technician observations..."></textarea>
+
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-4">
+
+                <a asp-controller="LabTechnician"
+                   asp-action="VerificationQueue"
+                   class="btn-dark-custom me-2">
+
+                    Save & Complete Test
+
+                </a>
+
+                <button class="btn-dark-custom me-2">
+
+                    Flag Abnormal Result
+
+                </button>
+
+                <a asp-controller="LabTechnician"
+                   asp-action="TestDetail"
+                   class="btn-dark-custom">
+
+                    View Test Detail
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
