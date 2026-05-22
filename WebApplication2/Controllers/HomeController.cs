@@ -171,6 +171,9 @@ namespace WebApplication2.Controllers
 
                     return PartialView("_ReportsPortalPartial");
 
+                case "profilesettings":
+                    return PartialView("_ProfileSettingsPartial");
+
                 default:
                     return Content("<div class='text-white p-4'><h5>Section placeholder</h5></div>");
             }
