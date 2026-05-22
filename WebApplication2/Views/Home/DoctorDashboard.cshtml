@@ -1,7 +1,9 @@
 ﻿@{
     Layout = null;
-}<!DOCTYPE html><html lang="en">
-   <head>
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -10,93 +12,124 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link href="~/css/dashboardstyles.css" rel="stylesheet" />
-    
-    <style>
-        /* Matches the sub-heading style seen in your image */
-        .sidebar-heading {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #727b84;
-            font-weight: 700;
-            padding: 15px 20px 5px 20px;
-            margin: 0;
-        }
 
-        /* Animation for custom toast entrance */
-        .animate-slide-in-toast {
-            animation: toastSlideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        @@keyframes toastSlideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        /* Flex layout helper wrapper */
-        .app-container {
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-            background-color: #121212;
-        }
+    <style>
+            .sidebar-heading {
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: #727b84;
+                font-weight: 700;
+                padding: 12px 20px 4px 20px;
+                margin: 0;
+            }
+
+            .animate-slide-in-toast {
+                animation: toastSlideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            }
+            @@keyframes toastSlideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            .app-container {
+                display: flex;
+                height: 100vh;
+                overflow: hidden;
+                background-color: #ffffff;
+            }
+
+            .sidebar-link {
+                display: flex;
+                align-items: center;
+                padding: 10px 20px !important;
+                color: #ffffff !important;
+                text-decoration: none;
+                font-size: 0.92rem;
+                transition: all 0.2s;
+            }
+
+                .sidebar-link:hover, .sidebar-link.active {
+                    background-color: #0c2b4e;
+                    font-weight: 600;
+                }
     </style>
-    </head>
-    <body>
+</head>
+<body>
 
     <div class="app-container">
 
-        <div class="sidebar" style="width: 260px; background-color: #071D37; border-right: 1px solid #2d2d2d; display: flex; flex-direction: column; height: 100vh;">
+        <div class="sidebar" style="width: 260px; background-color: #071D37; display: flex; flex-direction: column; height: 100vh;">
 
-            <div class="sidebar-top" style="padding: 1px 10px; gap: 1px; display: flex; flex-direction: column; align-items: center; text-align: center; justify-content: space-evenly; border-bottom: 1px solid #16406d;">
-                <div class="profile-avatar" style="width: 32px; height: 32px; background: #0c2b4e; border: 1px solid #16406d; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #a1a1a1;">
-                    <i class="fa-solid fa-user" style="font-size: 20px;"></i>
+            <div style="flex-shrink: 0;">
+                <div class="sidebar-top" style="padding: 20px 20px 10px 20px; display: flex; align-items: center; gap: 15px; text-align: left;">
+                    <div class="profile-avatar" style="width: 42px; height: 42px; background: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #071D37;">
+                        <i class="fa-solid fa-user" style="font-size: 20px;"></i>
+                    </div>
+
+                    <div class="profile-info">
+                        <div class="profile-text" style="font-size: 0.82rem; color: #8da4be; margin-bottom: -2px;">Mr</div>
+                        <div class="profile-text" style="font-size: 0.92rem; font-weight: 600; color: #ffffff; line-height: 1.2;">Kenneth Malgas</div>
+                    </div>
                 </div>
-            
-                <div class="profile-info" style="margin-top: 0px;">
-                    <div class="profile-text" style="font-size: 0.90rem; font-weight: 600; color: #ffffff; line-height: 1.1;">Kenneth Malgas</div>
-                    <div class="profile-role" style="font-size: 0.85rem; color: #8da4be; margin-top: 1px;">Doctor</div>
+
+                <div style="font-size: 1.6rem; font-weight: 500; color: #ffffff; padding: 0 20px 15px 20px; border-bottom: 2px solid #ffffff; letter-spacing: 0.5px;">
+                    Doctor
                 </div>
             </div>
-            
-            <div class="sidebar-bottom" style="flex: 1; overflow-y: auto; padding-bottom: 15px;">
 
-                <div class="sidebar-heading" style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px; color: #555555; font-weight: 700; padding: 12px 20px 4px 20px; margin: 0;">Patients</div>
+            <div class="sidebar-bottom" style="flex: 1; overflow-y: auto; padding-top: 5px;">
 
-                <a href="javascript:void(0)" onclick="loadSection('managepatients')" class="sidebar-link" style="display: flex; align-items: center; padding: 8px 20px; color: #a1a1a1; text-decoration: none; font-size: 0.9rem;">
-                    <i class="fa-solid fa-magnifying-glass me-2" style="width: 16px;"></i> Patient Search
-                
+                <div class="sidebar-heading">Patients</div>
 
-                <a href="javascript:void(0)" onclick="loadSection('createrequest')" class="sidebar-link" style="display: flex; align-items: center; padding: 8px 20px; color: #a1a1a1; text-decoration: none; font-size: 0.9rem;">
-                    <i class="fa-solid fa-plus me-2" style="width: 16px;"></i> New Test Request
+                <a href="javascript:void(0)" onclick="loadSection('managepatients')" class="sidebar-link">
+                    <i class="fa-solid fa-user-doctor me-2" style="width: 20px;"></i> Patient Search
                 </a>
 
-                <div class="sidebar-heading" style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px; color: #555555; font-weight: 700; padding: 12px 20px 4px 20px; margin: 0;">Results</div>
-
-                <a href="javascript:void(0)" onclick="loadSection('alerts')" class="sidebar-link" style="display: flex; align-items: center; padding: 8px 20px; color: #a1a1a1; text-decoration: none; font-size: 0.9rem;">
-                    <i class="fa-solid fa-circle text-danger me-2" style="font-size: 8px; width: 16px; text-align: center;"></i> Dashboard
+                <a href="javascript:void(0)" onclick="loadSection('createrequest')" class="sidebar-link">
+                    <i class="fa-solid fa-hand-holding-medical me-2" style="width: 20px;"></i> New Test Request
                 </a>
 
-                <a href="javascript:void(0)" onclick="loadSection('trackprogress')" class="sidebar-link" style="display: flex; align-items: center; padding: 8px 20px; color: #a1a1a1; text-decoration: none; font-size: 0.9rem;">
-                    <i class="fa-solid fa-file-lines me-2" style="width: 16px;"></i> All Results
+                <div class="sidebar-heading">Results</div>
+
+                <a href="javascript:void(0)" onclick="loadSection('alerts')" class="sidebar-link">
+                    <i class="fa-solid fa-chart-pie me-2" style="width: 20px;"></i> Dashboard
                 </a>
 
-                <div class="sidebar-heading" style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px; color: #555555; font-weight: 700; padding: 12px 20px 4px 20px; margin: 0;">Systems</div>
-
-                <a href="javascript:void(0)" onclick="loadSection('reports')" class="sidebar-link" style="display: flex; align-items: center; padding: 8px 20px; color: #a1a1a1; text-decoration: none; font-size: 0.9rem;">
-                    <i class="fa-solid fa-file-pdf me-2" style="width: 16px;"></i> Doctor Reports
+                <a href="javascript:void(0)" onclick="loadSection('trackprogress')" class="sidebar-link">
+                    <i class="fa-solid fa-prescription-bottle-medical me-2" style="width: 20px;"></i> All Results
                 </a>
 
-                <div style="margin-top: 15px; border-top: 1px solid #16406d; padding-top: 10px;">
-                    <a href="javascript:void(0)" class="sidebar-link" style="display: flex; align-items: center; padding: 8px 20px; color: #555555; text-decoration: none; font-size: 0.85rem;">
-                        <i class="fa-solid fa-user-gear me-2" style="width: 16px;"></i> Profile Settings
-                    </a>
-                </div>
+                <div class="sidebar-heading">Systems</div>
+
+                <a href="javascript:void(0)" onclick="loadSection('reports')" class="sidebar-link">
+                    <i class="fa-solid fa-file-pdf me-2" style="width: 20px;"></i> Doctor Reports
+                </a>
 
             </div>
 
-        </div> <div class="main-content overflow-auto flex-grow-1" id="mainContent" style="min-height: 100vh; background-color: #fff;">
+            <div style="flex-shrink: 0; padding: 15px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #16406d; background-color: #071D37;">
+                <button onclick="loadSection('profilesettings')" class="btn sidebar-link w-100 d-flex align-items-center justify-content-center gap-2 fw-semibold text-white" style="background-color: #dc3545; border: none; padding: 10px; border-radius: 6px; font-size: 0.9rem;">
+                    <i class="fa-solid fa-user-gear"></i> Profile Settings
+                </button>
+
+                <a asp-controller="Home" asp-action="LoginPage" class="btn w-100 d-flex align-items-center justify-content-center gap-2 fw-semibold text-white" style="background-color: #007bff; border: none; padding: 10px; border-radius: 6px; font-size: 0.9rem; text-decoration: none;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+            </div>
+
+        </div>
+
+        <div class="main-content overflow-auto flex-grow-1" id="mainContent" style="min-height: 100vh; background-color: #ffffff;">
             <div class="d-flex justify-content-center align-items-center h-100 py-5">
-                <div class="text-center text-white-50">
+                <div class="text-center text-secondary">
                     <i class="fa-solid fa-circle-notch fa-spin fs-3 mb-2 text-primary"></i>
                     <p class="m-0">Loading Clinical Stream...</p>
                 </div>
@@ -106,26 +139,25 @@
     </div>
 
     <div id="toastContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 3000; margin-top: 10px;"></div>
-    
+
     <script>
             function loadSection(section) {
-                // Manage active visual links highlighting inside the sidebar
+                // Remove active status highlights from sidebar list views
                 document.querySelectorAll('.sidebar-link').forEach(link => {
                     link.classList.remove('active');
                 });
 
-                // Find event targets to accurately map active CSS highlights
+                // Attach custom highlighting tracking on current target selection
                 const clickedElement = window.event?.currentTarget;
                 if (clickedElement) {
                     clickedElement.classList.add('active');
                 } else {
-                    if (section === 'alerts') {
-                        const defaultLink = document.querySelector(`[onclick="loadSection('alerts')"]`);
-                        if (defaultLink) defaultLink.classList.add('active');
-                    }
+                    let targetSelector = `[onclick="loadSection('${section}')"]`;
+                    const defaultLink = document.querySelector(targetSelector);
+                    if (defaultLink) defaultLink.classList.add('active');
                 }
 
-                // Fetch data fragments dynamically
+                // Fetch dynamic subviews asynchronously
                 fetch('/Home/LoadDashboardSection?section=' + section)
                     .then(res => res.text())
                     .then(html => {
@@ -134,31 +166,30 @@
                     .catch(err => console.error("Could not fetch the sub-panel segment view:", err));
             }
 
-            // --- CUSTOM TOAST ENGINE INFRASTRUCTURE FOR EXTRA UX MARKS ---
             function showToast(title, message, type = 'success') {
                 const container = document.getElementById('toastContainer');
-                let accentColor = '#10b981'; 
+                let accentColor = '#10b981';
                 let icon = 'fa-circle-check';
-                
+
                 if (type === 'danger') {
-                    accentColor = '#ef4444'; 
+                    accentColor = '#ef4444';
                     icon = 'fa-circle-xmark';
                 } else if (type === 'warning') {
-                    accentColor = '#f59e0b'; 
+                    accentColor = '#f59e0b';
                     icon = 'fa-triangle-exclamation';
                 }
 
                 const toast = document.createElement('div');
                 toast.className = "animate-slide-in-toast";
                 toast.style = `
-                    width: 320px; 
-                    background: #0c2b4e; 
-                    border-left: 4px solid ${accentColor}; 
+                    width: 320px;
+                    background: #071D37;
+                    border-left: 4px solid ${accentColor};
                     border: 1px solid #16406d;
-                    color: white; 
-                    padding: 12px; 
-                    margin-bottom: 10px; 
-                    border-radius: 8px; 
+                    color: white;
+                    padding: 12px;
+                    margin-bottom: 10px;
+                    border-radius: 8px;
                     box-shadow: 0 8px 20px rgba(0,0,0,0.4);
                     display: flex;
                     align-items: flex-start;
@@ -184,12 +215,10 @@
                 }, 4000);
             }
 
-            // --- AUTO RUN TRIGGER ---
             document.addEventListener("DOMContentLoaded", function() {
                 loadSection('alerts');
             });
     </script>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+</body></html>
