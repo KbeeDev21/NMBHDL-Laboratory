@@ -15,26 +15,27 @@
     }
 
     .card-dark {
-        background: #102B4E;
+        background: #ffffff;
         border-radius: 20px;
         padding: 30px;
         margin-bottom: 20px;
-        border: 1px solid #1B3E68;
+        border: 1px solid #dbe3ec;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
 
     .metric-card {
-        background: #163A63;
+        background: #f8fafc;
         border-radius: 16px;
         padding: 25px;
         text-align: center;
-        border: 1px solid #1B3E68;
+        border: 1px solid #e2e8f0;
         height: 100%;
         transition: 0.2s ease;
     }
 
         .metric-card:hover {
             transform: translateY(-3px);
-            background: #1B4B7A;
+            background: #f1f5f9;
         }
 
     .metric-number {
@@ -43,8 +44,8 @@
     }
 
     .alert-banner {
-        background: #f8d7da;
-        color: #842029;
+        background: #fef2f2;
+        color: #991b1b;
         border-left: 5px solid #dc3545;
         padding: 20px;
         border-radius: 10px;
@@ -52,50 +53,59 @@
     }
 
     .form-control,
-    .form-select,
-    .form-control:focus,
-    .form-select:focus {
-        background: #0B2447;
-        color: #fff;
-        border: 1px solid #355C8A;
+    .form-select {
+        background: #ffffff;
+        color: #1f2937;
+        border: 1px solid #d1d5db;
         box-shadow: none;
     }
 
+        .form-control:focus,
+        .form-select:focus {
+            background: #ffffff;
+            color: #1f2937;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 0.15rem rgba(59,130,246,0.15);
+        }
+
     .btn-dark-custom {
-        background: #163A63;
-        border: 1px solid #355C8A;
+        background: #0d6efd;
+        border: 1px solid #0d6efd;
         color: white !important;
         border-radius: 12px;
         padding: 10px 20px;
         text-decoration: none;
-        transition: 0.2s;
+        transition: 0.2s ease;
     }
 
         .btn-dark-custom:hover {
-            background: #1B4B7A;
-            border-color: #4d79a8;
+            background: #0b5ed7;
+            border-color: #0b5ed7;
         }
 
     .column-card {
-        background: #163A63;
+        background: #f8fafc;
         border-radius: 16px;
         padding: 20px;
         height: 100%;
-        border: 1px solid #1B3E68;
+        border: 1px solid #e2e8f0;
     }
 
     .test-card {
-        background: #1B4B7A;
+        background: #ffffff;
         border-radius: 12px;
         padding: 15px;
         margin-bottom: 15px;
         border-left: 4px solid #dc3545;
+        border-top: 1px solid #e2e8f0;
+        border-right: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
         transition: 0.2s ease;
     }
 
         .test-card:hover {
             transform: translateX(4px);
-            background: #25598c;
+            background: #f8fafc;
         }
 
     .status-badge {
@@ -105,6 +115,7 @@
         font-size: 0.8rem;
         margin-right: 5px;
         margin-top: 5px;
+        font-weight: 600;
     }
 
     .badge-stat {
@@ -118,27 +129,27 @@
     }
 
     .badge-done {
-        background: #2d6a4f;
+        background: #198754;
         color: white;
     }
 
     .test-card a {
-        color: white;
+        color: #1f2937;
         text-decoration: none;
     }
 
         .test-card a:hover {
-            color: #cfe6ff;
+            color: #2563eb;
         }
 
     .text-muted {
-        color: #c5d3e0 !important;
+        color: #6b7280 !important;
     }
 
     h1,
     h5,
     strong {
-        color: white;
+        color: #1f2937;
     }
 
 </style>

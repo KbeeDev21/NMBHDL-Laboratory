@@ -15,25 +15,26 @@
     }
 
     .card-dark {
-        background: #102B4E;
+        background: #ffffff;
         border-radius: 20px;
         padding: 30px;
-        border: 1px solid #1B3E68;
+        border: 1px solid #dbe3ec;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
 
     .metric-card {
-        background: #163A63;
+        background: #f8fafc;
         border-radius: 16px;
         padding: 20px;
         text-align: center;
         height: 100%;
-        border: 1px solid #1B3E68;
+        border: 1px solid #e2e8f0;
         transition: 0.2s ease;
     }
 
         .metric-card:hover {
             transform: translateY(-3px);
-            background: #1B4B7A;
+            background: #f1f5f9;
         }
 
     .metric-number {
@@ -41,58 +42,73 @@
         font-weight: bold;
     }
 
-    .form-control,
-    .form-control:focus {
-        background: #0B2447;
-        color: #fff;
-        border: 1px solid #355C8A;
+    .form-control {
+        background: #ffffff;
+        color: #1f2937;
+        border: 1px solid #d1d5db;
         box-shadow: none;
     }
 
+        .form-control:focus {
+            background: #ffffff;
+            color: #1f2937;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 0.15rem rgba(59,130,246,0.15);
+        }
+
     .btn-dark-custom {
-        background: #163A63;
-        border: 1px solid #355C8A;
+        background: #0d6efd;
+        border: 1px solid #0d6efd;
         color: white !important;
         border-radius: 12px;
         padding: 10px 20px;
         text-decoration: none;
-        transition: 0.2s;
+        transition: 0.2s ease;
     }
 
         .btn-dark-custom:hover {
-            background: #1B4B7A;
-            border-color: #4d79a8;
+            background: #0b5ed7;
+            border-color: #0b5ed7;
         }
 
     table {
-        color: white !important;
+        color: #1f2937 !important;
     }
 
     th,
     td {
-        border-color: #355C8A !important;
+        border-color: #e2e8f0 !important;
         vertical-align: middle;
     }
 
     .table-dark {
-        --bs-table-bg: #163A63;
-        --bs-table-striped-bg: #1B4B7A;
-        --bs-table-hover-bg: #25598c;
+        --bs-table-bg: #ffffff;
+        --bs-table-striped-bg: #f8fafc;
+        --bs-table-hover-bg: #dbeafe;
+        --bs-table-color: #1f2937;
+        border: 1px solid #e2e8f0;
         border-radius: 14px;
         overflow: hidden;
     }
 
+    /* Better table hover */
+    .table-hover tbody tr:hover td,
+    .table-hover tbody tr:hover th {
+        background-color: #dbeafe !important;
+        color: #1f2937 !important;
+        font-weight: 500;
+    }
+
     .text-muted {
-        color: #c5d3e0 !important;
+        color: #6b7280 !important;
     }
 
     h1,
     label {
-        color: white;
+        color: #1f2937;
     }
 
 </style>
-
 
 <!-- MAIN CONTENT -->
 <div class="main-content">

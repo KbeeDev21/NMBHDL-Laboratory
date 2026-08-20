@@ -11,29 +11,31 @@
 <style>
 
     .page-container {
-        max-width: 1400px;
-        margin: 0 auto;
+        padding: 0;
     }
 
     .card-dark {
-        background: #102B4E;
+        background: #ffffff;
         border-radius: 20px;
         padding: 30px;
-        border: 1px solid #1B3E68;
+        border: 1px solid #dbe3ec;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
 
-    .test-card {
-        background: #163A63;
+    .queue-card {
+        background: #f8fafc;
         border-radius: 16px;
         padding: 22px;
         margin-bottom: 20px;
         border-left: 4px solid #2563eb;
-        border: 1px solid #1B3E68;
+        border-top: 1px solid #e2e8f0;
+        border-right: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
         transition: 0.2s ease;
     }
 
-        .test-card:hover {
-            background: #1B4B7A;
+        .queue-card:hover {
+            background: #f1f5f9;
             transform: translateX(4px);
         }
 
@@ -47,13 +49,13 @@
         font-weight: 600;
     }
 
-    .badge-processing {
-        background: #2563eb;
-        color: white;
-    }
-
     .badge-stat {
         background: #f4a261;
+        color: black;
+    }
+
+    .badge-routine {
+        background: #d9e6f2;
         color: black;
     }
 
@@ -62,9 +64,19 @@
         color: white;
     }
 
+    .badge-progress {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .badge-processing {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
     .btn-dark-custom {
-        background: #163A63;
-        border: 1px solid #355C8A;
+        background: #0d6efd;
+        border: 1px solid #0d6efd;
         color: white !important;
         border-radius: 12px;
         padding: 10px 18px;
@@ -73,30 +85,36 @@
     }
 
         .btn-dark-custom:hover {
-            background: #1B4B7A;
-            border-color: #4d79a8;
+            background: #0b5ed7;
+            border-color: #0b5ed7;
         }
 
     .text-muted {
-        color: #c5d3e0 !important;
+        color: #6b7280 !important;
     }
 
     .filter-box,
     .form-control,
-    .form-select,
-    .form-control:focus,
-    .form-select:focus {
-        background: #0B2447;
-        color: white;
-        border: 1px solid #355C8A;
+    .form-select {
+        background: #ffffff;
+        color: #1f2937;
+        border: 1px solid #d1d5db;
         box-shadow: none;
     }
+
+        .form-control:focus,
+        .form-select:focus {
+            background: #ffffff;
+            color: #1f2937;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 0.15rem rgba(59,130,246,0.15);
+        }
 
     h1,
     h4,
     p,
     strong {
-        color: white;
+        color: #1f2937;
     }
 
 </style>

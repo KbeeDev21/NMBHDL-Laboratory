@@ -36,19 +36,21 @@
 
         /* KPI Cards */
         .metric-card {
-            background: #102B4E;
+            background: #ffffff;
             border-radius: 18px;
             padding: 30px;
             text-align: center;
-            border: 1px solid #1B3E68;
+            border: 1px solid #dbe3ec;
             margin-bottom: 20px;
             height: 100%;
             transition: 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
             .metric-card:hover {
                 transform: translateY(-4px);
-                background: #163A63;
+                background: #f8fafc;
+                box-shadow: 0 6px 18px rgba(0,0,0,0.08);
                 cursor: pointer;
             }
 
@@ -59,16 +61,18 @@
 
         /* Sections */
         .section-card {
-            background: #102B4E;
+            background: #ffffff;
             border-radius: 18px;
             padding: 30px;
-            border: 1px solid #1B3E68;
+            border: 1px solid #dbe3ec;
             margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
         /* Priority Flags */
         .priority-item {
-            background: #163A63;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
             border-radius: 12px;
             padding: 14px 18px;
             margin-bottom: 12px;
@@ -113,7 +117,7 @@
 
         .progress {
             height: 12px;
-            background: #0B2447;
+            background: #e5e7eb;
             border-radius: 10px;
         }
 
@@ -130,16 +134,16 @@
             }
 
                 .priority-link:hover .priority-item {
-                    background: #1B3E68;
+                    background: #f1f5f9;
                     transform: translateX(4px);
                     cursor: pointer;
                 }
 
         .text-secondary {
-            color: #b8c7d9 !important;
+            color: #6b7280 !important;
         }
 
-        /* Fix dark text visibility */
+        /* White Theme Text */
         .section-card,
         .section-card h3,
         .section-card span,
@@ -148,23 +152,23 @@
         .metric-card div,
         .priority-item,
         .priority-item span {
-            color: white;
+            color: #1f2937;
         }
 
         /* Progress labels */
         .progress-row span {
-            color: #dbeafe;
+            color: #374151;
         }
 
         /* KPI card labels */
         .metric-card div:last-child {
-            color: #dbeafe;
+            color: #6b7280;
             font-size: 1rem;
         }
 
         /* Priority flag text */
         .priority-left span {
-            color: white;
+            color: #1f2937;
         }
     </style>
 

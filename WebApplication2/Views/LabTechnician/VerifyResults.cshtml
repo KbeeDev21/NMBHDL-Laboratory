@@ -3,11 +3,12 @@
     ViewData["Title"] = "Verify Results";
 }
 
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+<link href="~/css/dashboardstyles.css" rel="stylesheet" />
+
 <style>
-    body {
-        background-color: #111 !important;
-        color: #fff !important;
-    }
 
     .page-container {
         max-width: 1200px;
@@ -15,18 +16,22 @@
     }
 
     .card-dark {
-        background: #222;
+        background: #ffffff;
         border-radius: 18px;
         padding: 30px;
-        border: 1px solid #333;
+        border: 1px solid #dbe3ec;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
 
     .result-card {
-        background: #2b2b2b;
+        background: #f8fafc;
         border-radius: 12px;
         padding: 20px;
         margin-bottom: 20px;
-        border-left: 4px solid #1d4ed8;
+        border-left: 4px solid #2563eb;
+        border-top: 1px solid #e2e8f0;
+        border-right: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
     }
 
     .status-badge {
@@ -35,41 +40,62 @@
         border-radius: 20px;
         font-size: 0.8rem;
         margin-right: 5px;
+        font-weight: 600;
     }
 
     .badge-awaiting {
-        background: #1d4ed8;
+        background: #2563eb;
         color: white;
     }
 
     .badge-abnormal {
-        background: #8b1e1e;
+        background: #dc3545;
         color: white;
     }
 
     .btn-dark-custom {
-        background: #222;
-        border: 1px solid #444;
+        background: #0d6efd;
+        border: 1px solid #0d6efd;
         color: white !important;
         border-radius: 12px;
         padding: 10px 20px;
         text-decoration: none;
+        transition: 0.2s ease;
     }
 
         .btn-dark-custom:hover {
-            background: #2d2d2d;
-            border-color: #666;
+            background: #0b5ed7;
+            border-color: #0b5ed7;
         }
 
     .form-control,
-    .form-select,
-    .form-control:focus,
-    .form-select:focus {
-        background: #1a1a1a;
-        color: #fff;
-        border: 1px solid #444;
+    .form-select {
+        background: #ffffff;
+        color: #1f2937;
+        border: 1px solid #d1d5db;
         box-shadow: none;
     }
+
+        .form-control:focus,
+        .form-select:focus {
+            background: #ffffff;
+            color: #1f2937;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 0.15rem rgba(59,130,246,0.15);
+        }
+
+    h1,
+    h4,
+    p,
+    strong,
+    label {
+        color: #1f2937;
+    }
+
+    .text-muted {
+        color: #6b7280 !important;
+    }
+
 </style>
 
 <div class="page-container">
