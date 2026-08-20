@@ -1,4 +1,4 @@
-﻿@{    
+﻿@{
     Layout = "~/Views/Shared/_LabTechLayout.cshtml";
     ViewData["Title"] = "Review Queue";
 }
@@ -25,19 +25,13 @@
     .review-card {
         background: #f8fafc;
         border-radius: 16px;
-        padding: 22px;
-        margin-bottom: 20px;
+        padding: 24px;
+        margin-bottom: 22px;
         border-left: 4px solid #dc3545;
         border-top: 1px solid #e2e8f0;
         border-right: 1px solid #e2e8f0;
         border-bottom: 1px solid #e2e8f0;
-        transition: 0.2s ease;
     }
-
-        .review-card:hover {
-            background: #f1f5f9;
-            transform: translateX(4px);
-        }
 
     .status-badge {
         display: inline-block;
@@ -64,6 +58,16 @@
         color: #374151;
     }
 
+    .badge-resubmitted {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .badge-verified {
+        background: #198754;
+        color: white;
+    }
+
     .note-box {
         background: #ffffff;
         border-radius: 12px;
@@ -75,6 +79,89 @@
         border-bottom: 1px solid #e2e8f0;
     }
 
+    .original-result {
+        background: #ffffff;
+        border: 1px solid #dbe3ec;
+        border-radius: 12px;
+        padding: 18px;
+        margin-top: 18px;
+    }
+
+    .result-row {
+        padding: 12px 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+        .result-row:last-child {
+            border-bottom: none;
+        }
+
+    .result-name {
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .result-value {
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .normal-range {
+        font-size: 0.82rem;
+        color: #64748b;
+    }
+
+    .technician-note {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 9px;
+        padding: 10px 12px;
+        margin-top: 8px;
+        color: #1e3a8a;
+        font-size: 0.84rem;
+    }
+
+    .history {
+        margin-top: 20px;
+        background: #ffffff;
+        border: 1px solid #dbe3ec;
+        border-radius: 12px;
+        padding: 20px;
+    }
+
+    .history-item {
+        position: relative;
+        padding: 0 0 20px 25px;
+        border-left: 2px solid #cbd5e1;
+        margin-left: 8px;
+    }
+
+        .history-item:last-child {
+            border-left: none;
+            padding-bottom: 0;
+        }
+
+    .history-dot {
+        position: absolute;
+        left: -7px;
+        top: 0;
+        width: 12px;
+        height: 12px;
+        background: #0d6efd;
+        border-radius: 50%;
+    }
+
+    .history-title {
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .history-meta {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-top: 3px;
+    }
+
     .btn-dark-custom {
         background: #0d6efd;
         border: 1px solid #0d6efd;
@@ -83,11 +170,27 @@
         padding: 10px 18px;
         text-decoration: none;
         transition: 0.2s ease;
+        display: inline-block;
     }
 
         .btn-dark-custom:hover {
             background: #0b5ed7;
             border-color: #0b5ed7;
+        }
+
+    .btn-outline-custom {
+        background: white;
+        border: 1px solid #0d6efd;
+        color: #0d6efd !important;
+        border-radius: 12px;
+        padding: 10px 18px;
+        text-decoration: none;
+        transition: 0.2s ease;
+        display: inline-block;
+    }
+
+        .btn-outline-custom:hover {
+            background: #eff6ff;
         }
 
     .filter-box,
@@ -113,11 +216,11 @@
 
     h1,
     h4,
+    h5,
     p,
     strong {
         color: #1f2937;
     }
-
 </style>
 
 
@@ -128,7 +231,7 @@
 
         <div class="card-dark">
 
-            <!-- Header -->
+            <!-- HEADER -->
             <div class="d-flex justify-content-between align-items-center mb-4">
 
                 <div>
@@ -138,7 +241,7 @@
                     </h1>
 
                     <p class="text-muted">
-                        Tests returned after verification requiring technician review.
+                        Results returned after verification requiring technician review and possible recapture.
                     </p>
 
                 </div>
@@ -153,17 +256,18 @@
 
             </div>
 
-            <!-- Filters -->
+
+            <!-- FILTERS -->
             <div class="row g-3 mb-4">
 
-                <div class="col-md-3">
+                <div class="col-md-4">
 
                     <input class="form-control filter-box"
                            placeholder="Search request number..." />
 
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-4">
 
                     <select class="form-select filter-box">
 
@@ -175,14 +279,28 @@
 
                 </div>
 
+                <div class="col-md-4">
+
+                    <select class="form-select filter-box">
+
+                        <option>All Review Statuses</option>
+                        <option>To Be Reviewed</option>
+                        <option>Returned For Correction</option>
+                        <option>Resubmitted</option>
+
+                    </select>
+
+                </div>
+
             </div>
 
-            <!-- Review Item -->
+
+            <!-- REVIEW ITEM -->
             <div class="review-card">
 
                 <div class="d-flex justify-content-between align-items-start">
 
-                    <div>
+                    <div class="flex-grow-1">
 
                         <h4>
                             REQ-2026-00124
@@ -199,8 +317,8 @@
                         </p>
 
                         <p class="mb-2">
-                            <strong>Returned By:</strong>
-                            Technician M. Jacobs
+                            <strong>Technician:</strong>
+                            Technician A. Smith
                         </p>
 
                         <span class="status-badge badge-review">
@@ -215,23 +333,284 @@
                             Returned For Correction
                         </span>
 
-                        <!-- Verification Note -->
+
+                        <!-- ORIGINAL RESULTS -->
+                        <div class="original-result">
+
+                            <h5 class="mb-3">
+                                Original Results
+                            </h5>
+
+
+                            <!-- HAEMOGLOBIN -->
+                            <div class="result-row">
+
+                                <div class="row">
+
+                                    <div class="col-md-3">
+
+                                        <div class="result-name">
+                                            Haemoglobin
+                                        </div>
+
+                                        <div class="result-value">
+                                            8.7 g/dL
+                                        </div>
+
+                                    </div>
+
+                                    <div class="col-md-3">
+
+                                        <div class="normal-range">
+                                            Normal: 12.0 – 16.0 g/dL
+                                        </div>
+
+                                    </div>
+
+                                    <div class="col-md-6">
+
+                                        <div class="technician-note">
+
+                                            <strong>
+                                                Technician Notes:
+                                            </strong>
+
+                                            Low haemoglobin observed.
+                                            Sample processed without issues.
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- WCC -->
+                            <div class="result-row">
+
+                                <div class="row">
+
+                                    <div class="col-md-3">
+
+                                        <div class="result-name">
+                                            White Cell Count
+                                        </div>
+
+                                        <div class="result-value">
+                                            14.2 x10⁹/L
+                                        </div>
+
+                                    </div>
+
+                                    <div class="col-md-3">
+
+                                        <div class="normal-range">
+                                            Normal: 4.0 – 11.0 x10⁹/L
+                                        </div>
+
+                                    </div>
+
+                                    <div class="col-md-6">
+
+                                        <div class="technician-note">
+
+                                            <strong>
+                                                Technician Notes:
+                                            </strong>
+
+                                            Elevated WCC recorded.
+                                            Result checked against analyser output.
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- PLATELETS -->
+                            <div class="result-row">
+
+                                <div class="row">
+
+                                    <div class="col-md-3">
+
+                                        <div class="result-name">
+                                            Platelets
+                                        </div>
+
+                                        <div class="result-value">
+                                            455 x10⁹/L
+                                        </div>
+
+                                    </div>
+
+                                    <div class="col-md-3">
+
+                                        <div class="normal-range">
+                                            Normal: 150 – 450 x10⁹/L
+                                        </div>
+
+                                    </div>
+
+                                    <div class="col-md-6">
+
+                                        <div class="technician-note">
+
+                                            <strong>
+                                                Technician Notes:
+                                            </strong>
+
+                                            Platelet count slightly above
+                                            expected range.
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- VERIFIER NOTES -->
                         <div class="note-box">
 
                             <strong>
-                                Verification Note:
+                                Notes From Verifying Technician
                             </strong>
 
                             <p class="mb-0 mt-2">
+
                                 White Cell Count appears inconsistent with
                                 previous patient history. Please confirm values.
+
                             </p>
+
+                            <small class="text-muted">
+                                Verified by Technician M. Jacobs
+                            </small>
+
+                        </div>
+
+
+                        <!-- FULL HISTORY -->
+                        <div class="history">
+
+                            <h5 class="mb-4">
+                                Verification History
+                            </h5>
+
+
+                            <div class="history-item">
+
+                                <div class="history-dot"></div>
+
+                                <div class="history-title">
+                                    Results Captured
+                                </div>
+
+                                <div class="history-meta">
+                                    Technician A. Smith • 20 Aug 2026 • 09:42
+                                </div>
+
+                                <p class="mb-0 mt-2">
+                                    Original test results captured and submitted for verification.
+                                </p>
+
+                            </div>
+
+
+                            <div class="history-item">
+
+                                <div class="history-dot"></div>
+
+                                <div class="history-title">
+                                    Submitted For Verification
+                                </div>
+
+                                <div class="history-meta">
+                                    Technician A. Smith • 20 Aug 2026 • 10:05
+                                </div>
+
+                                <p class="mb-0 mt-2">
+                                    Results submitted to the verification queue.
+                                </p>
+
+                            </div>
+
+
+                            <div class="history-item">
+
+                                <div class="history-dot"></div>
+
+                                <div class="history-title">
+                                    Verification Rejected
+                                </div>
+
+                                <div class="history-meta">
+                                    Technician M. Jacobs • 20 Aug 2026 • 10:18
+                                </div>
+
+                                <p class="mb-0 mt-2">
+                                    White Cell Count requires confirmation.
+                                </p>
+
+                            </div>
+
+
+                            <div class="history-item">
+
+                                <div class="history-dot"></div>
+
+                                <div class="history-title">
+                                    Returned To Technician
+                                </div>
+
+                                <div class="history-meta">
+                                    System • 20 Aug 2026 • 10:19
+                                </div>
+
+                                <p class="mb-0 mt-2">
+                                    Results returned for correction and recapture.
+                                </p>
+
+                            </div>
+
+
+                            <div class="history-item">
+
+                                <div class="history-dot"></div>
+
+                                <div class="history-title">
+                                    Awaiting Recapture
+                                </div>
+
+                                <div class="history-meta">
+                                    Current Status
+                                </div>
+
+                                <p class="mb-0 mt-2">
+                                    Technician must review the original values,
+                                    make corrections where necessary and provide
+                                    recapture notes.
+                                </p>
+
+                            </div>
 
                         </div>
 
                     </div>
 
-                    <div class="text-end">
+
+                    <!-- ACTIONS -->
+                    <div class="text-end ms-4">
 
                         <p class="text-danger fw-bold">
                             Requires technician review
@@ -239,17 +618,20 @@
 
                         <a asp-controller="LabTechnician"
                            asp-action="CaptureResults"
-                           class="btn-dark-custom me-2">
+                           class="btn-dark-custom mb-2">
 
-                            Review Result
+                            <i class="fa-solid fa-rotate"></i>
+                            Recapture Results
 
                         </a>
 
+                        <br />
+
                         <a asp-controller="LabTechnician"
                            asp-action="TestDetail"
-                           class="btn-dark-custom">
+                           class="btn-outline-custom">
 
-                            View Detail
+                            View Details
 
                         </a>
 
@@ -259,12 +641,13 @@
 
             </div>
 
-            <!-- Review Item -->
+
+            <!-- SECOND REVIEW ITEM -->
             <div class="review-card">
 
                 <div class="d-flex justify-content-between align-items-start">
 
-                    <div>
+                    <div class="flex-grow-1">
 
                         <h4>
                             REQ-2026-00131
@@ -280,53 +663,137 @@
                             PT / INR
                         </p>
 
-                        <p class="mb-2">
-                            <strong>Returned By:</strong>
-                            Technician A. Smith
-                        </p>
-
                         <span class="status-badge badge-review">
                             To Be Reviewed
                         </span>
 
-                        <span class="status-badge badge-returned">
-                            Returned For Correction
+                        <span class="status-badge badge-resubmitted">
+                            Resubmitted
                         </span>
+
 
                         <div class="note-box">
 
                             <strong>
-                                Verification Note:
+                                Notes From Verifying Technician
                             </strong>
 
                             <p class="mb-0 mt-2">
-                                INR result formatting incorrect.
-                                Please verify decimal placement.
+
+                                INR result formatting was incorrect.
+                                Please verify decimal placement before resubmitting.
+
                             </p>
+
+                            <small class="text-muted">
+                                Verified by Technician M. Jacobs
+                            </small>
+
+                        </div>
+
+
+                        <!-- HISTORY -->
+                        <div class="history">
+
+                            <h5 class="mb-4">
+                                Verification History
+                            </h5>
+
+
+                            <div class="history-item">
+
+                                <div class="history-dot"></div>
+
+                                <div class="history-title">
+                                    Original Results Submitted
+                                </div>
+
+                                <div class="history-meta">
+                                    Technician A. Smith
+                                </div>
+
+                            </div>
+
+
+                            <div class="history-item">
+
+                                <div class="history-dot"></div>
+
+                                <div class="history-title">
+                                    Verification Rejected
+                                </div>
+
+                                <div class="history-meta">
+                                    Technician M. Jacobs
+                                </div>
+
+                                <p class="mb-0 mt-2">
+                                    Decimal placement requires correction.
+                                </p>
+
+                            </div>
+
+
+                            <div class="history-item">
+
+                                <div class="history-dot"></div>
+
+                                <div class="history-title">
+                                    Results Recaptured
+                                </div>
+
+                                <div class="history-meta">
+                                    Technician A. Smith
+                                </div>
+
+                                <p class="mb-0 mt-2">
+                                    Result corrected and resubmitted for verification.
+                                </p>
+
+                            </div>
+
+
+                            <div class="history-item">
+
+                                <div class="history-dot"></div>
+
+                                <div class="history-title">
+                                    Resubmitted For Verification
+                                </div>
+
+                                <div class="history-meta">
+                                    Current Status
+                                </div>
+
+                            </div>
 
                         </div>
 
                     </div>
 
-                    <div class="text-end">
+
+                    <div class="text-end ms-4">
 
                         <p class="text-warning fw-bold">
-                            Awaiting technician correction
+                            Awaiting technician review
                         </p>
 
                         <a asp-controller="LabTechnician"
                            asp-action="CaptureResults"
-                           class="btn-dark-custom me-2">
+                           class="btn-dark-custom mb-2">
 
-                            Review Result
+                            <i class="fa-solid fa-rotate"></i>
+                            Recapture Results
 
                         </a>
 
+                        <br />
+
                         <a asp-controller="LabTechnician"
                            asp-action="TestDetail"
-                           class="btn-dark-custom">
+                           class="btn-outline-custom">
 
-                            View Detail
+                            View Details
 
                         </a>
 

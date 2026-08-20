@@ -53,7 +53,7 @@
         }
 
     textarea.form-control {
-        resize: none;
+        resize: vertical;
     }
 
     .btn-dark-custom {
@@ -64,11 +64,27 @@
         padding: 10px 18px;
         text-decoration: none;
         transition: 0.2s ease;
+        display: inline-block;
     }
 
         .btn-dark-custom:hover {
             background: #0b5ed7;
             border-color: #0b5ed7;
+        }
+
+    .btn-outline-custom {
+        background: white;
+        border: 1px solid #0d6efd;
+        color: #0d6efd !important;
+        border-radius: 12px;
+        padding: 10px 18px;
+        text-decoration: none;
+        transition: 0.2s ease;
+        display: inline-block;
+    }
+
+        .btn-outline-custom:hover {
+            background: #eef5ff;
         }
 
     .abnormal {
@@ -112,6 +128,81 @@
         margin-bottom: 6px;
     }
 
+    .patient-age-box {
+        background: #ffffff;
+        border: 1px solid #dbe3ec;
+        border-radius: 12px;
+        padding: 14px 16px;
+    }
+
+    .patient-age-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+
+    .patient-age-value {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .result-card {
+        background: #ffffff;
+        border: 1px solid #dbe3ec;
+        border-radius: 14px;
+        padding: 20px;
+        height: 100%;
+    }
+
+    .result-card-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 15px;
+    }
+
+    .normal-range {
+        background: #f1f5f9;
+        border-radius: 8px;
+        padding: 9px 12px;
+        margin-top: 8px;
+        font-size: 0.82rem;
+        color: #475569;
+    }
+
+        .normal-range strong {
+            color: #334155;
+        }
+
+    .technician-note {
+        margin-top: 15px;
+    }
+
+        .technician-note label {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+    .assigned-test {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1e40af;
+        border-radius: 10px;
+        padding: 12px 15px;
+        margin-top: 15px;
+    }
+
+    .locked-test {
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 12px 15px;
+        color: #64748b;
+        font-size: 0.85rem;
+    }
 </style>
 
 
@@ -132,20 +223,22 @@
                     </h1>
 
                     <p class="text-muted">
-                        Record laboratory test results and technician notes.
+                        Record the assigned laboratory test results and technician notes.
                     </p>
 
                 </div>
 
                 <a asp-controller="Home"
                    asp-action="LabTechnicianDashboard"
-                   class="btn-dark-custom">
+                   class="btn-outline-custom">
 
-                    ← Dashboard
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Dashboard
 
                 </a>
 
             </div>
+
 
             <!-- Test Information -->
             <div class="info-box">
@@ -154,15 +247,56 @@
                     REQ-2026-00124
                 </h4>
 
-                <p>
-                    <strong>Patient:</strong>
-                    Baloyi, Thabo
-                </p>
+                <div class="row g-3 mt-1">
 
-                <p>
-                    <strong>Test Type:</strong>
-                    Full Blood Count + Differential
-                </p>
+                    <div class="col-md-4">
+
+                        <div class="patient-age-box">
+
+                            <p class="mb-1">
+                                <strong>Patient:</strong>
+                            </p>
+
+                            <p>
+                                Baloyi, Thabo
+                            </p>
+                        </div>
+
+                        </div>
+
+                        <div class="col-md-4">
+
+                            <div class="patient-age-box">
+
+                                <p class="mb-1">
+                                    <strong>Test Request:</strong>
+                                </p>
+
+                                <p>
+                                    Full Blood Count + Differential
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-4">
+
+                            <div class="patient-age-box">
+
+                                <div class="patient-age-label">
+                                    Patient Age
+                                </div>
+
+                                <div class="patient-age-value">
+                                    42 years
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
 
                 <span class="status-badge badge-processing">
                     In Progress
@@ -172,7 +306,21 @@
                     STAT
                 </span>
 
+                <div class="assigned-test">
+
+                    <i class="fa-solid fa-flask me-2"></i>
+
+                    <strong>Assigned Test Type:</strong>
+                    Haematology / Full Blood Count
+
+                    <div class="mt-1">
+                        This technician may capture results only for the test type assigned to them.
+                    </div>
+
+                </div>
+
             </div>
+
 
             <!-- Clinical Information -->
             <div class="info-box">
@@ -181,27 +329,52 @@
                     Clinical Information
                 </h4>
 
-                <p>
-                    <strong>Medical Conditions:</strong>
-                    Hypertension
-                </p>
+                <div class="row g-3">
 
-                <p>
-                    <strong>Allergies:</strong>
-                    Penicillin
-                </p>
+                    <div class="col-md-4">
 
-                <p>
-                    <strong>Medication:</strong>
-                    Amlodipine
-                </p>
+                        <strong>Medical Conditions</strong>
 
-                <p>
-                    <strong>Doctor Notes:</strong>
-                    Rule out severe infection.
-                </p>
+                        <p class="mt-1">
+                            Hypertension
+                        </p>
+
+                    </div>
+
+                    <div class="col-md-4">
+
+                        <strong>Allergies</strong>
+
+                        <p class="mt-1">
+                            Penicillin
+                        </p>
+
+                    </div>
+
+                    <div class="col-md-4">
+
+                        <strong>Medication</strong>
+
+                        <p class="mt-1">
+                            Amlodipine
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="mt-3">
+
+                    <strong>Clinical Notes from Doctor</strong>
+
+                    <p class="mt-1">
+                        Rule out severe infection.
+                    </p>
+
+                </div>
 
             </div>
+
 
             <!-- Result Entry -->
             <div class="info-box">
@@ -210,50 +383,147 @@
                     Result Values
                 </h4>
 
+                <p class="text-muted mb-4">
+                    Enter the result for each assigned test and record technician notes separately.
+                </p>
+
                 <div class="row g-3">
 
+
+                    <!-- HAEMOGLOBIN -->
                     <div class="col-md-4">
 
-                        <label class="form-label">
-                            Haemoglobin
-                        </label>
+                        <div class="result-card">
 
-                        <input class="form-control"
-                               value="8.7 g/dL" />
+                            <div class="result-card-title">
+                                Haemoglobin
+                            </div>
 
-                        <small class="abnormal">
-                            Abnormal Low
-                        </small>
+                            <label class="form-label">
+                                Result
+                            </label>
+
+                            <input class="form-control"
+                                   value="8.7"
+                                   placeholder="Enter result" />
+
+                            <div class="normal-range">
+
+                                <strong>Normal Range:</strong>
+                                12.0 – 16.0 g/dL
+
+                            </div>
+
+                            <small class="abnormal d-block mt-2">
+                                Abnormal Low
+                            </small>
+
+
+                            <div class="technician-note">
+
+                                <label>
+                                    Technician Notes
+                                </label>
+
+                                <textarea class="form-control"
+                                          rows="4"
+                                          placeholder="Enter notes for Haemoglobin..."></textarea>
+
+                            </div>
+
+                        </div>
 
                     </div>
 
+
+                    <!-- WHITE CELL COUNT -->
                     <div class="col-md-4">
 
-                        <label class="form-label">
-                            White Cell Count
-                        </label>
+                        <div class="result-card">
 
-                        <input class="form-control"
-                               value="14.2 x10⁹/L" />
+                            <div class="result-card-title">
+                                White Cell Count (WCC)
+                            </div>
 
-                        <small class="abnormal">
-                            Abnormal High
-                        </small>
+                            <label class="form-label">
+                                Result
+                            </label>
+
+                            <input class="form-control"
+                                   value="14.2"
+                                   placeholder="Enter result" />
+
+                            <div class="normal-range">
+
+                                <strong>Normal Range:</strong>
+                                4.0 – 11.0 x10⁹/L
+
+                            </div>
+
+                            <small class="abnormal d-block mt-2">
+                                Abnormal High
+                            </small>
+
+
+                            <div class="technician-note">
+
+                                <label>
+                                    Technician Notes
+                                </label>
+
+                                <textarea class="form-control"
+                                          rows="4"
+                                          placeholder="Enter notes for White Cell Count..."></textarea>
+
+                            </div>
+
+                        </div>
 
                     </div>
 
+
+                    <!-- PLATELETS -->
                     <div class="col-md-4">
 
-                        <label class="form-label">
-                            Platelets
-                        </label>
+                        <div class="result-card">
 
-                        <input class="form-control"
-                               value="455 x10⁹/L" />
+                            <div class="result-card-title">
+                                Platelets
+                            </div>
 
-                        <small class="abnormal">
-                            Abnormal High
-                        </small>
+                            <label class="form-label">
+                                Result
+                            </label>
+
+                            <input class="form-control"
+                                   value="455"
+                                   placeholder="Enter result" />
+
+                            <div class="normal-range">
+
+                                <strong>Normal Range:</strong>
+                                150 – 450 x10⁹/L
+
+                            </div>
+
+                            <small class="abnormal d-block mt-2">
+                                Abnormal High
+                            </small>
+
+
+                            <div class="technician-note">
+
+                                <label>
+                                    Technician Notes
+                                </label>
+
+                                <textarea class="form-control"
+                                          rows="4"
+                                          placeholder="Enter notes for Platelets..."></textarea>
+
+                            </div>
+
+                        </div>
 
                     </div>
 
@@ -261,18 +531,25 @@
 
             </div>
 
-            <!-- Notes -->
+
+            <!-- Test Assignment Reminder -->
             <div class="info-box">
 
                 <h4 class="section-title">
-                    Technician Notes
+                    Test Assignment
                 </h4>
 
-                <textarea class="form-control"
-                          rows="5"
-                          placeholder="Enter technician observations..."></textarea>
+                <div class="locked-test">
+
+                    <i class="fa-solid fa-lock me-2"></i>
+
+                    This screen represents the assigned test for the current laboratory technician.
+                    Other test types on the same request should remain unavailable for editing.
+
+                </div>
 
             </div>
+
 
             <!-- Actions -->
             <div class="mt-4">
@@ -281,19 +558,21 @@
                    asp-action="VerificationQueue"
                    class="btn-dark-custom me-2">
 
+                    <i class="fa-solid fa-check"></i>
                     Save & Complete Test
 
                 </a>
 
                 <button class="btn-dark-custom me-2">
 
+                    <i class="fa-solid fa-flag"></i>
                     Flag Abnormal Result
 
                 </button>
 
                 <a asp-controller="LabTechnician"
                    asp-action="TestDetail"
-                   class="btn-dark-custom">
+                   class="btn-outline-custom">
 
                     View Test Detail
 

@@ -1,6 +1,6 @@
 ﻿@{
     Layout = "~/Views/Shared/_LabTechLayout.cshtml";
-    ViewData["Title"] = "Test Detail";
+    ViewData["Title"] = "Sample Information";
 }
 
 <link rel="stylesheet"
@@ -9,13 +9,12 @@
 <link href="~/css/dashboardstyles.css" rel="stylesheet" />
 
 <style>
-
     .page-container {
         max-width: 1250px;
         margin: 40px auto;
     }
 
-    .card-dark {
+    .card-main {
         background: #ffffff;
         border-radius: 20px;
         padding: 30px;
@@ -23,346 +22,470 @@
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
 
-    .info-box {
-        background: #f8fafc;
-        border-radius: 16px;
-        padding: 22px;
-        margin-bottom: 20px;
-        height: 100%;
-        border: 1px solid #e2e8f0;
-        transition: 0.2s ease;
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 25px;
     }
 
-        .info-box:hover {
-            background: #f1f5f9;
+        .page-header h1 {
+            color: #1f2937;
+            font-size: 2rem;
+            margin-bottom: 6px;
         }
+
+        .page-header p {
+            color: #6b7280;
+            margin: 0;
+        }
+
+    .section-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        color: #1f2937;
+        font-size: 1.15rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        color: #374151;
+        font-weight: 600;
+        margin-bottom: 7px;
+    }
+
+    .form-control {
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 11px 13px;
+        min-height: 44px;
+    }
+
+        .form-control:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.12);
+        }
+
+    .readonly-field {
+        background: #e9eef5 !important;
+        color: #374151;
+        cursor: not-allowed;
+    }
+
+    .field-note {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-top: 6px;
+    }
+
+    .info-box {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 16px;
+        height: 100%;
+    }
 
     .info-label {
         color: #6b7280;
-        font-size: 0.85rem;
+        font-size: 0.78rem;
         text-transform: uppercase;
+        letter-spacing: 0.4px;
         margin-bottom: 5px;
-        letter-spacing: 0.5px;
     }
 
     .info-value {
-        font-size: 1.15rem;
-        font-weight: 600;
         color: #1f2937;
-    }
-
-    .status-badge {
-        display: inline-block;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        margin-right: 8px;
         font-weight: 600;
     }
 
-    .badge-urgent {
-        background: #f4a261;
-        color: black;
+    .priority-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        background: #fee2e2;
+        color: #b91c1c;
     }
 
-    .badge-received {
-        background: #2563eb;
-        color: white;
+    .test-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
     }
 
-    .badge-overdue {
-        background: #dc3545;
-        color: white;
+        .test-list li {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+            .test-list li:last-child {
+                margin-bottom: 0;
+            }
+
+        .test-list i {
+            color: #0d6efd;
+            margin-right: 8px;
+        }
+
+    .workflow-note {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1e40af;
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-top: 10px;
     }
 
-    .btn-dark-custom {
+        .workflow-note i {
+            margin-right: 8px;
+        }
+
+    .action-row {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 25px;
+    }
+
+    .btn-primary-custom {
         background: #0d6efd;
         border: 1px solid #0d6efd;
         color: white !important;
-        border-radius: 12px;
-        padding: 10px 20px;
+        border-radius: 10px;
+        padding: 11px 20px;
         text-decoration: none;
+        font-weight: 600;
         transition: 0.2s ease;
     }
 
-        .btn-dark-custom:hover {
+        .btn-primary-custom:hover {
             background: #0b5ed7;
             border-color: #0b5ed7;
         }
 
-    .progress {
-        height: 26px;
-        background: #e5e7eb;
-        border-radius: 14px;
-        overflow: hidden;
-        border: 1px solid #d1d5db;
+    .btn-secondary-custom {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        color: #374151 !important;
+        border-radius: 10px;
+        padding: 11px 20px;
+        text-decoration: none;
+        font-weight: 600;
     }
 
-    .timeline-box {
-        background: #f8fafc;
-        border-radius: 16px;
-        padding: 20px;
-        border: 1px solid #e2e8f0;
-    }
-
-    .timeline-item {
-        padding: 14px 0;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-        .timeline-item:last-child {
-            border-bottom: none;
+        .btn-secondary-custom:hover {
+            background: #f1f5f9;
         }
-
-    .timeline-time {
-        color: #2563eb;
-        font-weight: 700;
-        width: 90px;
-        display: inline-block;
-    }
-
-    .text-muted {
-        color: #6b7280 !important;
-    }
-
-    h1,
-    h4 {
-        color: #1f2937;
-    }
-
 </style>
 
 <div class="page-container">
 
-    <div class="card-dark">
+    <div class="card-main">
 
-        <!-- Navigation -->
-        <a asp-controller="LabTechnician"
-           asp-action="StatUrgent"
-           class="text-info text-decoration-none">
+        <!-- HEADER -->
+        <div class="page-header">
 
-            ← Back to STAT Board
+            <div>
+                <h1>Sample Information</h1>
 
-        </a>
-
-        <!-- Header -->
-        <h1 class="mt-3">
-            NMB-2026-04-0862 — FBC
-        </h1>
-
-        <p class="text-muted">
-            Urgent • General Medicine • Dr. F. Abrahams
-        </p>
-
-        <!-- Status -->
-        <div class="mb-4">
-
-            <span class="status-badge badge-urgent">
-                Urgent
-            </span>
-
-            <span class="status-badge badge-received">
-                Received
-            </span>
-
-            <span class="status-badge badge-overdue">
-                TAT Breached
-            </span>
-
-        </div>
-
-        <!-- Information Grid -->
-        <div class="row">
-
-            <div class="col-md-4">
-
-                <div class="info-box">
-
-                    <div class="info-label">
-                        Patient
-                    </div>
-
-                    <div class="info-value">
-                        Hendricks, Ayesha
-                    </div>
-
-                </div>
-
+                <p>
+                    Review the sample information before accepting the sample.
+                </p>
             </div>
-
-            <div class="col-md-4">
-
-                <div class="info-box">
-
-                    <div class="info-label">
-                        Age
-                    </div>
-
-                    <div class="info-value">
-                        30 Years
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="col-md-4">
-
-                <div class="info-box">
-
-                    <div class="info-label">
-                        Ward
-                    </div>
-
-                    <div class="info-value">
-                        General Medicine
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="col-md-4">
-
-                <div class="info-box">
-
-                    <div class="info-label">
-                        Requested At
-                    </div>
-
-                    <div class="info-value">
-                        09:20
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="col-md-4">
-
-                <div class="info-box">
-
-                    <div class="info-label">
-                        TAT Target
-                    </div>
-
-                    <div class="info-value">
-                        90 min
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="col-md-4">
-
-                <div class="info-box">
-
-                    <div class="info-label">
-                        Elapsed
-                    </div>
-
-                    <div class="info-value text-danger">
-                        95 min
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- Progress -->
-        <h4 class="mt-4">
-            TAT Progress
-        </h4>
-
-        <div class="progress mb-4">
-
-            <div class="progress-bar bg-danger"
-                 role="progressbar"
-                 style="width: 100%;">
-
-                95m / 90m
-
-            </div>
-
-        </div>
-
-        <!-- Timeline -->
-        <h4 class="mb-3">
-            Process Timeline
-        </h4>
-
-        <div class="timeline-box">
-
-            <div class="timeline-item">
-
-                <span class="timeline-time">
-                    09:20
-                </span>
-
-                Urgent request created
-
-            </div>
-
-            <div class="timeline-item">
-
-                <span class="timeline-time">
-                    09:45
-                </span>
-
-                Sample collected
-
-            </div>
-
-            <div class="timeline-item">
-
-                <span class="timeline-time">
-                    10:10
-                </span>
-
-                Sample received and queued
-
-            </div>
-
-            <div class="timeline-item">
-
-                <span class="timeline-time">
-                    10:42
-                </span>
-
-                Assigned to laboratory technician
-
-            </div>
-
-        </div>
-
-        <!-- Actions -->
-        <div class="mt-4">
 
             <a asp-controller="LabTechnician"
-               asp-action="Escalations"
-               class="btn-dark-custom me-2">
+               asp-action="ReceiveSamples"
+               class="btn-secondary-custom">
+                <i class="fa-solid fa-arrow-left"></i>
+                Back to Samples
+            </a>
 
-                Escalate
+        </div>
 
+
+        <!-- SAMPLE IDENTIFICATION -->
+        <div class="section-card">
+
+            <div class="section-title">
+                <i class="fa-solid fa-vial"></i>
+                Sample Reception Information
+            </div>
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+
+                    <label class="form-label">
+                        Request Number
+                    </label>
+
+                    <input type="text"
+                           class="form-control readonly-field"
+                           value="REQ-2026-00124"
+                           readonly />
+
+                    <div class="field-note">
+                        Request number cannot be edited.
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-6">
+
+                    <label class="form-label">
+                        Sample Barcode
+                    </label>
+
+                    <input type="text"
+                           class="form-control"
+                           value="BC-889213" />
+
+                    <div class="field-note">
+                        Only the sample barcode may be edited.
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-6">
+
+                    <label class="form-label">
+                        Sample Type
+                    </label>
+
+                    <input type="text"
+                           class="form-control readonly-field"
+                           value="Whole Blood"
+                           readonly />
+
+                </div>
+
+
+                <div class="col-md-6">
+
+                    <label class="form-label">
+                        Technician Receiving Sample
+                    </label>
+
+                    <input type="text"
+                           class="form-control readonly-field"
+                           value="Keenan James"
+                           readonly />
+
+                </div>
+
+
+                <div class="col-md-6">
+
+                    <label class="form-label">
+                        Date Received
+                    </label>
+
+                    <input type="date"
+                           class="form-control"
+                           value="2026-08-20"
+                           readonly/>
+
+                </div>
+
+
+                <div class="col-md-6">
+
+                    <label class="form-label">
+                        Time Received
+                    </label>
+
+                    <input type="time"
+                           class="form-control"
+                           value="10:10" 
+                           readonly/>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- PATIENT INFORMATION -->
+        <div class="section-card">
+
+            <div class="section-title">
+                <i class="fa-solid fa-user"></i>
+                Patient Information
+            </div>
+
+            <div class="row g-3">
+
+                <div class="col-md-4">
+
+                    <div class="info-box">
+
+                        <div class="info-label">
+                            Patient
+                        </div>
+
+                        <div class="info-value">
+                            Baloyi, Thabo
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <div class="info-box">
+
+                        <div class="info-label">
+                            Doctor
+                        </div>
+
+                        <div class="info-value">
+                            Dr. F. Abrahams
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <div class="info-box">
+
+                        <div class="info-label">
+                            Priority
+                        </div>
+
+                        <div class="info-value">
+                            <span class="priority-badge">
+                                STAT
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- REQUEST SUMMARY -->
+        <div class="section-card">
+
+            <div class="section-title">
+                <i class="fa-solid fa-clipboard-list"></i>
+                Request Summary
+            </div>
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+
+                    <div class="info-box">
+
+                        <div class="info-label">
+                            Request Number
+                        </div>
+
+                        <div class="info-value">
+                            REQ-2026-00124
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-6">
+
+                    <div class="info-box">
+
+                        <div class="info-label">
+                            Patient
+                        </div>
+
+                        <div class="info-value">
+                            Baloyi, Thabo
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="mt-4">
+
+                <div class="info-label mb-2">
+                    Requested Tests
+                </div>
+
+                <ul class="test-list">
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        FBC + Differential
+                    </li>
+
+                    <li>
+                        <i class="fa-solid fa-check"></i>
+                        ESR
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+
+        <!-- WORKFLOW INFORMATION -->
+        <div class="workflow-note">
+
+            <i class="fa-solid fa-circle-info"></i>
+
+            After the sample is accepted, it will move to
+            <strong>Awaiting Selection</strong>, where the laboratory
+            technician can view the required consumables, sample barcode,
+            patient information and clinical information before starting
+            the assigned test.
+
+        </div>
+
+
+        <!-- ACTIONS -->
+        <div class="action-row">
+
+            <a asp-controller="LabTechnician"
+               asp-action="ReceiveSamples"
+               class="btn-secondary-custom">
+                Cancel
             </a>
 
             <a asp-controller="LabTechnician"
-               asp-action="Reports"
-               class="btn-dark-custom me-2">
-
-                View Report
-
-            </a>
-
-            <a asp-controller="LabTechnician"
-               asp-action="CaptureResults"
-               class="btn-dark-custom">
-
-                Capture Results
-
+               asp-action="AwaitingSelection"
+               class="btn-primary-custom">
+                <i class="fa-solid fa-check"></i>
+                Accept Sample
             </a>
 
         </div>
