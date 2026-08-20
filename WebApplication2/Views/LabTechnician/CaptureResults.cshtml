@@ -3,6 +3,8 @@
     ViewData["Title"] = "Capture Results";
 }
 
+@model WebApplication2.Models.CaptureResultsViewModel
+
 <link rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
@@ -203,6 +205,22 @@
         color: #64748b;
         font-size: 0.85rem;
     }
+
+    .normal {
+        color: #198754;
+        font-weight: bold;
+    }
+
+    .abnormal {
+        color: #dc3545;
+        font-weight: bold;
+    }
+
+    .status-neutral {
+        color: #64748b;
+        font-weight: 600;
+    }
+
 </style>
 
 
@@ -262,41 +280,41 @@
                             </p>
                         </div>
 
+                    </div>
+
+                    <div class="col-md-4">
+
+                        <div class="patient-age-box">
+
+                            <p class="mb-1">
+                                <strong>Test Request:</strong>
+                            </p>
+
+                            <p>
+                                Full Blood Count + Differential
+                            </p>
+
                         </div>
 
-                        <div class="col-md-4">
+                    </div>
 
-                            <div class="patient-age-box">
+                    <div class="col-md-4">
 
-                                <p class="mb-1">
-                                    <strong>Test Request:</strong>
-                                </p>
+                        <div class="patient-age-box">
 
-                                <p>
-                                    Full Blood Count + Differential
-                                </p>
-
+                            <div class="patient-age-label">
+                                Patient Age
                             </div>
 
-                        </div>
-
-                        <div class="col-md-4">
-
-                            <div class="patient-age-box">
-
-                                <div class="patient-age-label">
-                                    Patient Age
-                                </div>
-
-                                <div class="patient-age-value">
-                                    42 years
-                                </div>
-
+                            <div class="patient-age-value">
+                                42 years
                             </div>
 
                         </div>
 
                     </div>
+
+                </div>
 
                 <span class="status-badge badge-processing">
                     In Progress
@@ -376,160 +394,257 @@
             </div>
 
 
-            <!-- Result Entry -->
-            <div class="info-box">
+          <!-- Result Entry -->
+<div class="info-box">
 
-                <h4 class="section-title">
-                    Result Values
-                </h4>
+    <h4 class="section-title">
+        Result Values
+    </h4>
 
-                <p class="text-muted mb-4">
-                    Enter the result for each assigned test and record technician notes separately.
-                </p>
+    <p class="text-muted mb-4">
+        Enter the result for each assigned test. The result status will be evaluated automatically against the normal range.
+    </p>
 
-                <div class="row g-3">
+    <div class="row g-3">
 
+        <!-- HAEMOGLOBIN -->
+        <div class="col-md-4">
 
-                    <!-- HAEMOGLOBIN -->
-                    <div class="col-md-4">
+            <div class="result-card">
 
-                        <div class="result-card">
+                <div class="result-card-title">
+                    Haemoglobin
+                </div>
 
-                            <div class="result-card-title">
-                                Haemoglobin
-                            </div>
+                <label class="form-label">
+                    Result
+                </label>
 
-                            <label class="form-label">
-                                Result
-                            </label>
+                <input type="number"
+                       step="0.1"
+                       class="form-control result-input"
+                       asp-for="Haemoglobin"
+                       placeholder="Enter result"
+                       data-test="haemoglobin"
+                       data-min="12.0"
+                       data-max="16.0" />
 
-                            <input class="form-control"
-                                   value="8.7"
-                                   placeholder="Enter result" />
+                <div class="normal-range">
 
-                            <div class="normal-range">
+                    <strong>Normal Range:</strong>
+                    12.0 – 16.0 g/dL
 
-                                <strong>Normal Range:</strong>
-                                12.0 – 16.0 g/dL
+                </div>
 
-                            </div>
+                <small id="haemoglobin-status"
+                       class="d-block mt-2 status-neutral">
 
-                            <small class="abnormal d-block mt-2">
-                                Abnormal Low
-                            </small>
+                    Enter a result to evaluate
 
-
-                            <div class="technician-note">
-
-                                <label>
-                                    Technician Notes
-                                </label>
-
-                                <textarea class="form-control"
-                                          rows="4"
-                                          placeholder="Enter notes for Haemoglobin..."></textarea>
-
-                            </div>
-
-                        </div>
-
-                    </div>
+                </small>
 
 
-                    <!-- WHITE CELL COUNT -->
-                    <div class="col-md-4">
+                <div class="technician-note">
 
-                        <div class="result-card">
+                    <label>
+                        Technician Notes
+                    </label>
 
-                            <div class="result-card-title">
-                                White Cell Count (WCC)
-                            </div>
-
-                            <label class="form-label">
-                                Result
-                            </label>
-
-                            <input class="form-control"
-                                   value="14.2"
-                                   placeholder="Enter result" />
-
-                            <div class="normal-range">
-
-                                <strong>Normal Range:</strong>
-                                4.0 – 11.0 x10⁹/L
-
-                            </div>
-
-                            <small class="abnormal d-block mt-2">
-                                Abnormal High
-                            </small>
-
-
-                            <div class="technician-note">
-
-                                <label>
-                                    Technician Notes
-                                </label>
-
-                                <textarea class="form-control"
-                                          rows="4"
-                                          placeholder="Enter notes for White Cell Count..."></textarea>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- PLATELETS -->
-                    <div class="col-md-4">
-
-                        <div class="result-card">
-
-                            <div class="result-card-title">
-                                Platelets
-                            </div>
-
-                            <label class="form-label">
-                                Result
-                            </label>
-
-                            <input class="form-control"
-                                   value="455"
-                                   placeholder="Enter result" />
-
-                            <div class="normal-range">
-
-                                <strong>Normal Range:</strong>
-                                150 – 450 x10⁹/L
-
-                            </div>
-
-                            <small class="abnormal d-block mt-2">
-                                Abnormal High
-                            </small>
-
-
-                            <div class="technician-note">
-
-                                <label>
-                                    Technician Notes
-                                </label>
-
-                                <textarea class="form-control"
-                                          rows="4"
-                                          placeholder="Enter notes for Platelets..."></textarea>
-
-                            </div>
-
-                        </div>
-
-                    </div>
+                    <textarea class="form-control"
+                              asp-for="HaemoglobinNotes"
+                              rows="4"
+                              placeholder="Enter notes for Haemoglobin..."></textarea>
 
                 </div>
 
             </div>
+
+        </div>
+
+
+        <!-- WHITE CELL COUNT -->
+        <div class="col-md-4">
+
+            <div class="result-card">
+
+                <div class="result-card-title">
+                    White Cell Count (WCC)
+                </div>
+
+                <label class="form-label">
+                    Result
+                </label>
+
+                <input type="number"
+                       step="0.1"
+                       class="form-control result-input"
+                       asp-for="Wcc"
+                       placeholder="Enter result"
+                       data-test="wcc"
+                       data-min="4.0"
+                       data-max="11.0" />
+
+                <div class="normal-range">
+
+                    <strong>Normal Range:</strong>
+                    4.0 – 11.0 x10⁹/L
+
+                </div>
+
+                <small id="wcc-status"
+                       class="d-block mt-2 status-neutral">
+
+                    Enter a result to evaluate
+
+                </small>
+
+
+                <div class="technician-note">
+
+                    <label>
+                        Technician Notes
+                    </label>
+
+                    <textarea class="form-control"
+                              asp-for="WccNotes"
+                              rows="4"
+                              placeholder="Enter notes for White Cell Count..."></textarea>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- PLATELETS -->
+        <div class="col-md-4">
+
+            <div class="result-card">
+
+                <div class="result-card-title">
+                    Platelets
+                </div>
+
+                <label class="form-label">
+                    Result
+                </label>
+
+                <input type="number"
+                       step="1"
+                       class="form-control result-input"
+                       asp-for="Platelets"
+                       placeholder="Enter result"
+                       data-test="platelets"
+                       data-min="150"
+                       data-max="450" />
+
+                <div class="normal-range">
+
+                    <strong>Normal Range:</strong>
+                    150 – 450 x10⁹/L
+
+                </div>
+
+                <small id="platelets-status"
+                       class="d-block mt-2 status-neutral">
+
+                    Enter a result to evaluate
+
+                </small>
+
+
+                <div class="technician-note">
+
+                    <label>
+                        Technician Notes
+                    </label>
+
+                    <textarea class="form-control"
+                              asp-for="PlateletsNotes"
+                              rows="4"
+                              placeholder="Enter notes for Platelets..."></textarea>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Automatic Result Evaluation -->
+<script>
+
+    document.querySelectorAll(".result-input").forEach(function (input) {
+
+        input.addEventListener("input", function () {
+
+            const value = parseFloat(this.value);
+
+            const min = parseFloat(this.dataset.min);
+            const max = parseFloat(this.dataset.max);
+
+            const test = this.dataset.test;
+
+            const statusElement =
+                document.getElementById(test + "-status");
+
+
+            // Empty input
+            if (this.value === "" || isNaN(value)) {
+
+                statusElement.textContent =
+                    "Enter a result to evaluate";
+
+                statusElement.className =
+                    "d-block mt-2 status-neutral";
+
+                return;
+            }
+
+
+            // Below normal range
+            if (value < min) {
+
+                statusElement.textContent =
+                    "Abnormally Low";
+
+                statusElement.className =
+                    "d-block mt-2 abnormal";
+
+                return;
+            }
+
+
+            // Above normal range
+            if (value > max) {
+
+                statusElement.textContent =
+                    "Abnormally High";
+
+                statusElement.className =
+                    "d-block mt-2 abnormal";
+
+                return;
+            }
+
+
+            // Within normal range
+            statusElement.textContent =
+                "Within Normal Range";
+
+            statusElement.className =
+                "d-block mt-2 normal";
+
+        });
+
+    });
+
+</script>
 
 
             <!-- Test Assignment Reminder -->
