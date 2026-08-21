@@ -142,12 +142,10 @@
 
     <script>
             function loadSection(section) {
-                // Remove active status highlights from sidebar list views
                 document.querySelectorAll('.sidebar-link').forEach(link => {
                     link.classList.remove('active');
                 });
 
-                // Attach custom highlighting tracking on current target selection
                 const clickedElement = window.event?.currentTarget;
                 if (clickedElement) {
                     clickedElement.classList.add('active');
@@ -157,7 +155,6 @@
                     if (defaultLink) defaultLink.classList.add('active');
                 }
 
-                // Fetch dynamic subviews asynchronously
                 fetch('/Home/LoadDashboardSection?section=' + section)
                     .then(res => res.text())
                     .then(html => {
