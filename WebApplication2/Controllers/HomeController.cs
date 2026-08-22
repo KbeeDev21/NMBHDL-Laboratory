@@ -96,24 +96,24 @@ namespace WebApplication2.Controllers
 
                     // 2. Recent Test Request Datatable Rows (REQ 3 Workflow statuses)
                     var recentRequests = new List<dynamic>
-            {
-                new { RequestNumber = "REQ-2026-0042", PatientName = "Sipho Dlamini", IdNumber = "8706125432089", Tests = "Hb, Platelets", Urgency = "STAT", Status = "In Progress", TimeElapsed = "15 mins ago" },
-                new { RequestNumber = "REQ-2026-0041", PatientName = "Riaan Petersen", IdNumber = "7901044321008", Tests = "WBC, Diff Count", Urgency = "Urgent", Status = "Sample(s) Received", TimeElapsed = "45 mins ago" },
-                new { RequestNumber = "REQ-2026-0040", PatientName = "Thandiwe Nkosi", IdNumber = "9203156789012", Tests = "Peripheral Blood Film", Urgency = "Routine", Status = "Submitted", TimeElapsed = "1 hour ago" },
-                new { RequestNumber = "REQ-2026-0039", PatientName = "Ayesha Hendricks", IdNumber = "9507254012345", Tests = "INR, Coagulation", Urgency = "STAT", Status = "Completed", TimeElapsed = "2 hours ago" },
-                new { RequestNumber = "REQ-2026-0038", PatientName = "Chantel Myburgh", IdNumber = "8811235098081", Tests = "FBC Panel", Urgency = "Routine", Status = "Released by doctor", TimeElapsed = "3 hours ago" }
-            };
+                    {
+                        new { RequestNumber = "REQ-2026-0042", PatientName = "Sipho Dlamini", IdNumber = "8706125432089", Tests = "Hb, Platelets", Urgency = "STAT", Status = "In Progress", TimeElapsed = "15 mins ago" },
+                        new { RequestNumber = "REQ-2026-0041", PatientName = "Riaan Petersen", IdNumber = "7901044321008", Tests = "WBC, Diff Count", Urgency = "Urgent", Status = "Sample(s) Received", TimeElapsed = "45 mins ago" },
+                        new { RequestNumber = "REQ-2026-0040", PatientName = "Thandiwe Nkosi", IdNumber = "9203156789012", Tests = "Peripheral Blood Film", Urgency = "Routine", Status = "Submitted", TimeElapsed = "1 hour ago" },
+                        new { RequestNumber = "REQ-2026-0039", PatientName = "Ayesha Hendricks", IdNumber = "9507254012345", Tests = "INR, Coagulation", Urgency = "STAT", Status = "Completed", TimeElapsed = "2 hours ago" },
+                        new { RequestNumber = "REQ-2026-0038", PatientName = "Chantel Myburgh", IdNumber = "8811235098081", Tests = "FBC Panel", Urgency = "Routine", Status = "Released by doctor", TimeElapsed = "3 hours ago" }
+                    };
                     ViewBag.RecentRequests = recentRequests;
 
                     // 3. Abnormal Critical Alerts Feed Array (REQ 5)
                     var mockAlerts = new List<dynamic>
-            {
-                new { Surname = "Dlamini", FirstName = "Sipho", IdNumber = "8706125432089", TestName = "Hb (Hemoglobin)", ResultValue = "5.2", Unit = "g/dL", RefRange = "ref 13.5–17.5", Category = "Full Blood Count", Date = "Today, 11:42", AlertLevel = "Critical Low" },
-                new { Surname = "Petersen", FirstName = "Riaan", IdNumber = "7901044321008", TestName = "WBC (White Blood Cell)", ResultValue = "42.1", Unit = "10⁹/L", RefRange = "ref 4.5–11.0", Category = "Differential Count", Date = "Today, 11:15", AlertLevel = "Critical High" },
-                new { Surname = "Nkosi", FirstName = "Thandiwe", IdNumber = "9203156789012", TestName = "Platelets", ResultValue = "22", Unit = "10⁹/L", RefRange = "ref 150–400", Category = "Full Blood Count", Date = "Yesterday, 15:30", AlertLevel = "Critical Low" }
-            };
+                    {
+                        new { Surname = "Dlamini", FirstName = "Sipho", IdNumber = "8706125432089", TestName = "Hb (Hemoglobin)", ResultValue = "5.2", Unit = "g/dL", RefRange = "ref 13.5–17.5", Category = "Full Blood Count", Date = "Today, 11:42", AlertLevel = "Critical Low" },
+                        new { Surname = "Petersen", FirstName = "Riaan", IdNumber = "7901044321008", TestName = "WBC (White Blood Cell)", ResultValue = "42.1", Unit = "10⁹/L", RefRange = "ref 4.5–11.0", Category = "Differential Count", Date = "Today, 11:15", AlertLevel = "Critical High" },
+                        new { Surname = "Nkosi", FirstName = "Thandiwe", IdNumber = "9203156789012", TestName = "Platelets", ResultValue = "22", Unit = "10⁹/L", RefRange = "ref 150–400", Category = "Full Blood Count", Date = "Yesterday, 15:30", AlertLevel = "Critical Low" }
+                    };
 
-                    return PartialView("_AbnormalAlertsPartial", mockAlerts);
+                    return PartialView("~/Views/Doctor/_AbnormalAlertsPartial.cshtml", mockAlerts);
 
                 // REQ 1: Manage Patient Records Portal
                 case "managepatients":
@@ -125,7 +125,7 @@ namespace WebApplication2.Controllers
                         new { Surname = "Hendricks", FirstName = "Ayesha", IdNumber = "9507254012345", Cellphone = "0645551234", Email = "ayesha.h@outlook.com", Conditions = "Asthma", Allergies = "Latex, Dust Mites", Medication = "Salbutamol Inhaler as needed" }
                     };
 
-                    return PartialView("_ManagePatientsPartial", mockPatients);
+                    return PartialView("~/Views/Doctor/_ManagePatientsPartial.cshtml", mockPatients);
 
                 // REQ 2: Create Test Requests Form 
                 case "createrequest":
@@ -138,8 +138,8 @@ namespace WebApplication2.Controllers
                         new { IdNumber = "9507254012345", FullName = "Hendricks, Ayesha" }
                     };
 
-                                    // Available test type panels configurations
-                                    ViewBag.TestPanels = new List<string> {
+                    // Available test type panels configurations
+                    ViewBag.TestPanels = new List<string> {
                         "Full Blood Count (FBC)",
                         "Hemoglobin (Hb) Isolation",
                         "Differential White Cell Count",
@@ -148,7 +148,7 @@ namespace WebApplication2.Controllers
                         "Peripheral Blood Film Study"
                     };
 
-                    return PartialView("_CreateRequestPartial");
+                    return PartialView("~/Views/Doctor/_CreateRequestPartial.cshtml");
 
                 // REQ 3 & 4: Full Historical Track & View Results List
                 case "trackprogress":
@@ -161,7 +161,7 @@ namespace WebApplication2.Controllers
                         new { RequestId = 1038, PatientName = "Chantel Myburgh", IdNumber = "8811235098081", Panels = "FBC Panel", DateCreated = "18 May 2026", Urgency = "Routine", Status = "Released by doctor" }
                     };
 
-                    return PartialView("_TrackProgressPartial", historicalTrackingData);
+                    return PartialView("~/Views/Doctor/_TrackProgressPartial.cshtml", historicalTrackingData);
 
                 // REQ 6: Doctor Reports Summary Portal
                 case "reports":
@@ -169,10 +169,10 @@ namespace WebApplication2.Controllers
                     ViewBag.DefaultStartDate = DateTime.Now.AddDays(-30).ToString("yyyy-MM-dd");
                     ViewBag.DefaultEndDate = DateTime.Now.ToString("yyyy-MM-dd");
 
-                    return PartialView("_ReportsPortalPartial");
+                    return PartialView("~/Views/Doctor/_ReportsPortalPartial.cshtml");
 
                 case "profilesettings":
-                    return PartialView("_ProfileSettings");
+                    return PartialView("~/Views/Doctor/_ProfileSettings.cshtml"); // Or _ProfileSettingsPartial.cshtml if you renamed it
 
                 default:
                     return Content("<div class='text-white p-4'><h5>Section placeholder</h5></div>");

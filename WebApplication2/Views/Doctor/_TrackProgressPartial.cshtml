@@ -82,7 +82,8 @@
 
                                     @if (log.Status == "Submitted" || log.Status == "Sample(s) Received")
                                     {
-                                        <button onclick="showToast('Order Revocation', 'Order request #@log.RequestId has been successfully retracted and marked as Cancelled.', 'danger')" class="btn btn-sm btn-outline-danger border-light-subtle px-2" style="border-radius: 6px;" title="Cancel Request">
+                                        // Changed onclick to trigger our JS function, and added data-bs-toggle attributes 
+                                        <button onclick="prepareCancelModal('@log.RequestId')" data-bs-toggle="modal" data-bs-target="#cancelModal" class="btn btn-sm btn-outline-danger border-light-subtle px-2" style="border-radius: 6px;" title="Cancel Request">
                                             <i class="fa-solid fa-ban me-1"></i> Cancel
                                         </button>
                                     }
@@ -127,3 +128,72 @@
         box-shadow: 0 0 0 0.25rem rgba(2, 132, 199, 0.15) !important;
     }
 </style>
+
+
+
+<!-- Cancellation Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow" style="border-radius: 12px; border: none;">
+            <div class="modal-header bg-danger-subtle text-danger border-bottom-0" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <h6 class="modal-title fw-bold" id="cancelModalLabel">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Revoke Diagnostic Order
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Form uses onsubmit to trigger our JS function instead of routing to the backend -->
+            <form id="cancelRequestForm" onsubmit="simulateCancellation(event)">
+                <div class="modal-body p-4 text-start">
+                    <p class="text-secondary small mb-3">
+                        You are about to cancel Order <strong id="displayRequestId" class="text-dark"></strong>.
+                        Please provide a required clinical or administrative reason for this revocation.
+                    </p>
+
+                    <input type="hidden" id="hiddenCancelRequestId" value="" />
+
+                    <div class="mb-2">
+                        <label for="cancelReason" class="form-label fw-semibold small text-dark">Cancellation Reason <span class="text-danger">*</span></label>
+                        <textarea class="form-control bg-light" id="cancelReason" rows="3" required placeholder="e.g., Duplicate order, patient no-show, alternative testing required..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top-0 pt-0 pb-3 pe-4">
+                    <button type="button" class="btn btn-sm btn-light border fw-medium" data-bs-dismiss="modal">Abort</button>
+                    <button type="submit" class="btn btn-sm btn-danger fw-semibold px-3">Confirm Cancellation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Injects the specific Request ID into the modal
+    function prepareCancelModal(requestId) {
+        document.getElementById('hiddenCancelRequestId').value = requestId;
+        document.getElementById('displayRequestId').innerText = '#' + requestId;
+        document.getElementById('cancelReason').value = '';
+    }
+
+    // Simulates the backend submission for UI presentation purposes
+    function simulateCancellation(event) {
+        event.preventDefault(); // Prevents the page from reloading
+
+        const reqId = document.getElementById('hiddenCancelRequestId').value;
+        const reason = document.getElementById('cancelReason').value;
+
+        // Hide the modal using Bootstrap's JS API
+        const modalElement = document.getElementById('cancelModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+        modalInstance.hide();
+
+        // Trigger the existing toast notification to show success
+        showToast(
+            'Order Revocation',
+            `Order request #${reqId} has been successfully retracted.`,
+            'danger'
+        );
+
+        // Optional: For a complete UI illusion, you could also use JS here to find the row by ID and visually change its badge to "Cancelled".
+    }
+</script>

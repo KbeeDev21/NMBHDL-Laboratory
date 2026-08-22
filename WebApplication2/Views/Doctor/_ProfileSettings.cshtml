@@ -141,13 +141,41 @@
 </style>
 
 <script>
-    document.getElementById('profileForm')?.addEventListener('submit', function (e) {
+    document.getElementById('profileForm')?.addEventListener('submit', function(e) {
+        e.preventDefault(); // Stop the form from attempting a backend post during prototyping
+
         let newPwd = document.getElementById('newPassword').value;
         let confPwd = document.getElementById('confirmPassword').value;
 
-        if (newPwd !== confPwd) {
-            e.preventDefault();
-            showToast('Security Mismatch', 'Confirm password entry does not match your new password choice. Please retype.', 'danger');
+        // Only enforce password validation if the user actually typed something in the password field
+        if (newPwd.length > 0) {
+
+            // 1. Match Validation
+            if (newPwd !== confPwd) {
+                showToast('Security Mismatch', 'Confirm password entry does not match your new password choice. Please retype.', 'danger');
+                return;
+            }
+
+            // 2. Strict Specification Validation (8+ chars, 1 uppercase, 1 number, 1 special char)
+            const passwordPolicy = /^(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
+            if (!passwordPolicy.test(newPwd)) {
+                showToast(
+                    'Policy Violation',
+                    'Passwords must contain at least 8 characters, one uppercase letter, one number, and one special character.',
+                    'warning'
+                );
+                return;
+            }
         }
+
+        // If everything passes (or if they just updated their phone number without changing the password)
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+
+        showToast(
+            'Profile Authorized',
+            'Registry updates and security credentials successfully committed to the database.',
+            'success'
+        );
     });
 </script>
