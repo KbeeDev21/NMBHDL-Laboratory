@@ -1,0 +1,153 @@
+@{
+    Layout = "~/Views/Shared/_LabTechLayout.cshtml";
+    ViewData["Title"] = "Capture Results";
+}
+
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+<link href="~/css/dashboardstyles.css" rel="stylesheet" />
+
+<style>
+    .page-container {
+        padding: 0;
+    }
+
+    .lookup-card {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 40px;
+        border: 1px solid #dbe3ec;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        max-width: 850px;
+        margin: 40px auto;
+    }
+
+    .lookup-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: #eff6ff;
+        color: #0d6efd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+
+    .lookup-card h1 {
+        color: #1f2937;
+        font-weight: 700;
+    }
+
+    .lookup-card p {
+        color: #6b7280;
+    }
+
+    .form-control {
+        background: #ffffff;
+        color: #1f2937;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        padding: 12px 14px;
+    }
+
+        .form-control:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 0.15rem rgba(59,130,246,0.15);
+        }
+
+    .btn-search {
+        background: #0d6efd;
+        border: 1px solid #0d6efd;
+        color: white !important;
+        border-radius: 10px;
+        padding: 12px 20px;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+        .btn-search:hover {
+            background: #0b5ed7;
+            border-color: #0b5ed7;
+        }
+
+    .info-box {
+        background: #f8fafc;
+        border: 1px solid #dbe3ec;
+        border-radius: 12px;
+        padding: 18px;
+        margin-top: 25px;
+    }
+
+        .info-box strong {
+            color: #1f2937;
+        }
+</style>
+
+<div class="main-content">
+
+    <div class="page-container">
+
+        <div class="lookup-card">
+
+            <div class="lookup-icon">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+
+            <h1>Capture Results</h1>
+
+            <p class="mb-4">
+                Enter the patient registration number to retrieve the assigned laboratory test.
+            </p>
+
+            <form asp-controller="LabTechnician"
+                  asp-action="CaptureResultsLookup"
+                  method="post">
+
+                <div class="mb-3">
+
+                    <label for="registrationNumber"
+                           class="form-label fw-bold">
+                        Patient Registration Number
+                    </label>
+
+                    <input type="text"
+                           id="registrationNumber"
+                           name="registrationNumber"
+                           class="form-control"
+                           placeholder="Enter registration number"
+                           required />
+
+                </div>
+
+                <button type="submit"
+                        class="btn-search">
+
+                    <i class="fa-solid fa-search me-2"></i>
+                    Find Patient
+
+                </button>
+
+            </form>
+
+            <div class="info-box">
+
+                <strong>
+                    <i class="fa-solid fa-circle-info me-2"></i>
+                    Information 
+                </strong>
+
+                <p class="mb-0 mt-2">
+                    Entering a registration number
+                    will open the assigned test details for the selected patient.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

@@ -61,6 +61,26 @@ namespace WebApplication2.Controllers
         }
 
         [HttpGet]
+        public IActionResult CaptureResultsLookup()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult CaptureResultsLookup(string registrationNumber)
+        {
+            if (string.IsNullOrWhiteSpace(registrationNumber))
+            {
+                return View();
+            }
+
+            return RedirectToAction("CaptureResults", new
+            {
+                requestNumber = registrationNumber
+            });
+        }
+
+        [HttpGet]
         public IActionResult CaptureResults()
         {
             return View(new CaptureResultsViewModel());

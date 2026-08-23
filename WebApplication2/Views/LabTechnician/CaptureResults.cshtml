@@ -394,257 +394,359 @@
             </div>
 
 
-          <!-- Result Entry -->
-<div class="info-box">
+            <!-- Result Entry -->
+            <div class="info-box">
 
-    <h4 class="section-title">
-        Result Values
-    </h4>
+                <h4 class="section-title">
+                    Result Values
+                </h4>
 
-    <p class="text-muted mb-4">
-        Enter the result for each assigned test. The result status will be evaluated automatically against the normal range.
-    </p>
+                <p class="text-muted mb-4">
+                    Enter the result for each assigned test. The result status will be evaluated automatically against the normal range.
+                </p>
 
-    <div class="row g-3">
+                <div class="row g-3">
 
-        <!-- HAEMOGLOBIN -->
-        <div class="col-md-4">
+                    <!-- HAEMOGLOBIN -->
+                    <div class="col-md-4">
 
-            <div class="result-card">
+                        <div class="result-card">
 
-                <div class="result-card-title">
-                    Haemoglobin
-                </div>
+                            <div class="result-card-title">
+                                Haemoglobin
+                            </div>
 
-                <label class="form-label">
-                    Result
-                </label>
+                            <label class="form-label">
+                                Result
+                            </label>
 
-                <input type="number"
-                       step="0.1"
-                       class="form-control result-input"
-                       asp-for="Haemoglobin"
-                       placeholder="Enter result"
-                       data-test="haemoglobin"
-                       data-min="12.0"
-                       data-max="16.0" />
+                            <input type="number"
+                                   step="0.1"
+                                   class="form-control result-input"
+                                   asp-for="Haemoglobin"
+                                   placeholder="Enter result"
+                                   data-test="haemoglobin"
+                                   data-min="12.0"
+                                   data-max="16.0" />
 
-                <div class="normal-range">
+                            <div class="normal-range">
 
-                    <strong>Normal Range:</strong>
-                    12.0 – 16.0 g/dL
+                                <strong>Normal Range:</strong>
+                                12.0 – 16.0 g/dL
 
-                </div>
+                            </div>
 
-                <small id="haemoglobin-status"
-                       class="d-block mt-2 status-neutral">
+                            <small id="haemoglobin-status"
+                                   class="d-block mt-2 status-neutral">
 
-                    Enter a result to evaluate
+                                Enter a result to evaluate
 
-                </small>
+                            </small>
 
 
-                <div class="technician-note">
+                            <div class="technician-note">
 
-                    <label>
-                        Technician Notes
-                    </label>
+                                <label>
+                                    Technician Notes
+                                </label>
 
-                    <textarea class="form-control"
-                              asp-for="HaemoglobinNotes"
-                              rows="4"
-                              placeholder="Enter notes for Haemoglobin..."></textarea>
+                                <textarea class="form-control"
+                                          asp-for="HaemoglobinNotes"
+                                          rows="4"
+                                          placeholder="Enter notes for Haemoglobin..."></textarea>
+
+                            </div>
+
+                            <div class="mt-2">
+                                <button type="button"
+                                        class="btn-outline-custom note-save-btn"
+                                        onclick="saveNote(this)">
+                                    <i class="fa-solid fa-floppy-disk"></i>
+                                    Save
+                                </button>
+
+                                <button type="button"
+                                        class="btn-outline-custom note-edit-btn"
+                                        onclick="editNote(this)"
+                                        style="display:none;">
+                                    <i class="fa-solid fa-pen"></i>
+                                    Edit
+                                </button>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- WHITE CELL COUNT -->
+                    <div class="col-md-4">
+
+                        <div class="result-card">
+
+                            <div class="result-card-title">
+                                White Cell Count (WCC)
+                            </div>
+
+                            <label class="form-label">
+                                Result
+                            </label>
+
+                            <input type="number"
+                                   step="0.1"
+                                   class="form-control result-input"
+                                   asp-for="Wcc"
+                                   placeholder="Enter result"
+                                   data-test="wcc"
+                                   data-min="4.0"
+                                   data-max="11.0" />
+
+                            <div class="normal-range">
+
+                                <strong>Normal Range:</strong>
+                                4.0 – 11.0 x10⁹/L
+
+                            </div>
+
+                            <small id="wcc-status"
+                                   class="d-block mt-2 status-neutral">
+
+                                Enter a result to evaluate
+
+                            </small>
+
+
+                            <div class="technician-note">
+
+                                <label>
+                                    Technician Notes
+                                </label>
+
+                                <textarea class="form-control"
+                                          asp-for="WccNotes"
+                                          rows="4"
+                                          placeholder="Enter notes for White Cell Count..."></textarea>
+
+                            </div>
+
+                            <div class="mt-2">
+                                <button type="button"
+                                        class="btn-outline-custom note-save-btn"
+                                        onclick="saveNote(this)">
+                                    <i class="fa-solid fa-floppy-disk"></i>
+                                    Save
+                                </button>
+
+                                <button type="button"
+                                        class="btn-outline-custom note-edit-btn"
+                                        onclick="editNote(this)"
+                                        style="display:none;">
+                                    <i class="fa-solid fa-pen"></i>
+                                    Edit
+                                </button>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PLATELETS -->
+                    <div class="col-md-4">
+
+                        <div class="result-card">
+
+                            <div class="result-card-title">
+                                Platelets
+                            </div>
+
+                            <label class="form-label">
+                                Result
+                            </label>
+
+                            <input type="number"
+                                   step="1"
+                                   class="form-control result-input"
+                                   asp-for="Platelets"
+                                   placeholder="Enter result"
+                                   data-test="platelets"
+                                   data-min="150"
+                                   data-max="450" />
+
+                            <div class="normal-range">
+
+                                <strong>Normal Range:</strong>
+                                150 – 450 x10⁹/L
+
+                            </div>
+
+                            <small id="platelets-status"
+                                   class="d-block mt-2 status-neutral">
+
+                                Enter a result to evaluate
+
+                            </small>
+
+
+                            <div class="technician-note">
+
+                                <label>
+                                    Technician Notes
+                                </label>
+
+                                <textarea class="form-control"
+                                          asp-for="PlateletsNotes"
+                                          rows="4"
+                                          placeholder="Enter notes for Platelets..."></textarea>
+
+                            </div>
+
+                            <div class="mt-2">
+                                <button type="button"
+                                        class="btn-outline-custom note-save-btn"
+                                        onclick="saveNote(this)">
+                                    <i class="fa-solid fa-floppy-disk"></i>
+                                    Save
+                                </button>
+
+                                <button type="button"
+                                        class="btn-outline-custom note-edit-btn"
+                                        onclick="editNote(this)"
+                                        style="display:none;">
+                                    <i class="fa-solid fa-pen"></i>
+                                    Edit
+                                </button>
+                            </div>
+
+                        </div>
+
+                    </div>
 
                 </div>
 
             </div>
 
-        </div>
 
+            <!-- Automatic Result Evaluation + Note Actions -->
+            <script>
 
-        <!-- WHITE CELL COUNT -->
-        <div class="col-md-4">
+                document.querySelectorAll(".result-input").forEach(function (input) {
 
-            <div class="result-card">
+                    input.addEventListener("input", function () {
 
-                <div class="result-card-title">
-                    White Cell Count (WCC)
-                </div>
+                        const value = parseFloat(this.value);
 
-                <label class="form-label">
-                    Result
-                </label>
+                        const min = parseFloat(this.dataset.min);
+                        const max = parseFloat(this.dataset.max);
 
-                <input type="number"
-                       step="0.1"
-                       class="form-control result-input"
-                       asp-for="Wcc"
-                       placeholder="Enter result"
-                       data-test="wcc"
-                       data-min="4.0"
-                       data-max="11.0" />
+                        const test = this.dataset.test;
 
-                <div class="normal-range">
+                        const statusElement =
+                            document.getElementById(test + "-status");
 
-                    <strong>Normal Range:</strong>
-                    4.0 – 11.0 x10⁹/L
 
-                </div>
+                        // Empty input
+                        if (this.value === "" || isNaN(value)) {
 
-                <small id="wcc-status"
-                       class="d-block mt-2 status-neutral">
+                            statusElement.textContent =
+                                "Enter a result to evaluate";
 
-                    Enter a result to evaluate
+                            statusElement.className =
+                                "d-block mt-2 status-neutral";
 
-                </small>
+                            return;
+                        }
 
 
-                <div class="technician-note">
+                        // Below normal range
+                        if (value < min) {
 
-                    <label>
-                        Technician Notes
-                    </label>
+                            statusElement.textContent =
+                                "Abnormally Low";
 
-                    <textarea class="form-control"
-                              asp-for="WccNotes"
-                              rows="4"
-                              placeholder="Enter notes for White Cell Count..."></textarea>
+                            statusElement.className =
+                                "d-block mt-2 abnormal";
 
-                </div>
+                            return;
+                        }
 
-            </div>
 
-        </div>
+                        // Above normal range
+                        if (value > max) {
 
+                            statusElement.textContent =
+                                "Abnormally High";
 
-        <!-- PLATELETS -->
-        <div class="col-md-4">
+                            statusElement.className =
+                                "d-block mt-2 abnormal";
 
-            <div class="result-card">
+                            return;
+                        }
 
-                <div class="result-card-title">
-                    Platelets
-                </div>
 
-                <label class="form-label">
-                    Result
-                </label>
+                        // Within normal range
+                        statusElement.textContent =
+                            "Within Normal Range";
 
-                <input type="number"
-                       step="1"
-                       class="form-control result-input"
-                       asp-for="Platelets"
-                       placeholder="Enter result"
-                       data-test="platelets"
-                       data-min="150"
-                       data-max="450" />
+                        statusElement.className =
+                            "d-block mt-2 normal";
 
-                <div class="normal-range">
+                    });
 
-                    <strong>Normal Range:</strong>
-                    150 – 450 x10⁹/L
+                });
 
-                </div>
 
-                <small id="platelets-status"
-                       class="d-block mt-2 status-neutral">
+                // Save technician note
+                function saveNote(button) {
 
-                    Enter a result to evaluate
+                    const container = button.closest(".technician-note");
+                    const textarea = container.querySelector("textarea");
 
-                </small>
+                    if (!textarea.value.trim()) {
 
+                        alert("Please enter a technician note before saving.");
+                        return;
 
-                <div class="technician-note">
+                    }
 
-                    <label>
-                        Technician Notes
-                    </label>
+                    textarea.readOnly = true;
 
-                    <textarea class="form-control"
-                              asp-for="PlateletsNotes"
-                              rows="4"
-                              placeholder="Enter notes for Platelets..."></textarea>
+                    button.style.display = "none";
 
-                </div>
+                    container.querySelector(".note-edit-btn").style.display =
+                        "inline-block";
 
-            </div>
+                    alert("Technician note saved.");
 
-        </div>
+                }
 
-    </div>
 
-</div>
+                // Edit technician note
+                function editNote(button) {
 
+                    const container = button.closest(".technician-note");
+                    const textarea = container.querySelector("textarea");
 
-<!-- Automatic Result Evaluation -->
-<script>
+                    textarea.readOnly = false;
 
-    document.querySelectorAll(".result-input").forEach(function (input) {
+                    textarea.focus();
 
-        input.addEventListener("input", function () {
+                    button.style.display = "none";
 
-            const value = parseFloat(this.value);
+                    container.querySelector(".note-save-btn").style.display =
+                        "inline-block";
 
-            const min = parseFloat(this.dataset.min);
-            const max = parseFloat(this.dataset.max);
+                }
 
-            const test = this.dataset.test;
 
-            const statusElement =
-                document.getElementById(test + "-status");
+                // Flag abnormal result
+                function flagAbnormalResult() {
 
+                    alert("Abnormal results flagged");
 
-            // Empty input
-            if (this.value === "" || isNaN(value)) {
+                }
 
-                statusElement.textContent =
-                    "Enter a result to evaluate";
-
-                statusElement.className =
-                    "d-block mt-2 status-neutral";
-
-                return;
-            }
-
-
-            // Below normal range
-            if (value < min) {
-
-                statusElement.textContent =
-                    "Abnormally Low";
-
-                statusElement.className =
-                    "d-block mt-2 abnormal";
-
-                return;
-            }
-
-
-            // Above normal range
-            if (value > max) {
-
-                statusElement.textContent =
-                    "Abnormally High";
-
-                statusElement.className =
-                    "d-block mt-2 abnormal";
-
-                return;
-            }
-
-
-            // Within normal range
-            statusElement.textContent =
-                "Within Normal Range";
-
-            statusElement.className =
-                "d-block mt-2 normal";
-
-        });
-
-    });
-
-</script>
+            </script>
 
 
             <!-- Test Assignment Reminder -->
@@ -678,7 +780,9 @@
 
                 </a>
 
-                <button class="btn-dark-custom me-2">
+                <button type="button"
+                        class="btn-dark-custom me-2"
+                        onclick="flagAbnormalResult()">
 
                     <i class="fa-solid fa-flag"></i>
                     Flag Abnormal Result

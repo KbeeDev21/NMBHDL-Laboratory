@@ -8,181 +8,346 @@
 
 <link href="~/css/dashboardstyles.css" rel="stylesheet" />
 
-<style>
+<div class="container-fluid p-4 text-start">
 
-    .page-container {
-        max-width: 900px;
-        margin: 50px auto;
-    }
+    <!-- Page Header -->
+    <div class="d-flex flex-sm-row flex-column justify-content-between align-items-start align-items-sm-center mb-4 border-bottom pb-3 gap-3">
 
-    .profile-card {
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 35px;
-        border: 1px solid #dbe3ec;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
+        <div>
+            <h2 class="fw-bold text-dark mb-1">
+                Profile & Security Settings
+            </h2>
 
-    .profile-row {
-        background: #f8fafc;
-        border-radius: 14px;
-        padding: 16px 20px;
-        margin-bottom: 15px;
-        border: 1px solid #e2e8f0;
-        transition: 0.2s ease;
-    }
-
-        .profile-row:hover {
-            background: #f1f5f9;
-        }
-
-    .profile-label {
-        color: #6b7280;
-        font-size: 0.9rem;
-        margin-bottom: 4px;
-    }
-
-    .profile-value {
-        font-size: 1.05rem;
-        font-weight: 600;
-        color: #1f2937;
-    }
-
-    .btn-dark-custom {
-        background: #0d6efd;
-        border: 1px solid #0d6efd;
-        color: white !important;
-        border-radius: 12px;
-        padding: 10px 20px;
-        text-decoration: none;
-        transition: 0.2s ease;
-    }
-
-        .btn-dark-custom:hover {
-            background: #0b5ed7;
-            border-color: #0b5ed7;
-        }
-
-    h1 {
-        font-weight: 700;
-        color: #1f2937;
-    }
-
-    .text-muted {
-        color: #6b7280 !important;
-    }
-
-</style>
-
-<div class="page-container">
-
-    <div class="profile-card">
-
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-
-            <div>
-
-                <h1>My Profile</h1>
-
-                <p class="text-muted">
-                    View and manage technician account information.
-                </p>
-
-            </div>
-
-            <a asp-controller="Home"
-               asp-action="LabTechnicianDashboard"
-               class="btn-dark-custom">
-
-                ← Dashboard
-
-            </a>
-
+            <p class="text-muted m-0 small">
+                Manage your technician account information and profile preferences.
+            </p>
         </div>
 
-        <!-- Profile Details -->
-        <div class="profile-row">
-
-            <div class="profile-label">
-                Full Name
-            </div>
-
-            <div class="profile-value">
-                Keenen James
-            </div>
-
-        </div>
-
-        <div class="profile-row">
-
-            <div class="profile-label">
-                Employee Number
-            </div>
-
-            <div class="profile-value">
-                LT-001
-            </div>
-
-        </div>
-
-        <div class="profile-row">
-
-            <div class="profile-label">
-                Email Address
-            </div>
-
-            <div class="profile-value">
-                james.keenen@nmbhlab.co.za
-            </div>
-
-        </div>
-
-        <div class="profile-row">
-
-            <div class="profile-label">
-                Contact Number
-            </div>
-
-            <div class="profile-value">
-                082 123 4567
-            </div>
-
-        </div>
-
-        <div class="profile-row">
-
-            <div class="profile-label">
-                Role
-            </div>
-
-            <div class="profile-value">
+        <div>
+            <span class="badge bg-primary-subtle text-primary px-3 py-2 fw-semibold border border-primary-subtle"
+                  style="font-size: 0.82rem;">
+                <i class="fa-solid fa-id-card me-1"></i>
                 Laboratory Technician
+            </span>
+        </div>
+
+    </div>
+
+
+    <div class="row g-4">
+
+        <!-- LEFT PROFILE CARD -->
+        <div class="col-xl-4 col-lg-5">
+
+            <div class="card border border-light-subtle shadow-sm h-100"
+                 style="border-radius: 14px;">
+
+                <div class="card-body text-center pt-4 d-flex flex-column align-items-center justify-content-between">
+
+                    <div class="w-100">
+
+                        <!-- Avatar -->
+                        <div class="position-relative d-inline-block mb-3">
+
+                            <div class="profile-avatar shadow-sm mx-auto"
+                                 style="
+                                    width: 110px;
+                                    height: 110px;
+                                    background: #071D37;
+                                    border-radius: 50%;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    color: #ffffff;
+                                 ">
+
+                                <i class="fa-solid fa-user"
+                                   style="font-size: 52px;"></i>
+
+                            </div>
+
+                        </div>
+
+
+                        <h4 class="fw-bold text-dark mb-1">
+                            Keenen James
+                        </h4>
+
+                        <p class="text-muted small mb-3">
+                            Laboratory Technician
+                        </p>
+
+
+                        <hr class="my-3 text-light-subtle">
+
+
+                        <!-- Technician Details -->
+                        <div class="text-start px-2 mb-4">
+
+                            <div class="mb-3 small d-flex justify-content-between">
+
+                                <span class="text-muted fw-semibold">
+                                    Employee Number:
+                                </span>
+
+                                <span class="text-dark font-monospace fw-bold">
+                                    LT-001
+                                </span>
+
+                            </div>
+
+
+                            <div class="mb-3 small d-flex justify-content-between">
+
+                                <span class="text-muted fw-semibold">
+                                    Department:
+                                </span>
+
+                                <span class="text-dark text-end">
+                                    Laboratory
+                                </span>
+
+                            </div>
+
+
+                            <div class="small d-flex justify-content-between">
+
+                                <span class="text-muted fw-semibold">
+                                    Role:
+                                </span>
+
+                                <span class="text-dark text-end">
+                                    Laboratory Technician
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Existing Actions -->
+                    <div class="w-100">
+
+                        <a asp-controller="LabTechnician"
+                           asp-action="EditProfile"
+                           class="btn btn-outline-secondary btn-sm w-100 py-2 fw-semibold mb-2"
+                           style="border-radius: 8px;">
+
+                            <i class="fa-solid fa-user-pen me-2"></i>
+                            Edit Profile
+
+                        </a>
+
+
+                        <a asp-controller="LabTechnician"
+                           asp-action="ChangePassword"
+                           class="btn btn-primary btn-sm w-100 py-2 fw-semibold"
+                           style="
+                                border-radius: 8px;
+                                background-color: #0284c7;
+                                border-color: #0284c7;
+                           ">
+
+                            <i class="fa-solid fa-key me-2"></i>
+                            Change Password
+
+                        </a>
+
+                    </div>
+
+                </div>
+
             </div>
 
         </div>
 
-        <!-- Actions -->
-        <div class="mt-4">
 
-            <a asp-controller="LabTechnician"
-               asp-action="EditProfile"
-               class="btn-dark-custom me-2">
+        <!-- RIGHT INFORMATION CARD -->
+        <div class="col-xl-8 col-lg-7">
 
-                Edit Profile
+            <div class="card border border-light-subtle shadow-sm"
+                 style="border-radius: 14px;">
 
-            </a>
+                <div class="card-header bg-transparent border-0 pt-3 ps-4">
 
-            <a asp-controller="LabTechnician"
-               asp-action="ChangePassword"
-               class="btn-dark-custom">
+                    <h5 class="fw-bold text-dark m-0">
 
-                Change Password
+                        <i class="fa-solid fa-sliders text-primary me-2"></i>
 
-            </a>
+                        Personal Information
+
+                    </h5>
+
+                </div>
+
+
+                <div class="card-body px-4 pb-4">
+
+                    <div class="row g-3">
+
+                        <!-- Full Name -->
+                        <div class="col-sm-6">
+
+                            <label class="form-label text-secondary small fw-semibold">
+                                Full Name
+                            </label>
+
+                            <input type="text"
+                                   class="form-control"
+                                   value="Keenen James"
+                                   readonly
+                                   style="border-radius: 8px; padding: 10px;" />
+
+                        </div>
+
+
+                        <!-- Employee Number -->
+                        <div class="col-sm-6">
+
+                            <label class="form-label text-secondary small fw-semibold">
+                                Employee Number
+                            </label>
+
+                            <input type="text"
+                                   class="form-control"
+                                   value="LT-001"
+                                   readonly
+                                   style="border-radius: 8px; padding: 10px;" />
+
+                        </div>
+
+
+                        <!-- Email -->
+                        <div class="col-12">
+
+                            <label class="form-label text-secondary small fw-semibold">
+                                Email Address
+                            </label>
+
+                            <input type="email"
+                                   class="form-control"
+                                   value="james.keenen@nmbhlab.co.za"
+                                   readonly
+                                   style="border-radius: 8px; padding: 10px;" />
+
+                        </div>
+
+
+                        <!-- Contact -->
+                        <div class="col-sm-6">
+
+                            <label class="form-label text-secondary small fw-semibold">
+                                Contact Number
+                            </label>
+
+                            <input type="tel"
+                                   class="form-control"
+                                   value="082 123 4567"
+                                   readonly
+                                   style="border-radius: 8px; padding: 10px;" />
+
+                        </div>
+
+
+                        <!-- Role -->
+                        <div class="col-sm-6">
+
+                            <label class="form-label text-secondary small fw-semibold">
+                                Role
+                            </label>
+
+                            <input type="text"
+                                   class="form-control bg-light text-muted"
+                                   value="Laboratory Technician"
+                                   readonly
+                                   style="border-radius: 8px; padding: 10px;" />
+
+                        </div>
+
+                    </div>
+
+
+                    <hr class="my-4 text-light-subtle">
+
+
+                    <!-- Account Information -->
+                    <h5 class="fw-bold text-dark mb-3">
+
+                        <i class="fa-solid fa-shield-halved text-danger me-2"></i>
+
+                        Account Security
+
+                    </h5>
+
+
+                    <div class="row g-3">
+
+                        <div class="col-sm-6">
+
+                            <label class="form-label text-secondary small fw-semibold">
+                                Password
+                            </label>
+
+                            <input type="password"
+                                   class="form-control"
+                                   value="••••••••••"
+                                   readonly
+                                   style="border-radius: 8px; padding: 10px;" />
+
+                        </div>
+
+
+                        <div class="col-sm-6">
+
+                            <label class="form-label text-secondary small fw-semibold">
+                                Account Status
+                            </label>
+
+                            <input type="text"
+                                   class="form-control bg-light text-success fw-semibold"
+                                   value="Active"
+                                   readonly
+                                   style="border-radius: 8px; padding: 10px;" />
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+
+                        <a asp-controller="Home"
+                           asp-action="LabTechnicianDashboard"
+                           class="btn btn-light px-4 fw-semibold text-secondary"
+                           style="border-radius: 8px; padding: 10px 24px;">
+
+                            Dashboard
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
 
         </div>
 
     </div>
 
 </div>
+
+
+<style>
+
+    .form-control:focus {
+        border-color: #0284c7 !important;
+        box-shadow: 0 0 0 0.25rem rgba(2, 132, 199, 0.15) !important;
+    }
+
+    .card {
+        background-color: #ffffff;
+    }
+</style>
