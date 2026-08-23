@@ -29,13 +29,7 @@
         text-align: center;
         height: 100%;
         border: 1px solid #e2e8f0;
-        transition: 0.2s ease;
     }
-
-        .metric-card:hover {
-            transform: translateY(-3px);
-            background: #f1f5f9;
-        }
 
     .metric-number {
         font-size: 2.2rem;
@@ -46,15 +40,7 @@
         background: #ffffff;
         color: #1f2937;
         border: 1px solid #d1d5db;
-        box-shadow: none;
     }
-
-        .form-control:focus {
-            background: #ffffff;
-            color: #1f2937;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 0.15rem rgba(59,130,246,0.15);
-        }
 
     .btn-dark-custom {
         background: #0d6efd;
@@ -64,6 +50,7 @@
         padding: 10px 20px;
         text-decoration: none;
         transition: 0.2s ease;
+        display: inline-block;
     }
 
         .btn-dark-custom:hover {
@@ -87,16 +74,6 @@
         --bs-table-hover-bg: #dbeafe;
         --bs-table-color: #1f2937;
         border: 1px solid #e2e8f0;
-        border-radius: 14px;
-        overflow: hidden;
-    }
-
-    /* Better table hover */
-    .table-hover tbody tr:hover td,
-    .table-hover tbody tr:hover th {
-        background-color: #dbeafe !important;
-        color: #1f2937 !important;
-        font-weight: 500;
     }
 
     .text-muted {
@@ -107,17 +84,16 @@
     label {
         color: #1f2937;
     }
-
 </style>
 
-<!-- MAIN CONTENT -->
+
 <div class="main-content">
 
     <div class="page-container">
 
         <div class="card-dark">
 
-            <!-- Header -->
+            <!-- HEADER -->
             <div class="d-flex justify-content-between align-items-center mb-4">
 
                 <div>
@@ -142,7 +118,8 @@
 
             </div>
 
-            <!-- KPI Cards -->
+
+            <!-- KPI CARDS -->
             <div class="row g-3 mb-4">
 
                 <div class="col-md-3">
@@ -211,7 +188,8 @@
 
             </div>
 
-            <!-- Filters -->
+
+            <!-- FILTERS -->
             <div class="row g-3 mb-4">
 
                 <div class="col-md-4">
@@ -238,14 +216,20 @@
 
                 <div class="col-md-4 d-flex align-items-end">
 
-                    <button class="btn-dark-custom me-2">
+                    <button type="button"
+                            class="btn-dark-custom me-2"
+                            onclick="generateReport()">
 
+                        <i class="fa-solid fa-chart-column"></i>
                         Generate Report
 
                     </button>
 
-                    <button class="btn-dark-custom">
+                    <button type="button"
+                            class="btn-dark-custom"
+                            onclick="exportReport()">
 
+                        <i class="fa-solid fa-file-pdf"></i>
                         Export PDF
 
                     </button>
@@ -254,32 +238,19 @@
 
             </div>
 
-            <!-- Performance Table -->
+
+            <!-- PERFORMANCE TABLE -->
             <table class="table table-dark table-hover">
 
                 <thead>
 
                     <tr>
 
-                        <th>
-                            Test Type
-                        </th>
-
-                        <th>
-                            Target TAT
-                        </th>
-
-                        <th>
-                            Average TAT
-                        </th>
-
-                        <th>
-                            Compliance
-                        </th>
-
-                        <th>
-                            Breaches
-                        </th>
+                        <th>Test Type</th>
+                        <th>Target TAT</th>
+                        <th>Average TAT</th>
+                        <th>Compliance</th>
+                        <th>Breaches</th>
 
                     </tr>
 
@@ -289,73 +260,31 @@
 
                     <tr>
 
-                        <td>
-                            Full Blood Count
-                        </td>
-
-                        <td>
-                            90 min
-                        </td>
-
-                        <td>
-                            38 min
-                        </td>
-
-                        <td>
-                            96%
-                        </td>
-
-                        <td>
-                            1
-                        </td>
+                        <td>Full Blood Count</td>
+                        <td>90 min</td>
+                        <td>38 min</td>
+                        <td>96%</td>
+                        <td>1</td>
 
                     </tr>
 
                     <tr>
 
-                        <td>
-                            PT / INR
-                        </td>
-
-                        <td>
-                            60 min
-                        </td>
-
-                        <td>
-                            42 min
-                        </td>
-
-                        <td>
-                            92%
-                        </td>
-
-                        <td>
-                            2
-                        </td>
+                        <td>PT / INR</td>
+                        <td>60 min</td>
+                        <td>42 min</td>
+                        <td>92%</td>
+                        <td>2</td>
 
                     </tr>
 
                     <tr>
 
-                        <td>
-                            APTT
-                        </td>
-
-                        <td>
-                            60 min
-                        </td>
-
-                        <td>
-                            47 min
-                        </td>
-
-                        <td>
-                            89%
-                        </td>
-
-                        <td>
-                            1
-                        </td>
+                        <td>APTT</td>
+                        <td>60 min</td>
+                        <td>47 min</td>
+                        <td>89%</td>
+                        <td>1</td>
 
                     </tr>
 
@@ -368,3 +297,20 @@
     </div>
 
 </div>
+
+
+<script>
+
+    function generateReport() {
+
+        alert("Report generated successfully.");
+
+    }
+
+    function exportReport() {
+
+        alert("Report exported as PDF.");
+
+    }
+
+</script>

@@ -58,11 +58,6 @@
         color: white;
     }
 
-    .badge-normal {
-        background: #198754;
-        color: white;
-    }
-
     .btn-dark-custom {
         background: #0d6efd;
         border: 1px solid #0d6efd;
@@ -102,25 +97,17 @@
         padding: 7px 12px;
         font-size: 0.82rem;
         font-weight: 600;
-        text-decoration: none;
     }
-
-        .notes-button:hover {
-            background: #eff6ff;
-        }
 
     .form-control,
     .form-select {
         background: #ffffff;
         color: #1f2937;
         border: 1px solid #d1d5db;
-        box-shadow: none;
     }
 
         .form-control:focus,
         .form-select:focus {
-            background: #ffffff;
-            color: #1f2937;
             border-color: #3b82f6;
             box-shadow: 0 0 0 0.15rem rgba(59,130,246,0.15);
         }
@@ -151,7 +138,8 @@
         font-weight: 600;
     }
 
-    .clinical-notes {
+    .clinical-notes,
+    .technician-note {
         background: #eff6ff;
         border: 1px solid #bfdbfe;
         border-radius: 10px;
@@ -159,6 +147,8 @@
         color: #1e3a8a;
         font-size: 0.88rem;
         line-height: 1.5;
+        margin-top: 12px;
+        display: none;
     }
 
     .normal-range {
@@ -168,24 +158,6 @@
         font-size: 0.82rem;
         color: #475569;
         margin-top: 8px;
-    }
-
-    .technician-note {
-        display: none;
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        border-radius: 10px;
-        padding: 13px;
-        margin-top: 12px;
-        color: #1e3a8a;
-        font-size: 0.88rem;
-        line-height: 1.5;
-    }
-
-    .test-header {
-        border-bottom: 1px solid #e2e8f0;
-        padding-bottom: 12px;
-        margin-bottom: 15px;
     }
 </style>
 
@@ -234,7 +206,7 @@
         </div>
 
 
-        <!-- REQUEST / PATIENT INFORMATION -->
+        <!-- PATIENT INFORMATION -->
         <div class="section-card">
 
             <h4 class="mb-4">
@@ -244,51 +216,25 @@
             <div class="row g-4">
 
                 <div class="col-md-3">
-
-                    <div class="info-label">
-                        Request Number
-                    </div>
-
-                    <div class="info-value">
-                        REQ-2026-00124
-                    </div>
-
+                    <div class="info-label">Request Number</div>
+                    <div class="info-value">REQ-2026-00124</div>
                 </div>
 
                 <div class="col-md-3">
-
-                    <div class="info-label">
-                        Patient
-                    </div>
-
-                    <div class="info-value">
-                        Baloyi, Thabo
-                    </div>
-
+                    <div class="info-label">Patient</div>
+                    <div class="info-value">Baloyi, Thabo</div>
                 </div>
 
                 <div class="col-md-2">
-
-                    <div class="info-label">
-                        Patient Age
-                    </div>
-
-                    <div class="info-value">
-                        42 years
-                    </div>
-
+                    <div class="info-label">Patient Age</div>
+                    <div class="info-value">42 years</div>
                 </div>
 
                 <div class="col-md-4">
-
-                    <div class="info-label">
-                        Test Request
-                    </div>
-
+                    <div class="info-label">Test Request</div>
                     <div class="info-value">
                         Full Blood Count + Differential
                     </div>
-
                 </div>
 
             </div>
@@ -306,39 +252,18 @@
             <div class="row g-4">
 
                 <div class="col-md-4">
-
-                    <div class="info-label">
-                        Conditions
-                    </div>
-
-                    <div class="info-value">
-                        Hypertension
-                    </div>
-
+                    <div class="info-label">Conditions</div>
+                    <div class="info-value">Hypertension</div>
                 </div>
 
                 <div class="col-md-4">
-
-                    <div class="info-label">
-                        Allergies
-                    </div>
-
-                    <div class="info-value">
-                        Penicillin
-                    </div>
-
+                    <div class="info-label">Allergies</div>
+                    <div class="info-value">Penicillin</div>
                 </div>
 
                 <div class="col-md-4">
-
-                    <div class="info-label">
-                        Medication
-                    </div>
-
-                    <div class="info-value">
-                        Amlodipine
-                    </div>
-
+                    <div class="info-label">Medication</div>
+                    <div class="info-value">Amlodipine</div>
                 </div>
 
             </div>
@@ -349,7 +274,8 @@
                     Clinical Notes from Doctor
                 </div>
 
-                <div class="clinical-notes">
+                <div class="clinical-notes"
+                     style="display:block;">
 
                     Rule out severe infection.
 
@@ -363,31 +289,23 @@
         <!-- RESULTS -->
         <div class="section-card">
 
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-1">
+                Captured Test Results
+            </h4>
 
-                <div>
-
-                    <h4 class="mb-1">
-                        Captured Test Results
-                    </h4>
-
-                    <p class="text-muted mb-0">
-                        Review the original results, normal ranges and technician notes.
-                    </p>
-
-                </div>
-
-            </div>
+            <p class="text-muted">
+                Review the original results, normal ranges and technician notes.
+            </p>
 
 
             <!-- HAEMOGLOBIN -->
             <div class="result-card">
 
-                <div class="test-header d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-center">
 
                     <div>
 
-                        <h5 class="mb-1">
+                        <h5>
                             Haemoglobin
                         </h5>
 
@@ -408,7 +326,7 @@
 
                 </div>
 
-                <div class="row g-3">
+                <div class="row g-3 mt-2">
 
                     <div class="col-md-4">
 
@@ -435,7 +353,6 @@
 
                 </div>
 
-
                 <div id="haemoglobinNotes"
                      class="technician-note">
 
@@ -455,14 +372,14 @@
             </div>
 
 
-            <!-- WHITE CELL COUNT -->
+            <!-- WCC -->
             <div class="result-card">
 
-                <div class="test-header d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-center">
 
                     <div>
 
-                        <h5 class="mb-1">
+                        <h5>
                             White Cell Count (WCC)
                         </h5>
 
@@ -483,7 +400,7 @@
 
                 </div>
 
-                <div class="row g-3">
+                <div class="row g-3 mt-2">
 
                     <div class="col-md-4">
 
@@ -510,7 +427,6 @@
 
                 </div>
 
-
                 <div id="wccNotes"
                      class="technician-note">
 
@@ -533,11 +449,11 @@
             <!-- PLATELETS -->
             <div class="result-card">
 
-                <div class="test-header d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-center">
 
                     <div>
 
-                        <h5 class="mb-1">
+                        <h5>
                             Platelets
                         </h5>
 
@@ -558,7 +474,7 @@
 
                 </div>
 
-                <div class="row g-3">
+                <div class="row g-3 mt-2">
 
                     <div class="col-md-4">
 
@@ -585,7 +501,6 @@
 
                 </div>
 
-
                 <div id="plateletNotes"
                      class="technician-note">
 
@@ -601,15 +516,6 @@
                     </p>
 
                 </div>
-
-            </div>
-
-            <div class="verification-note">
-
-                <i class="fa-solid fa-circle-info me-2"></i>
-
-                Each <strong>Notes</strong> button represents the technician
-                notes captured for that individual test.
 
             </div>
 
@@ -629,10 +535,16 @@
                     Verification Decision
                 </label>
 
-                <select class="form-select">
+                <select id="verificationDecision"
+                        class="form-select">
 
-                    <option>Verified</option>
-                    <option>Reject / Return for Review</option>
+                    <option value="verified">
+                        Verified
+                    </option>
+
+                    <option value="rejected">
+                        Reject / Return for Review
+                    </option>
 
                 </select>
 
@@ -657,7 +569,9 @@
         <!-- ACTIONS -->
         <div class="mt-4">
 
-            <button class="btn-dark-custom me-2">
+            <button type="button"
+                    class="btn-dark-custom me-2"
+                    onclick="submitVerification()">
 
                 <i class="fa-solid fa-check"></i>
                 Submit Verification
@@ -692,6 +606,24 @@
         } else {
 
             notes.style.display = "block";
+
+        }
+
+    }
+
+
+    function submitVerification() {
+
+        const decision =
+            document.getElementById("verificationDecision").value;
+
+        if (decision === "verified") {
+
+            alert("Verification Submitted");
+
+        } else {
+
+            alert("Verification Rejected — available for Review");
 
         }
 

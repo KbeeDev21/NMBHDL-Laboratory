@@ -31,13 +31,7 @@
         border-top: 1px solid #e2e8f0;
         border-right: 1px solid #e2e8f0;
         border-bottom: 1px solid #e2e8f0;
-        transition: 0.2s ease;
     }
-
-        .alert-card:hover {
-            background: #f1f5f9;
-            transform: translateX(4px);
-        }
 
     .severity-high {
         color: #dc3545;
@@ -52,6 +46,7 @@
         padding: 10px 20px;
         text-decoration: none;
         transition: 0.2s ease;
+        display: inline-block;
     }
 
         .btn-dark-custom:hover {
@@ -65,7 +60,6 @@
         border-radius: 20px;
         font-size: 0.8rem;
         margin-right: 6px;
-        margin-top: 5px;
         font-weight: 600;
     }
 
@@ -88,18 +82,16 @@
     p {
         color: #1f2937;
     }
-
 </style>
 
 
-<!-- MAIN CONTENT -->
 <div class="main-content">
 
     <div class="page-container">
 
         <div class="card-dark">
 
-            <!-- Header -->
+            <!-- HEADER -->
             <div class="d-flex justify-content-between align-items-center mb-4">
 
                 <div>
@@ -124,7 +116,8 @@
 
             </div>
 
-            <!-- Escalation Card -->
+
+            <!-- ESCALATION 1 -->
             <div class="alert-card">
 
                 <h4>
@@ -155,21 +148,28 @@
 
                 </a>
 
-                <button class="btn-dark-custom me-2">
+                <button type="button"
+                        class="btn-dark-custom me-2"
+                        onclick="notifyDoctor()">
 
+                    <i class="fa-solid fa-message"></i>
                     Notify Doctor
 
                 </button>
 
-                <button class="btn-dark-custom">
+                <button type="button"
+                        class="btn-dark-custom"
+                        onclick="escalateManager()">
 
+                    <i class="fa-solid fa-arrow-up"></i>
                     Escalate to Manager
 
                 </button>
 
             </div>
 
-            <!-- Escalation Card -->
+
+            <!-- ESCALATION 2 -->
             <div class="alert-card">
 
                 <h4>
@@ -200,14 +200,20 @@
 
                 </a>
 
-                <button class="btn-dark-custom me-2">
+                <button type="button"
+                        class="btn-dark-custom me-2"
+                        onclick="notifyDoctor()">
 
+                    <i class="fa-solid fa-message"></i>
                     Notify Doctor
 
                 </button>
 
-                <button class="btn-dark-custom">
+                <button type="button"
+                        class="btn-dark-custom"
+                        onclick="escalateManager()">
 
+                    <i class="fa-solid fa-arrow-up"></i>
                     Escalate to Manager
 
                 </button>
@@ -219,3 +225,20 @@
     </div>
 
 </div>
+
+
+<script>
+
+    function notifyDoctor() {
+
+        alert("Message sent to Doctor");
+
+    }
+
+    function escalateManager() {
+
+        alert("Escalation message sent to Manager");
+
+    }
+
+</script>

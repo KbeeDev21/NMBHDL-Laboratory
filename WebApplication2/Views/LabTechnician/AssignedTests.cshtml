@@ -36,7 +36,6 @@
 
         .queue-card:hover {
             background: #f1f5f9;
-            transform: translateX(4px);
         }
 
     .status-badge {
@@ -59,19 +58,14 @@
         color: black;
     }
 
-    .badge-overdue {
-        background: #dc3545;
-        color: white;
-    }
-
     .badge-progress {
         background: #dbeafe;
         color: #1d4ed8;
     }
 
-    .badge-processing {
-        background: #dbeafe;
-        color: #1d4ed8;
+    .badge-overdue {
+        background: #dc3545;
+        color: white;
     }
 
     .btn-dark-custom {
@@ -82,11 +76,27 @@
         padding: 10px 18px;
         text-decoration: none;
         transition: 0.2s ease;
+        display: inline-block;
     }
 
         .btn-dark-custom:hover {
             background: #0b5ed7;
             border-color: #0b5ed7;
+        }
+
+    .btn-outline-custom {
+        background: white;
+        border: 1px solid #0d6efd;
+        color: #0d6efd !important;
+        border-radius: 12px;
+        padding: 10px 18px;
+        text-decoration: none;
+        transition: 0.2s ease;
+        display: inline-block;
+    }
+
+        .btn-outline-custom:hover {
+            background: #eef5ff;
         }
 
     .text-muted {
@@ -116,7 +126,6 @@
     strong {
         color: #1f2937;
     }
-
 </style>
 
 
@@ -127,12 +136,14 @@
 
         <div class="card-dark">
 
-            <!-- Header -->
+            <!-- HEADER -->
             <div class="d-flex justify-content-between align-items-center mb-4">
 
                 <div>
 
-                    <h1>Assigned Tests</h1>
+                    <h1>
+                        Assigned Tests
+                    </h1>
 
                     <p class="text-muted">
                         Tests currently assigned to the technician.
@@ -150,17 +161,18 @@
 
             </div>
 
-            <!-- Filters -->
+
+            <!-- FILTERS -->
             <div class="row g-3 mb-4">
 
-                <div class="col-md-3">
+                <div class="col-md-4">
 
                     <input class="form-control filter-box"
                            placeholder="Search patient..." />
 
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-4">
 
                     <select class="form-select filter-box">
 
@@ -174,31 +186,43 @@
 
             </div>
 
-            <!-- Test Card -->
-            <div class="test-card">
+
+            <!-- ===================================================== -->
+            <!-- ASSIGNED TEST 1 -->
+            <!-- ===================================================== -->
+
+            <div class="queue-card">
 
                 <div class="d-flex justify-content-between align-items-start">
 
-                    <div>
+                    <div class="flex-grow-1">
 
-                        <h4>REQ-2026-00124</h4>
+                        <h4>
+                            REQ-2026-00124
+                        </h4>
 
                         <p class="mb-2">
+
                             <strong>Patient:</strong>
                             Baloyi, Thabo
+
                         </p>
 
                         <p class="mb-2">
+
                             <strong>Test:</strong>
                             FBC + Differential
+
                         </p>
 
                         <p class="mb-2">
+
                             <strong>Started:</strong>
                             09:22 AM
+
                         </p>
 
-                        <span class="status-badge badge-processing">
+                        <span class="status-badge badge-progress">
                             In Progress
                         </span>
 
@@ -208,7 +232,9 @@
 
                     </div>
 
-                    <div class="text-end">
+
+                    <!-- ACTIONS -->
+                    <div class="text-end ms-4">
 
                         <p class="text-danger fw-bold">
                             45 minutes overdue
@@ -216,9 +242,10 @@
 
                         <a asp-controller="LabTechnician"
                            asp-action="TestDetail"
-                           class="btn-dark-custom me-2">
+                           class="btn-outline-custom me-2">
 
-                            View
+                            <i class="fa-solid fa-eye"></i>
+                            View Sample Information
 
                         </a>
 
@@ -227,6 +254,7 @@
                            asp-route-requestNumber="REQ-2026-00124"
                            class="btn-dark-custom">
 
+                            <i class="fa-solid fa-flask"></i>
                             Capture Results
 
                         </a>
@@ -237,37 +265,51 @@
 
             </div>
 
-            <!-- Test Card -->
-            <div class="test-card">
+
+            <!-- ===================================================== -->
+            <!-- ASSIGNED TEST 2 -->
+            <!-- ===================================================== -->
+
+            <div class="queue-card">
 
                 <div class="d-flex justify-content-between align-items-start">
 
-                    <div>
+                    <div class="flex-grow-1">
 
-                        <h4>REQ-2026-00125</h4>
+                        <h4>
+                            REQ-2026-00125
+                        </h4>
 
                         <p class="mb-2">
+
                             <strong>Patient:</strong>
                             Jacobs, Lerato
+
                         </p>
 
                         <p class="mb-2">
+
                             <strong>Test:</strong>
                             ESR
+
                         </p>
 
                         <p class="mb-2">
+
                             <strong>Started:</strong>
                             10:05 AM
+
                         </p>
 
-                        <span class="status-badge badge-processing">
+                        <span class="status-badge badge-progress">
                             In Progress
                         </span>
 
                     </div>
 
-                    <div class="text-end">
+
+                    <!-- ACTIONS -->
+                    <div class="text-end ms-4">
 
                         <p class="text-success fw-bold">
                             Within TAT
@@ -275,9 +317,10 @@
 
                         <a asp-controller="LabTechnician"
                            asp-action="TestDetail"
-                           class="btn-dark-custom me-2">
+                           class="btn-outline-custom me-2">
 
-                            View
+                            <i class="fa-solid fa-eye"></i>
+                            View Sample Information
 
                         </a>
 
@@ -286,6 +329,7 @@
                            asp-route-requestNumber="REQ-2026-00125"
                            class="btn-dark-custom">
 
+                            <i class="fa-solid fa-flask"></i>
                             Capture Results
 
                         </a>
