@@ -126,6 +126,100 @@
     strong {
         color: #1f2937;
     }
+
+    .details-panel {
+        display: none;
+        margin-top: 20px;
+    }
+
+    .info-section {
+        margin-top: 15px;
+        padding: 18px;
+        background: #ffffff;
+        border: 1px solid #dbe3ec;
+        border-radius: 12px;
+    }
+
+    .info-section-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 12px;
+    }
+
+    .info-item {
+        margin-bottom: 10px;
+    }
+
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+
+    .info-label {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        color: #64748b;
+        font-weight: 700;
+        margin-bottom: 3px;
+    }
+
+    .info-value {
+        font-size: 0.9rem;
+        color: #1f2937;
+    }
+
+    .clinical-notes {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 10px;
+        padding: 12px;
+        color: #1e3a8a;
+        font-size: 0.88rem;
+        line-height: 1.5;
+    }
+
+    .sample-box {
+        background: #f8fafc;
+        border: 1px solid #dbe3ec;
+        border-radius: 10px;
+        padding: 12px 15px;
+    }
+
+    .sample-label {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        color: #64748b;
+        font-weight: 700;
+    }
+
+    .sample-value {
+        font-weight: 600;
+        color: #1f2937;
+        margin-top: 3px;
+    }
+
+    .requested-test {
+        background: #f8fafc;
+        border: 1px solid #dbe3ec;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        color: #1f2937;
+        font-size: 0.88rem;
+    }
+
+        .requested-test:last-child {
+            margin-bottom: 0;
+        }
+
+        .requested-test i {
+            color: #2563eb;
+            margin-right: 8px;
+        }
+
+    .view-more-button {
+        min-width: 125px;
+    }
 </style>
 
 
@@ -165,14 +259,14 @@
             <!-- FILTERS -->
             <div class="row g-3 mb-4">
 
-                <div class="col-md-4">
+                <div class="col-md-6">
 
                     <input class="form-control filter-box"
                            placeholder="Search patient..." />
 
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-6">
 
                     <select class="form-select filter-box">
 
@@ -193,6 +287,7 @@
 
             <div class="queue-card">
 
+                <!-- ALWAYS VISIBLE SUMMARY -->
                 <div class="d-flex justify-content-between align-items-start">
 
                     <div class="flex-grow-1">
@@ -233,21 +328,269 @@
                     </div>
 
 
-                    <!-- ACTIONS -->
                     <div class="text-end ms-4">
 
                         <p class="text-danger fw-bold">
                             45 minutes overdue
                         </p>
 
-                        <a asp-controller="LabTechnician"
-                           asp-action="TestDetail"
-                           class="btn-outline-custom me-2">
+                        <button type="button"
+                                class="btn-outline-custom view-more-button"
+                                onclick="toggleDetails('details1', this)">
 
-                            <i class="fa-solid fa-eye"></i>
-                            View Sample Information
+                            <i class="fa-solid fa-chevron-down"></i>
+                            View More
 
-                        </a>
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- EXPANDED DETAILS -->
+                <div id="details1"
+                     class="details-panel">
+
+
+                    <!-- SAMPLE INFORMATION -->
+                    <div class="info-section">
+
+                        <div class="info-section-title">
+
+                            <i class="fa-solid fa-vial"></i>
+                            Sample Information
+
+                        </div>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Sample Type
+                                    </div>
+
+                                    <div class="sample-value">
+                                        Whole Blood
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Sample Barcode
+                                    </div>
+
+                                    <div class="sample-value">
+                                        BC-889213
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Doctor
+                                    </div>
+
+                                    <div class="sample-value">
+                                        Dr. F. Abrahams
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Technician
+                                    </div>
+
+                                    <div class="sample-value">
+                                        Keenen James
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- REQUEST INFORMATION -->
+                    <div class="info-section">
+
+                        <div class="info-section-title">
+
+                            <i class="fa-solid fa-clipboard-list"></i>
+                            Request Information
+
+                        </div>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-4">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Request Number
+                                    </div>
+
+                                    <div class="sample-value">
+                                        REQ-2026-00124
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-4">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Date Started
+                                    </div>
+
+                                    <div class="sample-value">
+                                        2026/08/20
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-4">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Priority
+                                    </div>
+
+                                    <div class="sample-value">
+                                        STAT
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="mt-3">
+
+                            <div class="info-label">
+                                Requested Tests
+                            </div>
+
+                            <div class="requested-test">
+
+                                <i class="fa-solid fa-check"></i>
+                                FBC + Differential
+
+                            </div>
+
+                            <div class="requested-test">
+
+                                <i class="fa-solid fa-check"></i>
+                                ESR
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PATIENT INFORMATION -->
+                    <div class="info-section">
+
+                        <div class="info-section-title">
+
+                            <i class="fa-solid fa-user"></i>
+                            Patient Clinical Information
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-4 info-item">
+
+                                <div class="info-label">
+                                    Conditions
+                                </div>
+
+                                <div class="info-value">
+                                    Anaemia
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-4 info-item">
+
+                                <div class="info-label">
+                                    Allergies
+                                </div>
+
+                                <div class="info-value">
+                                    Penicillin
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-4 info-item">
+
+                                <div class="info-label">
+                                    Medication
+                                </div>
+
+                                <div class="info-value">
+                                    Ferrous Sulphate
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="mt-3">
+
+                            <div class="info-label">
+                                Clinical Notes from Doctor
+                            </div>
+
+                            <div class="clinical-notes">
+
+                                Patient presents with fatigue and suspected iron deficiency.
+                                Please process FBC and differential as a priority.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ACTION -->
+                    <div class="mt-3">
 
                         <a asp-controller="LabTechnician"
                            asp-action="CaptureResults"
@@ -272,6 +615,7 @@
 
             <div class="queue-card">
 
+                <!-- ALWAYS VISIBLE SUMMARY -->
                 <div class="d-flex justify-content-between align-items-start">
 
                     <div class="flex-grow-1">
@@ -308,21 +652,261 @@
                     </div>
 
 
-                    <!-- ACTIONS -->
                     <div class="text-end ms-4">
 
                         <p class="text-success fw-bold">
                             Within TAT
                         </p>
 
-                        <a asp-controller="LabTechnician"
-                           asp-action="TestDetail"
-                           class="btn-outline-custom me-2">
+                        <button type="button"
+                                class="btn-outline-custom view-more-button"
+                                onclick="toggleDetails('details2', this)">
 
-                            <i class="fa-solid fa-eye"></i>
-                            View Sample Information
+                            <i class="fa-solid fa-chevron-down"></i>
+                            View More
 
-                        </a>
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- EXPANDED DETAILS -->
+                <div id="details2"
+                     class="details-panel">
+
+
+                    <!-- SAMPLE INFORMATION -->
+                    <div class="info-section">
+
+                        <div class="info-section-title">
+
+                            <i class="fa-solid fa-vial"></i>
+                            Sample Information
+
+                        </div>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Sample Type
+                                    </div>
+
+                                    <div class="sample-value">
+                                        Serum
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Sample Barcode
+                                    </div>
+
+                                    <div class="sample-value">
+                                        BC-889214
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Doctor
+                                    </div>
+
+                                    <div class="sample-value">
+                                        Dr. M. Williams
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Technician
+                                    </div>
+
+                                    <div class="sample-value">
+                                        Keenen James
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- REQUEST INFORMATION -->
+                    <div class="info-section">
+
+                        <div class="info-section-title">
+
+                            <i class="fa-solid fa-clipboard-list"></i>
+                            Request Information
+
+                        </div>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-4">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Request Number
+                                    </div>
+
+                                    <div class="sample-value">
+                                        REQ-2026-00125
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-4">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Date Started
+                                    </div>
+
+                                    <div class="sample-value">
+                                        2026/08/20
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-4">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Priority
+                                    </div>
+
+                                    <div class="sample-value">
+                                        Routine
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="mt-3">
+
+                            <div class="info-label">
+                                Requested Tests
+                            </div>
+
+                            <div class="requested-test">
+
+                                <i class="fa-solid fa-check"></i>
+                                ESR
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PATIENT INFORMATION -->
+                    <div class="info-section">
+
+                        <div class="info-section-title">
+
+                            <i class="fa-solid fa-user"></i>
+                            Patient Clinical Information
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-4 info-item">
+
+                                <div class="info-label">
+                                    Conditions
+                                </div>
+
+                                <div class="info-value">
+                                    No known conditions
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-4 info-item">
+
+                                <div class="info-label">
+                                    Allergies
+                                </div>
+
+                                <div class="info-value">
+                                    None reported
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-4 info-item">
+
+                                <div class="info-label">
+                                    Medication
+                                </div>
+
+                                <div class="info-value">
+                                    None reported
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="mt-3">
+
+                            <div class="info-label">
+                                Clinical Notes from Doctor
+                            </div>
+
+                            <div class="clinical-notes">
+
+                                Routine ESR requested for inflammatory marker assessment.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ACTION -->
+                    <div class="mt-3">
 
                         <a asp-controller="LabTechnician"
                            asp-action="CaptureResults"
@@ -345,3 +929,30 @@
     </div>
 
 </div>
+
+
+<script>
+
+    function toggleDetails(detailsId, button) {
+
+        const details = document.getElementById(detailsId);
+
+        if (details.style.display === "block") {
+
+            details.style.display = "none";
+
+            button.innerHTML =
+                '<i class="fa-solid fa-chevron-down"></i> View More';
+
+        } else {
+
+            details.style.display = "block";
+
+            button.innerHTML =
+                '<i class="fa-solid fa-chevron-up"></i> View Less';
+
+        }
+
+    }
+
+</script>

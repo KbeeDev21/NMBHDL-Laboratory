@@ -201,6 +201,25 @@
         margin-top: 3px;
     }
 
+    .requested-test {
+        background: #f8fafc;
+        border: 1px solid #dbe3ec;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        color: #1f2937;
+        font-size: 0.88rem;
+    }
+
+        .requested-test:last-child {
+            margin-bottom: 0;
+        }
+
+        .requested-test i {
+            color: #2563eb;
+            margin-right: 8px;
+        }
+
     .view-more-button {
         min-width: 125px;
     }
@@ -325,18 +344,14 @@
                             Due in 12 minutes
                         </p>
 
-                        <div class="d-flex flex-column gap-2">
+                        <button type="button"
+                                class="btn-outline-custom view-more-button"
+                                onclick="toggleDetails('details1', this)">
 
-                            <button type="button"
-                                    class="btn-outline-custom view-more-button"
-                                    onclick="toggleDetails('details1', this)">
+                            <i class="fa-solid fa-chevron-down"></i>
+                            View More
 
-                                <i class="fa-solid fa-chevron-down"></i>
-                                View More
-
-                            </button>
-
-                        </div>
+                        </button>
 
                     </div>
 
@@ -354,7 +369,7 @@
                         <div class="info-section-title">
 
                             <i class="fa-solid fa-vial"></i>
-                            Sample Required
+                            Sample Information
 
                         </div>
 
@@ -389,6 +404,142 @@
                                     </div>
 
                                 </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Doctor
+                                    </div>
+
+                                    <div class="sample-value">
+                                        Dr. F. Abrahams
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Technician Receiving Sample
+                                    </div>
+
+                                    <div class="sample-value">
+                                        Keenen James
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Date Received
+                                    </div>
+
+                                    <div class="sample-value">
+                                        2026/08/20
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Time Received
+                                    </div>
+
+                                    <div class="sample-value">
+                                        10:10
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- REQUEST SUMMARY -->
+                    <div class="info-section">
+
+                        <div class="info-section-title">
+
+                            <i class="fa-solid fa-clipboard-list"></i>
+                            Request Summary
+
+                        </div>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Request Number
+                                    </div>
+
+                                    <div class="sample-value">
+                                        REQ-2026-00124
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Patient
+                                    </div>
+
+                                    <div class="sample-value">
+                                        Baloyi, Thabo
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- REQUESTED TESTS -->
+                        <div class="mt-3">
+
+                            <div class="info-label">
+                                Requested Tests
+                            </div>
+
+                            <div class="requested-test">
+
+                                <i class="fa-solid fa-check"></i>
+                                FBC + Differential
+
+                            </div>
+
+                            <div class="requested-test">
+
+                                <i class="fa-solid fa-check"></i>
+                                ESR
 
                             </div>
 
@@ -486,17 +637,8 @@
                     </div>
 
 
-                    <!-- ACTIONS -->
+                    <!-- START TEST -->
                     <div class="mt-3">
-
-                        <a asp-controller="LabTechnician"
-                           asp-action="TestDetail"
-                           class="btn-outline-custom me-2">
-
-                            <i class="fa-solid fa-eye"></i>
-                            View Details
-
-                        </a>
 
                         <a asp-controller="LabTechnician"
                            asp-action="CaptureResults"
@@ -558,18 +700,14 @@
                             Within TAT
                         </p>
 
-                        <div class="d-flex flex-column gap-2">
+                        <button type="button"
+                                class="btn-outline-custom view-more-button"
+                                onclick="toggleDetails('details2', this)">
 
-                            <button type="button"
-                                    class="btn-outline-custom view-more-button"
-                                    onclick="toggleDetails('details2', this)">
+                            <i class="fa-solid fa-chevron-down"></i>
+                            View More
 
-                                <i class="fa-solid fa-chevron-down"></i>
-                                View More
-
-                            </button>
-
-                        </div>
+                        </button>
 
                     </div>
 
@@ -587,7 +725,7 @@
                         <div class="info-section-title">
 
                             <i class="fa-solid fa-vial"></i>
-                            Sample Required
+                            Sample Information
 
                         </div>
 
@@ -622,6 +760,135 @@
                                     </div>
 
                                 </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Doctor
+                                    </div>
+
+                                    <div class="sample-value">
+                                        Dr. M. Williams
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Technician Receiving Sample
+                                    </div>
+
+                                    <div class="sample-value">
+                                        Keenen James
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Date Received
+                                    </div>
+
+                                    <div class="sample-value">
+                                        2026/08/20
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Time Received
+                                    </div>
+
+                                    <div class="sample-value">
+                                        10:15
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- REQUEST SUMMARY -->
+                    <div class="info-section">
+
+                        <div class="info-section-title">
+
+                            <i class="fa-solid fa-clipboard-list"></i>
+                            Request Summary
+
+                        </div>
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Request Number
+                                    </div>
+
+                                    <div class="sample-value">
+                                        REQ-2026-00125
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <div class="sample-box">
+
+                                    <div class="sample-label">
+                                        Patient
+                                    </div>
+
+                                    <div class="sample-value">
+                                        Jacobs, Lerato
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- REQUESTED TESTS -->
+                        <div class="mt-3">
+
+                            <div class="info-label">
+                                Requested Tests
+                            </div>
+
+                            <div class="requested-test">
+
+                                <i class="fa-solid fa-check"></i>
+                                ESR
 
                             </div>
 
@@ -718,20 +985,12 @@
                     </div>
 
 
-                    <!-- ACTIONS -->
+                    <!-- START TEST -->
                     <div class="mt-3">
 
                         <a asp-controller="LabTechnician"
-                           asp-action="TestDetail"
-                           class="btn-outline-custom me-2">
-
-                            <i class="fa-solid fa-eye"></i>
-                            View Details
-
-                        </a>
-
-                        <a asp-controller="LabTechnician"
                            asp-action="CaptureResults"
+                           asp-route-requestNumber="REQ-2026-00125"
                            class="btn-dark-custom">
 
                             <i class="fa-solid fa-play"></i>
