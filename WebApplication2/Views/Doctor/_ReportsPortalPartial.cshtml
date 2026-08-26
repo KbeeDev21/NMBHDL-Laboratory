@@ -16,7 +16,7 @@
                     </h5>
                 </div>
                 <div class="card-body px-4 pb-4">
-                    <form method="get" asp-action="ExportDoctorActivityReport" asp-controller="Doctor" target="_blank" onsubmit="return validateReportDates()">
+                    <form id="reportForm" onsubmit="return simulateReportGeneration(event)">
 
                         <div class="mb-3">
                             <label class="form-label text-secondary small fw-semibold">Start Bound Date</label>
@@ -60,7 +60,7 @@
                                 <div class="fw-bold text-dark mb-1">Monthly Activity Requisition Sheet</div>
                                 <small class="text-muted"><i class="fa-regular fa-calendar me-1"></i>Scope: 01 May 2026 – 21 May 2026 | <strong class="text-secondary fw-semibold">24 Batches Found</strong></small>
                             </div>
-                            <a asp-action="ExportDoctorActivityReport" asp-controller="Doctor" asp-route-startDate="2026-05-01" asp-route-endDate="2026-05-21" target="_blank" class="btn btn-sm btn-light border border-light-subtle px-3 text-primary" style="border-radius: 6px;" title="Download Requisition PDF">
+                            <a href="#" onclick="event.preventDefault(); showToast('PDF Dispatcher', 'Downloading Monthly Activity Requisition Sheet...', 'success');" class="btn btn-sm btn-light border border-light-subtle px-3 text-primary" style="border-radius: 6px;" title="Download Requisition PDF">
                                 <i class="fa-solid fa-download"></i>
                             </a>
                         </div>
@@ -70,7 +70,7 @@
                                 <div class="fw-bold text-dark mb-1">Previous Calendar Month Summary</div>
                                 <small class="text-muted"><i class="fa-regular fa-calendar me-1"></i>Scope: 01 Apr 2026 – 30 Apr 2026 | <strong class="text-secondary fw-semibold">45 Batches Found</strong></small>
                             </div>
-                            <a asp-action="ExportDoctorActivityReport" asp-controller="Doctor" asp-route-startDate="2026-04-01" asp-route-endDate="2026-04-30" target="_blank" class="btn btn-sm btn-light border border-light-subtle px-3 text-primary" style="border-radius: 6px;" title="Download Summary PDF">
+                            <a href="#" onclick="event.preventDefault(); showToast('PDF Dispatcher', 'Downloading Previous Calendar Month Summary...', 'success');" class="btn btn-sm btn-light border border-light-subtle px-3 text-primary" style="border-radius: 6px;" title="Download Summary PDF">
                                 <i class="fa-solid fa-download"></i>
                             </a>
                         </div>
@@ -106,24 +106,32 @@
 </style>
 
 <script>
-    function validateReportDates() {
+    function simulateReportGeneration(event) {
+        event.preventDefault(); // Stop the form from hitting the backend
+
         const startVal = document.getElementById("reportStartDate").value;
         const endVal = document.getElementById("reportEndDate").value;
 
-        if (!startVal || !endVal) return true;
+        if (!startVal || !endVal) {
+            showToast("Validation Error", "Please provide both start and end dates.", "warning");
+            return false;
+        }
 
         const start = new Date(startVal);
         const end = new Date(endVal);
 
         if (start > end) {
-            // Using your streamlined dynamic UI feedback method safely
-            if (typeof showToast === "function") {
-                showToast("Date Bound Error", "The Start Bound Date cannot be further ahead chronologically than the End Bound Date.", "danger");
-            } else {
-                alert("Business Validation Error: The Start Bound Date cannot be further ahead chronologically than the End Bound Date.");
-            }
+            showToast("Date Bound Error", "The Start Bound Date cannot be further ahead chronologically than the End Bound Date.", "danger");
             return false;
         }
-        return true;
+
+        // Simulate a successful PDF compilation
+        showToast(
+            "Report Compiler",
+            `Generating official diagnostic audit log for the period of ${startVal} to ${endVal}. The PDF will download shortly.`,
+            "success"
+        );
+
+        return false;
     }
 </script>

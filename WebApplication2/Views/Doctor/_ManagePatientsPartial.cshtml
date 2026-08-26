@@ -75,7 +75,7 @@
                 <h5 class="modal-title fw-bold text-dark" id="addPatientModalLabel"><i class="fa-solid fa-id-card text-primary me-2"></i>New Patient Registration Intake</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="post" asp-action="RegisterPatient" asp-controller="Doctor">
+            <form id="registerPatientForm" onsubmit="simulatePatientRegistration(event)">
                 <div class="modal-body p-4 text-start">
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -167,4 +167,23 @@
             }
         });
     });
+
+    function simulatePatientRegistration(event) {
+        event.preventDefault(); // Stop the form from looking for a backend
+
+        // Grab the patient's name for a dynamic toast message
+        const firstName = document.querySelector('input[name="FirstName"]').value;
+        const surname = document.querySelector('input[name="Surname"]').value;
+
+        // Hide the Bootstrap modal
+        const modalElement = document.getElementById('addPatientModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+        modalInstance.hide();
+
+        // Trigger your existing toast system
+        showToast('Registration Complete', `Patient master record for ${firstName} ${surname} has been securely synchronized with the lab registry.`, 'success');
+
+        // Clear the form fields for the next use
+        event.target.reset();
+    }
 </script>

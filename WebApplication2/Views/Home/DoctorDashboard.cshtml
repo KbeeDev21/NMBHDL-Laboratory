@@ -155,7 +155,7 @@
                     if (defaultLink) defaultLink.classList.add('active');
                 }
 
-                fetch('/Home/LoadDashboardSection?section=' + section)
+                fetch('@Url.Action("LoadDashboardSection", "Home")?section=' + section)
                     .then(res => res.text())
                     .then(html => {
                         document.getElementById("mainContent").innerHTML = html;
