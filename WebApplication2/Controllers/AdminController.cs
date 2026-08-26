@@ -46,5 +46,15 @@ namespace WebApplication2.Controllers
         {
             return PartialView("_UpdateProfile");
         }
+
+        public IActionResult ChangePassword()
+        {
+            return PartialView("_ChangePassword");
+        }
+
+        public IActionResult DashboardContent()
+        {
+            return PartialView("_DashboardContent");
+        }
     }
 }
