@@ -14,16 +14,7 @@
     <link href="~/css/dashboardstyles.css" rel="stylesheet" />
 
     <style>
-            .sidebar-heading {
-                font-size: 0.75rem;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                color: #727b84;
-                font-weight: 700;
-                padding: 12px 20px 4px 20px;
-                margin: 0;
-            }
-
+            /* Toast notification animations are kept as they are specific to the Doctor subsystem alerts */
             .animate-slide-in-toast {
                 animation: toastSlideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             }
@@ -39,104 +30,70 @@
                     opacity: 1;
                 }
             }
-
-            .app-container {
-                display: flex;
-                height: 100vh;
-                overflow: hidden;
-                background-color: #ffffff;
-            }
-
-            .sidebar-link {
-                display: flex;
-                align-items: center;
-                padding: 10px 20px !important;
-                color: #ffffff !important;
-                text-decoration: none;
-                font-size: 0.92rem;
-                transition: all 0.2s;
-            }
-
-                .sidebar-link:hover, .sidebar-link.active {
-                    background-color: #0c2b4e;
-                    font-weight: 600;
-                }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
+    <!-- SIDEBAR -->
+    <div class="sidebar" style="height: 100vh; overflow-y: auto;">
 
-        <div class="sidebar" style="width: 260px; background-color: #071D37; display: flex; flex-direction: column; height: 100vh;">
-
-            <div style="flex-shrink: 0;">
-                <div class="sidebar-top" style="padding: 20px 20px 10px 20px; display: flex; align-items: center; gap: 15px; text-align: left;">
-                    <div class="profile-avatar" style="width: 42px; height: 42px; background: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #071D37;">
-                        <i class="fa-solid fa-user" style="font-size: 20px;"></i>
-                    </div>
-
-                    <div class="profile-info">
-                        <div class="profile-text" style="font-size: 0.82rem; color: #8da4be; margin-bottom: -2px;">Mr</div>
-                        <div class="profile-text" style="font-size: 0.92rem; font-weight: 600; color: #ffffff; line-height: 1.2;">Kenneth Malgas</div>
-                    </div>
-                </div>
-
-                <div style="font-size: 1.6rem; font-weight: 500; color: #ffffff; padding: 0 20px 15px 20px; border-bottom: 2px solid #ffffff; letter-spacing: 0.5px;">
-                    Doctor
+        <!-- SIDEBAR TOP -->
+        <div class="sidebar-top">
+            <div class="sidebar-profile">
+                <i class="fa-solid fa-user"></i>
+                <div class="profile-info">
+                    <div class="profile-text">Mr</div>
+                    <div class="profile-text">Kenneth Malgas</div>
                 </div>
             </div>
+            <div class="profile-role">Doctor</div>
+        </div>
 
-            <div class="sidebar-bottom" style="flex: 1; overflow-y: auto; padding-top: 5px;">
+        <!-- SIDEBAR BOTTOM -->
+        <div class="sidebar-bottom">
 
-                <div class="sidebar-heading">Patients</div>
+            <a href="javascript:void(0)" onclick="loadSection('alerts')" class="sidebar-link">
+                <i class="fa-solid fa-house"></i> Dashboard
+            </a>
 
-                <a href="javascript:void(0)" onclick="loadSection('managepatients')" class="sidebar-link">
-                    <i class="fa-solid fa-user-doctor me-2" style="width: 20px;"></i> Patient Search
-                </a>
+            <a href="javascript:void(0)" onclick="loadSection('managepatients')" class="sidebar-link">
+                <i class="fa-solid fa-user-doctor"></i> Patient Search
+            </a>
 
-                <a href="javascript:void(0)" onclick="loadSection('createrequest')" class="sidebar-link">
-                    <i class="fa-solid fa-hand-holding-medical me-2" style="width: 20px;"></i> New Test Request
-                </a>
+            <a href="javascript:void(0)" onclick="loadSection('createrequest')" class="sidebar-link">
+                <i class="fa-solid fa-hand-holding-medical"></i> New Test Request
+            </a>
 
-                <div class="sidebar-heading">Results</div>
+            <a href="javascript:void(0)" onclick="loadSection('trackprogress')" class="sidebar-link">
+                <i class="fa-solid fa-prescription-bottle-medical"></i> All Results
+            </a>
 
-                <a href="javascript:void(0)" onclick="loadSection('alerts')" class="sidebar-link">
-                    <i class="fa-solid fa-chart-pie me-2" style="width: 20px;"></i> Dashboard
-                </a>
+            <a href="javascript:void(0)" onclick="loadSection('reports')" class="sidebar-link">
+                <i class="fa-solid fa-file-pdf"></i> Doctor Reports
+            </a>
 
-                <a href="javascript:void(0)" onclick="loadSection('trackprogress')" class="sidebar-link">
-                    <i class="fa-solid fa-prescription-bottle-medical me-2" style="width: 20px;"></i> All Results
-                </a>
-
-                <div class="sidebar-heading">Systems</div>
-
-                <a href="javascript:void(0)" onclick="loadSection('reports')" class="sidebar-link">
-                    <i class="fa-solid fa-file-pdf me-2" style="width: 20px;"></i> Doctor Reports
-                </a>
-
-            </div>
-
-            <div style="flex-shrink: 0; padding: 15px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #16406d; background-color: #071D37;">
-                <button onclick="loadSection('profilesettings')" class="btn sidebar-link w-100 d-flex align-items-center justify-content-center gap-2 fw-semibold text-white" style="background-color: #dc3545; border: none; padding: 10px; border-radius: 6px; font-size: 0.9rem;">
+            <!-- SIDEBAR ACTIONS -->
+            <div class="sidebar-actions">
+                <a href="javascript:void(0)" onclick="loadSection('profilesettings')" class="sidebar-alert-btn">
                     <i class="fa-solid fa-user-gear"></i> Profile Settings
-                </button>
+                </a>
 
-                <a asp-controller="Home" asp-action="LoginPage" class="btn w-100 d-flex align-items-center justify-content-center gap-2 fw-semibold text-white" style="background-color: #007bff; border: none; padding: 10px; border-radius: 6px; font-size: 0.9rem; text-decoration: none;">
+                <a asp-controller="Home" asp-action="LoginPage" class="sidebar-primary-btn">
                     <i class="fa-solid fa-right-from-bracket"></i> Logout
                 </a>
             </div>
 
         </div>
+    </div>
 
-        <div class="main-content overflow-auto flex-grow-1" id="mainContent" style="min-height: 100vh; background-color: #ffffff;">
-            <div class="d-flex justify-content-center align-items-center h-100 py-5">
-                <div class="text-center text-secondary">
-                    <i class="fa-solid fa-circle-notch fa-spin fs-3 mb-2 text-primary"></i>
-                    <p class="m-0">Loading Clinical Stream...</p>
-                </div>
+    <!-- MAIN CONTENT -->
+    <div class="main-content" id="mainContent">
+        <div class="d-flex justify-content-center align-items-center h-100 py-5">
+            <div class="text-center text-secondary">
+                <i class="fa-solid fa-circle-notch fa-spin fs-3 mb-2 text-primary"></i>
+                <p class="m-0">Loading Clinical Stream...</p>
             </div>
         </div>
-
     </div>
 
     <div id="toastContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 3000; margin-top: 10px;"></div>
