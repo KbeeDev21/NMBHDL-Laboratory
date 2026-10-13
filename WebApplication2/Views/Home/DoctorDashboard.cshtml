@@ -27,6 +27,7 @@
             .animate-slide-in-toast {
                 animation: toastSlideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             }
+
             @@keyframes toastSlideIn {
                 from {
                     transform: translateX(100%);
@@ -142,19 +143,24 @@
 
     <script>
             function loadSection(section) {
+                // 1. Remove active class from all links
                 document.querySelectorAll('.sidebar-link').forEach(link => {
                     link.classList.remove('active');
                 });
 
-                const clickedElement = window.event?.currentTarget;
-                if (clickedElement) {
+                // 2. Handle adding the active class safely
+                const clickedElement = window.event ? window.event.currentTarget : null;
+
+                // Check if the event was an actual mouse click on a sidebar link
+                if (clickedElement && clickedElement.classList && clickedElement.classList.contains('sidebar-link')) {
                     clickedElement.classList.add('active');
                 } else {
-                    let targetSelector = `[onclick="loadSection('${section}')"]`;
-                    const defaultLink = document.querySelector(targetSelector);
+                    // If it was the automatic page load, find the link manually to highlight it
+                    const defaultLink = document.querySelector(`[onclick="loadSection('${section}')"]`);
                     if (defaultLink) defaultLink.classList.add('active');
                 }
 
+                // 3. Fetch the content from the C# controller
                 fetch('LoadDashboardSection?section=' + section)
                     .then(res => res.text())
                     .then(html => {
@@ -217,5 +223,5 @@
             });
     </script>
 
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-</body></html>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script></body>
+</html>
