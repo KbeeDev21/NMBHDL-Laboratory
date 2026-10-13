@@ -1,4 +1,4 @@
-﻿@{
+@{
     Layout = null;
 }
 
@@ -24,10 +24,10 @@
     <style>
 
         /* ============================================================
-                   LAB MANAGER - shared page styles
-                   Same block in every Lab Manager view so the subsystem looks
-                   the same everywhere without needing an extra .css file.
-                   ============================================================ */
+           LAB MANAGER - shared page styles
+           Same block in every Lab Manager view so the subsystem looks
+           the same everywhere without needing an extra .css file.
+           ============================================================ */
 
         .page-wrap {
             padding: 40px;
@@ -47,17 +47,33 @@
 
         /* ---------- Sidebar ---------- */
 
+        /* The manager menu has 5 groups where the technician menu has 2, so the
+           profile block is tightened to keep Logout above the fold. */
+        .sidebar-top {
+            min-height: auto;
+            padding-bottom: 16px;
+        }
+
+        .sidebar-profile {
+            margin-top: 14px;
+        }
+
+        .profile-role {
+            margin-top: 12px;
+        }
+
         .sidebar-bottom {
+            padding-top: 6px;
             padding-bottom: 10px;
         }
 
         .sidebar-section {
-            margin-top: 10px !important;
+            margin-top: 7px !important;
             margin-bottom: 4px;
         }
 
         .sidebar-link {
-            padding: 8px 14px;
+            padding: 7px 14px;
             margin-bottom: 3px;
         }
 
@@ -67,7 +83,7 @@
             }
 
         .sidebar-actions {
-            margin-top: 20px;
+            margin-top: 14px;
             padding-bottom: 10px;
             display: flex;
             flex-direction: column;
@@ -608,12 +624,12 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
-        a.metric-card:hover {
-            transform: translateY(-4px);
-            background: #f8fafc;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-            cursor: pointer;
-        }
+            a.metric-card:hover {
+                transform: translateY(-4px);
+                background: #f8fafc;
+                box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+                cursor: pointer;
+            }
 
         .metric-number {
             font-size: 3rem;
@@ -638,10 +654,10 @@
             height: 100%;
         }
 
-        a.mini-card:hover {
-            background: #f1f5f9;
-            cursor: pointer;
-        }
+            a.mini-card:hover {
+                background: #f1f5f9;
+                cursor: pointer;
+            }
 
         .mini-number {
             font-size: 1.8rem;
@@ -834,6 +850,193 @@
                 margin-bottom: 3px;
             }
 
+        /* ---------- Alerts & validation (AC error messages) ---------- */
+
+        .alert-box {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            border: 1px solid #86efac;
+            color: #166534;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #b91c1c;
+        }
+
+            .alert-box i {
+                margin-top: 3px;
+            }
+
+        /* Server-side validation summary */
+        .validation-box {
+            color: #b91c1c;
+            font-size: 0.9rem;
+        }
+
+            .validation-box:not(:empty) {
+                background: #fee2e2;
+                border: 1px solid #fca5a5;
+                border-radius: 12px;
+                padding: 12px 16px;
+                margin-bottom: 20px;
+            }
+
+            .validation-box ul {
+                margin: 0;
+                padding-left: 18px;
+            }
+
+        /* Field-level validation message */
+        .field-error {
+            display: block;
+            color: #b91c1c;
+            font-size: 0.82rem;
+            margin-top: 5px;
+        }
+
+        .input-validation-error {
+            border-color: #fca5a5 !important;
+            background: #fffafa;
+        }
+
+        /* ---------- Read-only detail blocks ---------- */
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .info-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px 16px;
+        }
+
+        .info-key {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #64748b;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .info-val {
+            color: #1f2937;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        /* ---------- Report bars (US-LM-08) ---------- */
+
+        .bar-track {
+            height: 10px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            min-width: 120px;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: #0d6efd;
+            border-radius: 10px;
+        }
+
+        .report-sheet {
+            background: #ffffff;
+            border: 1px solid #dbe3ec;
+            border-radius: 16px;
+            padding: 30px;
+        }
+
+        .report-letterhead {
+            text-align: center;
+            padding-bottom: 20px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #071D37;
+        }
+
+        .report-lab-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #071D37;
+            margin-bottom: 4px;
+        }
+
+        .report-meta {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .report-total-row td {
+            background: #f1f5f9 !important;
+            font-weight: 700;
+            border-top: 2px solid #cbd5e1;
+        }
+
+        /* ---------- Centred auth pages (US-LM-09) ---------- */
+
+        .auth-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            width: 100%;
+        }
+
+        .auth-card {
+            background: #ffffff;
+            border-radius: 20px;
+            border: 1px solid #dbe3ec;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 36px;
+            max-width: 460px;
+            width: 100%;
+        }
+
+        .auth-logo {
+            width: 64px;
+            height: 64px;
+            background: #071D37;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 28px;
+            margin: 0 auto 18px;
+        }
+
+        .auth-title {
+            text-align: center;
+            font-weight: 700;
+            color: #071D37;
+            margin-bottom: 6px;
+        }
+
+        .auth-subtitle {
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.92rem;
+            margin-bottom: 26px;
+        }
+
         /* ---------- Text colours ---------- */
 
         .section-card,
@@ -1004,6 +1207,19 @@
 
             </a>
 
+            <div class="sidebar-section mt-4">
+                REPORTING
+            </div>
+
+            <a asp-controller="LabManager"
+               asp-action="Reports"
+               class="sidebar-link">
+
+                <i class="fa-solid fa-chart-column me-2"></i>
+                Management Reports
+
+            </a>
+
             <!-- ACTIONS -->
             <div class="sidebar-actions">
 
@@ -1035,6 +1251,24 @@
     <div class="main-content">
 
         <div class="page-wrap">
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert-box alert-success">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <div>@TempData["Success"]</div>
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert-box alert-error">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <div>@TempData["Error"]</div>
+                </div>
+            }
+
+            <div asp-validation-summary="All" class="validation-box"></div>
 
             <div class="section-card">
 
@@ -1100,10 +1334,14 @@
                                 <td class="col-actions">
                                     <div class="row-actions">
 
-                                        <button type="button" class="icon-btn"
-                                                title="Edit" aria-label="Edit MedSupply SA">
+                                        <a asp-controller="LabManager"
+                                           asp-action="SupplierEdit"
+                                           asp-route-id="1"
+                                           class="icon-btn"
+                                           title="Edit"
+                                           aria-label="Edit MedSupply SA">
                                             <i class="fa-solid fa-pen-to-square"></i>
-                                        </button>
+                                        </a>
 
                                         <button type="button"
                                                 class="icon-btn icon-btn-danger"
@@ -1127,10 +1365,14 @@
                                 <td class="col-actions">
                                     <div class="row-actions">
 
-                                        <button type="button" class="icon-btn"
-                                                title="Edit" aria-label="Edit LabWare Pty">
+                                        <a asp-controller="LabManager"
+                                           asp-action="SupplierEdit"
+                                           asp-route-id="2"
+                                           class="icon-btn"
+                                           title="Edit"
+                                           aria-label="Edit LabWare Pty">
                                             <i class="fa-solid fa-pen-to-square"></i>
-                                        </button>
+                                        </a>
 
                                         <button type="button"
                                                 class="icon-btn icon-btn-danger"
