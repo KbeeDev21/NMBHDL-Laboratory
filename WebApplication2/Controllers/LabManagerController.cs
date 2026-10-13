@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 namespace WebApplication2.Controllers
 {
+    // keep in mind to look over dashboard , profile , changepassword , editprofile views they are not responding
+
     public class LabManagerController : Controller
     {
         private readonly ILogger<LabManagerController> _logger;
@@ -11,6 +13,12 @@ namespace WebApplication2.Controllers
         public LabManagerController(ILogger<LabManagerController> logger)
         {
             _logger = logger;
+        }
+        public IActionResult Dashboard()
+        {
+            {
+                return PartialView("Dashboard");
+            }
         }
         public IActionResult ConsumableIndex()
         {
@@ -94,6 +102,24 @@ namespace WebApplication2.Controllers
         {
             {
                 return PartialView("TestTypeIndex");
+            }
+        }
+       public IActionResult Profile()
+        {
+            {
+                return PartialView("Profile");
+            }
+        }
+        public IActionResult ChangePassword()
+        {
+            {
+                return PartialView("ChangePassword");
+            }
+        }
+        public IActionResult EditProfile()
+        {
+            {
+                return PartialView("EditProfile");
             }
         }
     }
