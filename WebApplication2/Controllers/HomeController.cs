@@ -44,7 +44,7 @@ namespace WebApplication2.Controllers
                 return RedirectToAction("AdminDashboard");
 
             if (user == "laboratory manager")
-                return RedirectToAction("LabManagerDashboard");
+                return RedirectToAction("Dashboard","LabManager");
 
             if (user == "doctor")
                 return RedirectToAction("DoctorDashboard");
