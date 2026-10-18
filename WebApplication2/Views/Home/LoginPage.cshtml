@@ -18,110 +18,110 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
     <style>
-            html, body {
-                height: 100%;
-                margin: 0;
-                background-color: #071D37;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
+        html, body {
+            height: 100%;
+            margin: 0;
+            background-color: #071D37;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-            /* TOP LEFT NAV */
-            .top-left-nav {
-                position: absolute;
-                top: 20px;
-                left: 20px;
-            }
+        /* TOP LEFT NAV */
+        .top-left-nav {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
 
-            .nav-icon-group {
-                display: flex;
-                gap: 12px;
-                align-items: center;
-                padding: 10px 14px;
-                border: 2px solid white;
-                border-radius: 12px;
-                text-decoration: none;
-                color: white;
-                transition: 0.2s ease;
-            }
+        .nav-icon-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 10px 14px;
+            border: 2px solid white;
+            border-radius: 12px;
+            text-decoration: none;
+            color: white;
+            transition: 0.2s ease;
+        }
 
-            .nav-icon-group i {
-                font-size: 18px;
-                color: white;
-            }
+        .nav-icon-group i {
+            font-size: 18px;
+            color: white;
+        }
 
-            .nav-icon-group:hover {
-                background: rgba(255, 255, 255, 0.1);
-            }
+        .nav-icon-group:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
 
-            /* LOGIN CARD */
-            .login-card {
-                width: 900px;
-                height: 550px;
-                display: flex;
-                border-radius: 5%;
-                overflow: hidden;
-                background: white;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-            }
+        /* LOGIN CARD */
+        .login-card {
+            width: 900px;
+            height: 550px;
+            display: flex;
+            border-radius: 5%;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
 
-            /* LEFT LOGO */
-            .login-left {
-                width: 50%;
-                background-image: url('/pictures/logo.png');
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
-            }
+        /* LEFT LOGO */
+        .login-left {
+            width: 50%;
+            background-image: url('@Url.Content("~/pictures/logo.png")');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
 
-            /* RIGHT SIDE */
-            .login-right {
-                width: 50%;
-                padding: 50px;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-            }
+        /* RIGHT SIDE */
+        .login-right {
+            width: 50%;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
 
-            /* TITLE */
-            .login-title {
-                font-weight: 700;
-                color: #071D37;
-                text-align: center;
-                transform: translateY(-20px);
-                margin-bottom: 20px;
-            }
+        /* TITLE */
+        .login-title {
+            font-weight: 700;
+            color: #071D37;
+            text-align: center;
+            transform: translateY(-20px);
+            margin-bottom: 20px;
+        }
 
-            /* REGISTER */
-            .register-link {
-                color: #0d6efd;
-                font-weight: 600;
-                text-decoration: none;
-            }
+        /* REGISTER */
+        .register-link {
+            color: #0d6efd;
+            font-weight: 600;
+            text-decoration: none;
+        }
 
-            .register-link:hover {
-                text-decoration: underline;
-            }
+        .register-link:hover {
+            text-decoration: underline;
+        }
 
-            .modal-overlay {
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.5);
-                justify-content: center;
-                align-items: center;
-            }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
 
-            .modal-box {
-                width: 420px;
-                background: white;
-                padding: 20px;
-                border-radius: 10px;
-            }
+        .modal-box {
+            width: 420px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
     </style>
 </head>
 
@@ -135,14 +135,14 @@
         </a>
     </div>
 
-   
 
     <div class="login-card">
 
-        
+        <!-- LEFT LOGO -->
         <div class="login-left"></div>
 
-        
+
+        <!-- RIGHT SIDE -->
         <div class="login-right">
 
             <h2 class="login-title">Login</h2>
@@ -151,12 +151,20 @@
 
                 <div class="mb-3">
                     <label class="form-label">Username</label>
-                    <input type="text" name="Username" class="form-control" placeholder="Enter username (e.g., doctor, admin)" required />
+
+                    <input type="text"
+                           name="Username"
+                           class="form-control"
+                           placeholder="Enter username (e.g., doctor, admin)"
+                           required />
                 </div>
+
 
                 <div class="mb-3">
                     <label class="form-label">Password</label>
+
                     <div class="input-group">
+
                         <input type="password"
                                name="Password"
                                class="form-control"
@@ -166,27 +174,49 @@
                         <button class="btn btn-outline-secondary"
                                 type="button"
                                 onclick="togglePassword()">
+
                             <i class="fa-solid fa-eye" id="eyeIcon"></i>
+
                         </button>
+
                     </div>
                 </div>
 
+
                 <div class="d-flex justify-content-center mt-3">
+
                     <button type="submit" class="btn btn-primary px-5">
+
                         <i class="fa-solid fa-right-to-bracket"></i> Login
+
                     </button>
+
                 </div>
 
+
                 <div class="text-center mt-3">
-                    <a href="javascript:void(0)" class="register-link" onclick="openRegisterModal()">
+
+                    <a href="javascript:void(0)"
+                       class="register-link"
+                       onclick="openRegisterModal()">
+
                         <i class="fa-solid fa-person-circle-plus"></i> Register
+
                     </a>
+
                 </div>
 
+
                 <div class="text-center mt-3">
-                    <a href="javascript:void(0)" class="register-link" onclick="openForgotModal()">
+
+                    <a href="javascript:void(0)"
+                       class="register-link"
+                       onclick="openForgotModal()">
+
                         <i class="fa-solid fa-circle-question"></i> Forgot Password?
+
                     </a>
+
                 </div>
 
             </form>
@@ -195,81 +225,92 @@
 
     </div>
 
-    
+
     <script>
-            function togglePassword() {
-                const passwordInput = document.getElementById("passwordInput");
-                const eyeIcon = document.getElementById("eyeIcon");
+        function togglePassword() {
+            const passwordInput = document.getElementById("passwordInput");
+            const eyeIcon = document.getElementById("eyeIcon");
 
-                if (passwordInput.type === "password") {
-                    passwordInput.type = "text";
-                    eyeIcon.classList.remove("fa-eye");
-                    eyeIcon.classList.add("fa-eye-slash");
-                } else {
-                    passwordInput.type = "password";
-                    eyeIcon.classList.remove("fa-eye-slash");
-                    eyeIcon.classList.add("fa-eye");
-                }
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                eyeIcon.classList.remove("fa-eye");
+                eyeIcon.classList.add("fa-eye-slash");
+            } else {
+                passwordInput.type = "password";
+                eyeIcon.classList.remove("fa-eye-slash");
+                eyeIcon.classList.add("fa-eye");
             }
-            function openRegisterModal() {
-                document.getElementById("registerModal").style.display = "flex";
-            }
+        }
 
-            function closeRegisterModal() {
-                document.getElementById("registerModal").style.display = "none";
-            }
+        function openRegisterModal() {
+            document.getElementById("registerModal").style.display = "flex";
+        }
 
-                    function openForgotModal() {
-                document.getElementById("forgotModal").style.display = "flex";
-            }
+        function closeRegisterModal() {
+            document.getElementById("registerModal").style.display = "none";
+        }
 
-            function closeForgotModal() {
-                document.getElementById("forgotModal").style.display = "none";
-            }
+        function openForgotModal() {
+            document.getElementById("forgotModal").style.display = "flex";
+        }
 
-            function searchUser() {
-                const email = document.getElementById("searchEmail").value;
+        function closeForgotModal() {
+            document.getElementById("forgotModal").style.display = "none";
+        }
 
-                fetch('/Account/FindUserByEmail?email=' + email)
-                    .then(res => res.json())
-                    .then(data => {
+        function searchUser() {
+            const email = document.getElementById("searchEmail").value;
 
-                        if (data.found) {
-                            document.getElementById("resetSection").style.display = "block";
-                        } else {
-                            alert("Email not found");
-                        }
-
-                    });
-            }
-
-            function resetPassword() {
-                const email = document.getElementById("searchEmail").value;
-                const password = document.getElementById("newPassword").value;
-
-                fetch('/Account/ResetPassword', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: email, password: password })
-                })
+            fetch('/Account/FindUserByEmail?email=' + email)
                 .then(res => res.json())
                 .then(data => {
-                    alert("Password reset successful");
-                    closeForgotModal();
+
+                    if (data.found) {
+                        document.getElementById("resetSection").style.display = "block";
+                    } else {
+                        alert("Email not found");
+                    }
+
                 });
-            }
+        }
+
+        function resetPassword() {
+            const email = document.getElementById("searchEmail").value;
+            const password = document.getElementById("newPassword").value;
+
+            fetch('/Account/ResetPassword', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert("Password reset successful");
+                closeForgotModal();
+            });
+        }
     </script>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+
     <!-- REGISTER MODAL -->
     <div id="registerModal" class="modal-overlay">
 
         <div class="modal-box">
 
             <div class="d-flex justify-content-between align-items-center mb-3">
+
                 <h5 class="mb-0">Patient Registration</h5>
 
-                <button type="button" class="btn-close" onclick="closeRegisterModal()"></button>
+                <button type="button"
+                        class="btn-close"
+                        onclick="closeRegisterModal()">
+                </button>
+
             </div>
 
             <form method="post" action="/Account/RegisterPatient">
@@ -319,33 +360,61 @@
 
     </div>
 
+
+    <!-- FORGOT PASSWORD MODAL -->
     <div id="forgotModal" class="modal-overlay">
 
         <div class="modal-box">
 
             <div class="d-flex justify-content-between align-items-center mb-3">
+
                 <h5>Forgot Password</h5>
 
-                <button type="button" class="btn-close" onclick="closeForgotModal()"></button>
+                <button type="button"
+                        class="btn-close"
+                        onclick="closeForgotModal()">
+                </button>
+
             </div>
+
 
             <!-- SEARCH EMAIL -->
             <div class="input-group mb-3">
-                <input type="email" id="searchEmail" class="form-control" placeholder="Enter email" />
 
-                <button class="btn btn-outline-primary" type="button" onclick="searchUser()">
+                <input type="email"
+                       id="searchEmail"
+                       class="form-control"
+                       placeholder="Enter email" />
+
+                <button class="btn btn-outline-primary"
+                        type="button"
+                        onclick="searchUser()">
+
                     <i class="fa fa-search"></i>
+
                 </button>
+
             </div>
 
-            <!-- RESET SECTION (hidden first) -->
+
+            <!-- RESET SECTION -->
             <div id="resetSection" style="display:none;">
 
-                <input type="password" id="newPassword" class="form-control mb-2" placeholder="New Password" />
-                <input type="password" id="confirmPassword" class="form-control mb-2" placeholder="Confirm Password" />
+                <input type="password"
+                       id="newPassword"
+                       class="form-control mb-2"
+                       placeholder="New Password" />
 
-                <button class="btn btn-primary w-100" onclick="resetPassword()">
+                <input type="password"
+                       id="confirmPassword"
+                       class="form-control mb-2"
+                       placeholder="Confirm Password" />
+
+                <button class="btn btn-primary w-100"
+                        onclick="resetPassword()">
+
                     Reset Password
+
                 </button>
 
             </div>
@@ -353,5 +422,6 @@
         </div>
 
     </div>
+
 </body>
 </html>

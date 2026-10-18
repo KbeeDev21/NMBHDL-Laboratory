@@ -45,5 +45,10 @@ namespace WebApplication2.Controllers
         {
             return PartialView("_TrackTestresults");
         }
+
+        public IActionResult DashboardContent()
+        {
+            return PartialView("_DashboardContent");
+        }
     }
 }

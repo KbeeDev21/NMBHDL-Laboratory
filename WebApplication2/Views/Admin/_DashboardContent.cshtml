@@ -1,0 +1,171 @@
+﻿<div class="dashboard-wrapper">
+
+
+    <!-- HEADER -->
+
+    <div class="mb-4">
+
+        <h1 class="page-title display-6">
+
+            Welcome, Mr Modau
+
+        </h1>
+
+
+        <p class="page-subtitle">
+
+            Administration Dashboard — select a module below to begin.
+
+        </p>
+
+    </div>
+
+
+    <!-- MANAGEMENT MODULE CARDS -->
+
+    <div class="row g-4">
+
+
+        <!-- MEDICAL CONDITIONS -->
+
+        <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+
+            <a href="#"
+               class="dash-card ajax-link"
+               data-url="@Url.Action("ListMedicalConditions", "Admin")">
+
+
+                <div class="dash-icon-wrap bg-medical">
+
+                    <i class="fa-solid fa-virus"></i>
+
+                </div>
+
+
+                <div class="dash-title">
+
+                    Medical Conditions
+
+                </div>
+
+
+                <p class="dash-desc">
+
+                    Create, view and manage medical condition records used throughout the system.
+
+                </p>
+
+
+            </a>
+
+        </div>
+
+
+        <!-- ALLERGIES -->
+
+        <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+
+            <a href="#"
+               class="dash-card ajax-link"
+               data-url="@Url.Action("ListAllergies", "Admin")">
+
+
+                <div class="dash-icon-wrap bg-allergy">
+
+                    <i class="fa-solid fa-hand-dots"></i>
+
+                </div>
+
+
+                <div class="dash-title">
+
+                    Allergies
+
+                </div>
+
+
+                <p class="dash-desc">
+
+                    Manage allergy records and descriptions used for patient information.
+
+                </p>
+
+
+            </a>
+
+        </div>
+
+
+        <!-- MEDICATION -->
+
+        <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+
+            <a href="#"
+               class="dash-card ajax-link"
+               data-url="@Url.Action("ListMedication", "Admin")">
+
+
+                <div class="dash-icon-wrap bg-medication">
+
+                    <i class="fa-solid fa-capsules"></i>
+
+                </div>
+
+
+                <div class="dash-title">
+
+                    Medication
+
+                </div>
+
+
+                <p class="dash-desc">
+
+                    Create and manage medication records available within the laboratory system.
+
+                </p>
+
+
+            </a>
+
+        </div>
+
+
+        <!-- PROFILE SETTINGS -->
+
+        <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+
+            <a href="#"
+               class="dash-card ajax-link"
+               data-url="@Url.Action("UpdateProfile", "Admin")">
+
+
+                <div class="dash-icon-wrap bg-profile">
+
+                    <i class="fa-solid fa-user-gear"></i>
+
+                </div>
+
+
+                <div class="dash-title">
+
+                    Profile Settings
+
+                </div>
+
+
+                <p class="dash-desc">
+
+                    Update your administrator profile information and manage account security settings.
+
+                </p>
+
+
+            </a>
+
+        </div>
+
+
+    </div>
+
+</div>
