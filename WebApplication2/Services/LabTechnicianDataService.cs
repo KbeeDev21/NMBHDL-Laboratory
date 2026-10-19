@@ -66,6 +66,91 @@ public sealed class LabTechnicianDataService
                 "Missing DefaultConnection connection string.");
     }
 
+   public async Task<IReadOnlyList<LabEscalationViewModel>>
+    GetActiveEscalationsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        const string sql = """
+        SELECT
+            tr.TestRequestID,
+            sr.SampleReceiptID,
+            tt.TestTypeID,
+            LTRIM(RTRIM(CONCAT(u.Surname, ', ', u.Name))) AS PatientName,
+            COALESCE(tt.TestName, '') AS TestName,
+            COALESCE(tr.Urgency, '') AS Urgency,
+            COALESCE(sr.Barcode, '') AS Barcode,
+            LTRIM(RTRIM(CONCAT(
+                COALESCE(doctor.Surname, ''),
+                CASE WHEN doctor.Surname IS NOT NULL THEN ', ' ELSE '' END,
+                COALESCE(doctor.Name, '')
+            ))) AS DoctorName,
+            sr.DateTimeReceived,
+            COALESCE(tt.TurnAroundMinutes, 0) AS TurnAroundMinutes,
+            DATEDIFF(
+                MINUTE,
+                DATEADD(
+                    MINUTE,
+                    tt.TurnAroundMinutes,
+                    sr.DateTimeReceived
+                ),
+                GETDATE()
+            ) AS MinutesOverdue
+        FROM dbo.SampleReceipt sr
+        INNER JOIN dbo.TestRequest tr
+            ON tr.TestRequestID = sr.TestRequestID
+        INNER JOIN dbo.Patient p
+            ON p.PatientID = tr.PatientID
+        INNER JOIN dbo.[User] u
+            ON u.UserID = p.UserID
+        LEFT JOIN dbo.Doctor d
+            ON d.DoctorID = tr.DoctorID
+        LEFT JOIN dbo.[User] doctor
+            ON doctor.UserID = d.UserID
+        CROSS APPLY STRING_SPLIT(
+            REPLACE(
+                REPLACE(
+                    REPLACE(
+                        REPLACE(COALESCE(tr.Type, ''), ';', ','),
+                        '+', ','
+                    ),
+                    CHAR(13), ','
+                ),
+                CHAR(10), ','
+            ),
+            ','
+        ) requested
+        INNER JOIN dbo.TestType tt
+            ON LTRIM(RTRIM(requested.value)) = LTRIM(RTRIM(tt.TestName))
+        WHERE COALESCE(tt.TurnAroundMinutes, 0) > 0
+          AND sr.DateTimeReceived IS NOT NULL
+          AND DATEADD(
+                MINUTE,
+                tt.TurnAroundMinutes,
+                sr.DateTimeReceived
+              ) < GETDATE()
+          AND COALESCE(tr.Status, '') NOT IN
+              ('Cancelled', 'Canceled', 'Completed', 'Rejected')
+        ORDER BY
+            CASE
+                WHEN UPPER(LTRIM(RTRIM(COALESCE(tr.Urgency, '')))) = 'STAT'
+                    THEN 0
+                WHEN UPPER(LTRIM(RTRIM(COALESCE(tr.Urgency, '')))) = 'URGENT'
+                    THEN 1
+                ELSE 2
+            END,
+            MinutesOverdue DESC;
+        """;
+
+        await using var connection = new SqlConnection(_connectionString);
+
+        var rows = await connection.QueryAsync<LabEscalationViewModel>(
+            new CommandDefinition(
+                sql,
+                cancellationToken: cancellationToken));
+
+        return rows.AsList();
+    }
+
     public async Task<IReadOnlyList<LabTechnicianQueueItem>>
         GetRequestsAwaitingReceiptAsync(
             CancellationToken cancellationToken = default)
@@ -672,12 +757,14 @@ public sealed class LabTechnicianDataService
                 : "Within Normal Range";
 
         const string insertSql = """
-            INSERT INTO dbo.TestResult
-                (Result, IsAbnormal, Status, CompletionDateTime, TestTypeID)
-            OUTPUT INSERTED.TestResultID
-            VALUES
-                (@Result, @IsAbnormal, @Status, SYSDATETIME(), @TestTypeID);
-            """;
+             INSERT INTO dbo.TestResult
+             (Result, IsAbnormal, Status, CompletionDateTime,
+             TestTypeID, TestRequestID)
+             OUTPUT INSERTED.TestResultID
+             VALUES
+             (@Result, @IsAbnormal, @Status, SYSDATETIME(),
+             @TestTypeID, @TestRequestID);
+             """;
 
         int testResultId = await connection.ExecuteScalarAsync<int>(
             new CommandDefinition(
@@ -687,7 +774,8 @@ public sealed class LabTechnicianDataService
                     Result = result.Trim(),
                     IsAbnormal = isAbnormal,
                     Status = status,
-                    TestTypeID = testTypeId
+                    TestTypeID = testTypeId,
+                    TestRequestID = assignment.TestRequestID
                 },
                 cancellationToken: cancellationToken));
 
@@ -726,17 +814,11 @@ public sealed class LabTechnicianDataService
                  x.TestRequestID == testRequestId);
     }
 
+
     public async Task<IReadOnlyList<VerificationQueueItemViewModel>>
         GetVerificationQueueAsync(
             CancellationToken cancellationToken = default)
     {
-        var completedTests = CompletedTests.Values
-            .OrderByDescending(x => x.CompletionDateTime)
-            .ToList();
-
-        if (completedTests.Count == 0)
-            return Array.Empty<VerificationQueueItemViewModel>();
-
         const string sql = """
             SELECT
                 tr.TestRequestID,
@@ -750,57 +832,50 @@ public sealed class LabTechnicianDataService
                 COALESCE(tt.Units, '') AS Units,
                 tt.NormalRangeMin,
                 tt.NormalRangeMax,
-                COALESCE(tr.Urgency, '') AS Urgency
-            FROM dbo.SampleReceipt sr
+                COALESCE(tr.Urgency, '') AS Urgency,
+                COALESCE(tres.Result, '') AS Result,
+                COALESCE(tres.Status, '') AS ResultStatus,
+                COALESCE(tres.IsAbnormal, 0) AS IsAbnormal,
+                tres.CompletionDateTime,
+                tres.TestResultID,
+                CONCAT('REQ-', tr.TestRequestID) AS RequestNumber,
+                COALESCE(latest.Decision, '') AS LatestVerificationDecision,
+                'Unknown' AS CapturedBy
+            FROM dbo.TestResult tres
             INNER JOIN dbo.TestRequest tr
-                ON tr.TestRequestID = sr.TestRequestID
+                ON tr.TestRequestID = tres.TestRequestID
+            INNER JOIN dbo.SampleReceipt sr
+                ON sr.TestRequestID = tr.TestRequestID
             INNER JOIN dbo.Patient p
                 ON p.PatientID = tr.PatientID
             INNER JOIN dbo.[User] u
                 ON u.UserID = p.UserID
             INNER JOIN dbo.TestType tt
-                ON tt.TestTypeID = @TestTypeID
-            WHERE sr.SampleReceiptID = @SampleReceiptID
-              AND tr.TestRequestID = @TestRequestID;
+                ON tt.TestTypeID = tres.TestTypeID
+            OUTER APPLY
+            (
+                SELECT TOP (1) rv.Decision
+                FROM dbo.ResultVerification rv
+                WHERE rv.TestResultID = tres.TestResultID
+                ORDER BY rv.VerificationDateTime DESC,
+                         rv.ResultVerificationID DESC
+            ) latest
+            WHERE tres.TestRequestID IS NOT NULL
+            ORDER BY tres.CompletionDateTime DESC,
+                     tres.TestResultID DESC;
             """;
 
         await using var connection = new SqlConnection(_connectionString);
-        var items = new List<VerificationQueueItemViewModel>();
 
-        foreach (var completed in completedTests)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
+        var items = await connection.QueryAsync<VerificationQueueItemViewModel>(
+            new CommandDefinition(
+                sql,
+                cancellationToken: cancellationToken));
 
-            var patient = await connection.QuerySingleOrDefaultAsync<
-                VerificationQueueItemViewModel>(
-                new CommandDefinition(
-                    sql,
-                    new
-                    {
-                        completed.SampleReceiptID,
-                        completed.TestRequestID,
-                        completed.TestTypeID
-                    },
-                    cancellationToken: cancellationToken));
-
-            if (patient == null)
-                continue;
-
-            patient.TestResultID = completed.TestResultID;
-            patient.Result = completed.Result;
-            patient.ResultStatus = completed.Status;
-            patient.IsAbnormal = !completed.Status.Equals(
-                "Within Normal Range",
-                StringComparison.OrdinalIgnoreCase);
-            patient.CompletionDateTime = completed.CompletionDateTime;
-            patient.RequestNumber = $"REQ-{completed.TestRequestID}";
-            patient.CapturedBy = "Unknown";
-
-            items.Add(patient);
-        }
-
-        return items;
+        return items.AsList();
     }
+
+
 
     public async Task<VerificationQueueItemViewModel?>
         GetVerificationResultAsync(
@@ -810,68 +885,53 @@ public sealed class LabTechnicianDataService
         if (testResultId <= 0)
             return null;
 
-        var completed = CompletedTests.Values.FirstOrDefault(
-            x => x.TestResultID == testResultId);
-
-        if (completed == null)
-            return null;
-
         const string sql = """
-            SELECT
-                tr.TestRequestID,
-                sr.SampleReceiptID,
-                tt.TestTypeID,
-                p.PatientID,
-                COALESCE(sr.Barcode, '') AS Barcode,
-                LTRIM(RTRIM(CONCAT(u.Surname, ', ', u.Name))) AS PatientName,
-                COALESCE(u.IDNumber, '') AS PatientNumber,
-                COALESCE(tt.TestName, '') AS TestName,
-                COALESCE(tt.Units, '') AS Units,
-                tt.NormalRangeMin,
-                tt.NormalRangeMax,
-                COALESCE(tr.Urgency, '') AS Urgency
-            FROM dbo.SampleReceipt sr
-            INNER JOIN dbo.TestRequest tr
-                ON tr.TestRequestID = sr.TestRequestID
-            INNER JOIN dbo.Patient p
-                ON p.PatientID = tr.PatientID
-            INNER JOIN dbo.[User] u
-                ON u.UserID = p.UserID
-            INNER JOIN dbo.TestType tt
-                ON tt.TestTypeID = @TestTypeID
-            WHERE sr.SampleReceiptID = @SampleReceiptID
-              AND tr.TestRequestID = @TestRequestID;
-            """;
+        SELECT
+            tr.TestRequestID,
+            sr.SampleReceiptID,
+            tt.TestTypeID,
+            p.PatientID,
+            COALESCE(sr.Barcode, '') AS Barcode,
+            LTRIM(RTRIM(CONCAT(u.Surname, ', ', u.Name)))
+                AS PatientName,
+            COALESCE(u.IDNumber, '') AS PatientNumber,
+            COALESCE(tt.TestName, '') AS TestName,
+            COALESCE(tt.Units, '') AS Units,
+            tt.NormalRangeMin,
+            tt.NormalRangeMax,
+            COALESCE(tr.Urgency, '') AS Urgency,
+            COALESCE(tres.Result, '') AS Result,
+            COALESCE(tres.Status, '') AS ResultStatus,
+            COALESCE(tres.IsAbnormal, 0) AS IsAbnormal,
+            tres.CompletionDateTime,
+            tres.TestResultID,
+            CONCAT('REQ-', tr.TestRequestID) AS RequestNumber,
+            'Unknown' AS CapturedBy
+        FROM dbo.TestResult tres
+        INNER JOIN dbo.TestRequest tr
+            ON tr.TestRequestID = tres.TestRequestID
+        INNER JOIN dbo.SampleReceipt sr
+            ON sr.TestRequestID = tr.TestRequestID
+        INNER JOIN dbo.Patient p
+            ON p.PatientID = tr.PatientID
+        INNER JOIN dbo.[User] u
+            ON u.UserID = p.UserID
+        INNER JOIN dbo.TestType tt
+            ON tt.TestTypeID = tres.TestTypeID
+        WHERE tres.TestResultID = @TestResultID;
+        """;
 
-        await using var connection = new SqlConnection(_connectionString);
+        await using var connection =
+            new SqlConnection(_connectionString);
 
-        var item = await connection.QuerySingleOrDefaultAsync<
+        return await connection.QuerySingleOrDefaultAsync<
             VerificationQueueItemViewModel>(
             new CommandDefinition(
                 sql,
-                new
-                {
-                    completed.SampleReceiptID,
-                    completed.TestRequestID,
-                    completed.TestTypeID
-                },
+                new { TestResultID = testResultId },
                 cancellationToken: cancellationToken));
-
-        if (item == null)
-            return null;
-
-        item.TestResultID = completed.TestResultID;
-        item.Result = completed.Result;
-        item.ResultStatus = completed.Status;
-        item.IsAbnormal = !completed.Status.Equals(
-            "Within Normal Range",
-            StringComparison.OrdinalIgnoreCase);
-        item.CompletionDateTime = completed.CompletionDateTime;
-        item.RequestNumber = $"REQ-{completed.TestRequestID}";
-        item.CapturedBy = "Unknown";
-
-        return item;
     }
+
 
     public async Task<(bool Success, string Message)> SaveVerificationDecisionAsync(
         int testResultId,
@@ -962,9 +1022,39 @@ public sealed class LabTechnicianDataService
         {
             return (false, "The test result was not found. No decision was saved.");
         }
-        catch (Exception)
+        catch (SqlException ex)
         {
-            return (false, "The verification decision could not be saved.");
+            Console.Error.WriteLine(
+                $"SaveVerificationDecisionAsync SQL error {ex.Number}: {ex.Message}");
+
+            return (false,
+                $"Database error ({ex.Number}): {ex.Message}");
         }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(
+                $"SaveVerificationDecisionAsync error: {ex}");
+
+            return (false,
+                "The verification decision could not be saved. Check application logs.");
+        }
+    }
+
+    public async Task<int?> GetLabTechnicianIdForUserAsync(
+    int userId,
+    CancellationToken cancellationToken = default)
+    {
+        const string sql = @"
+        SELECT TOP (1) LabTechnicianID
+        FROM dbo.LabTechnician
+        WHERE UserID = @UserID;";
+
+        await using var connection = new SqlConnection(_connectionString);
+
+        return await connection.QuerySingleOrDefaultAsync<int?>(
+            new CommandDefinition(
+                sql,
+                new { UserID = userId },
+                cancellationToken: cancellationToken));
     }
 }

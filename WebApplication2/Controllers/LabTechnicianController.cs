@@ -196,7 +196,26 @@ namespace WebApplication2.Controllers
         public IActionResult TestDetail() => View();
 
         [HttpGet]
-        public IActionResult Escalations() => View();
+        public async Task<IActionResult> Escalations(
+    CancellationToken cancellationToken)
+        {
+            try
+            {
+                var escalations = await _labTechnicianData
+                    .GetActiveEscalationsAsync(cancellationToken);
+
+                return View(escalations);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Escalations failed: {ex}");
+
+                TempData["ErrorMessage"] =
+                    $"Escalations error: {ex.Message}";
+
+                return View(new List<LabEscalationViewModel>());
+            }
+        }
 
         [HttpGet]
         public IActionResult Reports() => View();
@@ -563,6 +582,9 @@ namespace WebApplication2.Controllers
             }
         }
 
+
+
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitVerificationDecision(
@@ -579,70 +601,94 @@ namespace WebApplication2.Controllers
 
             var normalizedDecision = decision?.Trim();
 
-            if (!string.Equals(
-                    normalizedDecision,
-                    "Approved",
+            if (!string.Equals(normalizedDecision, "Approved",
                     StringComparison.OrdinalIgnoreCase)
-                && !string.Equals(
-                    normalizedDecision,
-                    "Returned",
+                && !string.Equals(normalizedDecision, "Returned",
                     StringComparison.OrdinalIgnoreCase))
             {
-                TempData["ErrorMessage"] =
-                    "Select a valid verification decision.";
-
-                return RedirectToAction(
-                    nameof(VerifyResults),
-                    new { testResultId });
+                TempData["ErrorMessage"] = "Select a valid verification decision.";
+                return RedirectToAction(nameof(VerifyResults), new { testResultId });
             }
 
-            if (string.Equals(
-                    normalizedDecision,
-                    "Returned",
+            if (string.Equals(normalizedDecision, "Returned",
                     StringComparison.OrdinalIgnoreCase)
                 && string.IsNullOrWhiteSpace(returnReason))
             {
                 TempData["ErrorMessage"] =
                     "A reason is required when returning a result for recapture.";
-
-                return RedirectToAction(
-                    nameof(VerifyResults),
-                    new { testResultId });
+                return RedirectToAction(nameof(VerifyResults), new { testResultId });
             }
 
             try
             {
-                var result = await _labTechnicianData
-                    .GetVerificationResultAsync(
-                        testResultId,
-                        cancellationToken);
+                var result = await _labTechnicianData.GetVerificationResultAsync(
+                    testResultId, cancellationToken);
 
                 if (result == null)
                 {
-                    TempData["ErrorMessage"] =
-                        "The selected test result could not be found.";
-
+                    TempData["ErrorMessage"] = "The selected test result was not found.";
                     return RedirectToAction(nameof(VerificationQueue));
                 }
 
-                TempData["ErrorMessage"] =
-                    "The decision was not saved. This login must be linked to a valid lab technician before verification can be recorded.";
+                var userId = User.FindFirst(
+                    System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+                if (!int.TryParse(userId, out var loggedInUserId))
+                {
+                    TempData["ErrorMessage"] =
+                        "Your login could not be matched to a lab technician.";
+                    return RedirectToAction(nameof(VerifyResults), new { testResultId });
+                }
+
+                var technicianId = await _labTechnicianData
+                    .GetLabTechnicianIdForUserAsync(loggedInUserId, cancellationToken);
+
+                if (technicianId == null || technicianId.Value <= 0)
+                {
+                    TempData["ErrorMessage"] =
+                        "No lab technician profile is linked to your login.";
+                    return RedirectToAction(nameof(VerifyResults), new { testResultId });
+                }
+
+                var saveResult = await _labTechnicianData.SaveVerificationDecisionAsync(
+                    testResultId,
+                    technicianId.Value,
+                    normalizedDecision!,
+                    cancellationToken);
+
+                if (!saveResult.Success)
+                {
+                    Console.Error.WriteLine(
+                        $"Verification save failed for TestResultID {testResultId}: {saveResult.Message}");
+
+                    TempData["ErrorMessage"] = saveResult.Message;
+                    return RedirectToAction(nameof(VerifyResults), new { testResultId });
+                }
+
+                Console.WriteLine(
+                    $"Verification save succeeded for TestResultID {testResultId}: {saveResult.Message}");
+
+                TempData["SuccessMessage"] = saveResult.Message;
+
+                TempData["SuccessMessage"] = saveResult.Message;
 
                 return RedirectToAction(
-                    nameof(VerifyResults),
-                    new { testResultId });
+                    normalizedDecision.Equals("Returned",
+                        StringComparison.OrdinalIgnoreCase)
+                        ? nameof(ReviewQueue)
+                        : nameof(VerificationQueue));
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine(
-                    $"SubmitVerificationDecision failed: {ex}");
-
+                Console.Error.WriteLine($"SubmitVerificationDecision failed: {ex}");
                 TempData["ErrorMessage"] =
-                    "Could not process the verification decision. Check the application logs.";
-
-                return RedirectToAction(nameof(VerificationQueue));
+                    "Could not save the verification decision. Check the application logs.";
+                return RedirectToAction(nameof(VerifyResults), new { testResultId });
             }
         }
+
+
+
 
         [HttpGet]
         public async Task<IActionResult> ReviewQueue(
