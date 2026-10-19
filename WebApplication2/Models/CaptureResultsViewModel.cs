@@ -1,21 +1,36 @@
-﻿namespace WebApplication2.Models
+﻿
+namespace WebApplication2.Models
 {
     public class CaptureResultsViewModel
     {
-        public string RequestNumber { get; set; } = "REQ-2026-00124";
-        public string PatientName { get; set; } = "Baloyi, Thabo";
-        public int PatientAge { get; set; } = 42;
+        // Request, patient and sample identification
+        public int SampleReceiptID { get; set; }
+        public int TestRequestID { get; set; }
+        public int TestTypeID { get; set; }
 
-        public string Haemoglobin { get; set; } = "";
-        public string Wcc { get; set; } = "";
-        public string Platelets { get; set; } = "";
+        public string RequestNumber { get; set; } = string.Empty;
+        public string RegistrationNumber { get; set; } = string.Empty;
+        public string PatientName { get; set; } = string.Empty;
+        public int PatientAge { get; set; }
 
-        public string HaemoglobinNotes { get; set; } = "";
-        public string WccNotes { get; set; } = "";
-        public string PlateletsNotes { get; set; } = "";
+        public string Barcode { get; set; } = string.Empty;
 
-        public string HaemoglobinStatus { get; set; } = "Awaiting Result";
-        public string WccStatus { get; set; } = "Awaiting Result";
-        public string PlateletsStatus { get; set; } = "Awaiting Result";
+        // Selected individual test
+        public string TestName { get; set; } = string.Empty;
+        public string Units { get; set; } = string.Empty;
+
+        public decimal? NormalRangeMin { get; set; }
+        public decimal? NormalRangeMax { get; set; }
+
+        // Captured result
+        public string ResultValue { get; set; } = string.Empty;
+        public string TechnicianNotes { get; set; } = string.Empty;
+
+        // Result evaluation
+        public bool? IsAbnormal { get; set; }
+        public string Status { get; set; } = "Awaiting Result";
+
+        public bool IsCompleted { get; set; }
+        public DateTime? CompletionDateTime { get; set; }
     }
 }

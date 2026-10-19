@@ -1,1038 +1,413 @@
-﻿@{
+﻿
+@model IEnumerable<WebApplication2.Models.LabTechnicianQueueItem>
+    @using WebApplication2.Models
+
+    @{
     Layout = "~/Views/Shared/_LabTechLayout.cshtml";
     ViewData["Title"] = "Awaiting Selection";
-}
 
-<link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    var samples = Model?.Where(x => !x.IsRejected).ToList()
+                  ?? new List<LabTechnicianQueueItem>();
 
-<link href="~/css/dashboardstyles.css" rel="stylesheet" />
+    var testTypes = (ViewBag.TestTypes as IEnumerable<LabTechnicianQueueItem>)?.ToList()
+                    ?? new List<LabTechnicianQueueItem>();
 
-<style>
-
-    .page-container {
-        padding: 0;
+    var consumables = (ViewBag.Consumables as IEnumerable<ConsumableStockItem>)?.ToList()
+                      ?? new List<ConsumableStockItem>();
     }
 
-    .card-dark {
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 30px;
-        border: 1px solid #dbe3ec;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
+    <link href="~/css/dashboardstyles.css" rel="stylesheet" />
 
-    .queue-card {
-        background: #f8fafc;
-        border-radius: 16px;
-        padding: 22px;
-        margin-bottom: 20px;
-        border-left: 4px solid #2563eb;
-        border-top: 1px solid #e2e8f0;
-        border-right: 1px solid #e2e8f0;
-        border-bottom: 1px solid #e2e8f0;
-        transition: 0.2s ease;
-    }
-
-        .queue-card:hover {
-            background: #f1f5f9;
+    <style>
+        .awaiting-page {
+            padding: 24px;
+            background: #f8fafc;
         }
 
-    .status-badge {
-        display: inline-block;
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        margin-right: 6px;
-        margin-top: 5px;
-        font-weight: 600;
-    }
-
-    .badge-stat {
-        background: #f4a261;
-        color: black;
-    }
-
-    .badge-routine {
-        background: #d9e6f2;
-        color: black;
-    }
-
-    .badge-overdue {
-        background: #dc3545;
-        color: white;
-    }
-
-    .btn-dark-custom {
-        background: #0d6efd;
-        border: 1px solid #0d6efd;
-        color: white !important;
-        border-radius: 12px;
-        padding: 10px 18px;
-        text-decoration: none;
-        transition: 0.2s ease;
-        display: inline-block;
-    }
-
-        .btn-dark-custom:hover {
-            background: #0b5ed7;
-            border-color: #0b5ed7;
+        .awaiting-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px;
         }
 
-    .btn-outline-custom {
-        background: white;
-        border: 1px solid #0d6efd;
-        color: #0d6efd !important;
-        border-radius: 12px;
-        padding: 10px 18px;
-        text-decoration: none;
-        transition: 0.2s ease;
-        display: inline-block;
-    }
-
-        .btn-outline-custom:hover {
-            background: #eef5ff;
+        .sample-card {
+            background: #f8fafc;
+            border: 1px solid #dbe3ec;
+            border-left: 4px solid #2563eb;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 14px;
         }
 
-    .text-muted {
-        color: #6b7280 !important;
-    }
+            .sample-card.expanded {
+                background: #f0f6fc;
+            }
 
-    .filter-box,
-    .form-control,
-    .form-select {
-        background: #ffffff;
-        color: #1f2937;
-        border: 1px solid #d1d5db;
-        box-shadow: none;
-    }
+        .details-panel {
+            display: none;
+            margin-top: 18px;
+        }
 
-        .form-control:focus,
-        .form-select:focus {
-            background: #ffffff;
+        .info-section {
+            background: #fff;
+            border: 1px solid #dbe3ec;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #0f172a;
+        }
+
+        .info-box {
+            height: 100%;
+            padding: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow-wrap: anywhere;
+        }
+
+        .info-label {
+            color: #64748b;
+            font-size: .7rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
             color: #1f2937;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 0.15rem rgba(59,130,246,0.15);
+            font-weight: 600;
         }
 
-    h1,
-    h4,
-    p,
-    strong {
-        color: #1f2937;
-    }
-
-    /* EXPANDABLE DETAILS */
-
-    .details-panel {
-        display: none;
-        margin-top: 20px;
-    }
-
-    .info-section {
-        margin-top: 15px;
-        padding: 18px;
-        background: #ffffff;
-        border: 1px solid #dbe3ec;
-        border-radius: 12px;
-    }
-
-    .info-section-title {
-        font-size: 0.9rem;
-        font-weight: 700;
-        color: #0f172a;
-        margin-bottom: 12px;
-    }
-
-    .info-item {
-        margin-bottom: 10px;
-    }
-
-        .info-item:last-child {
-            margin-bottom: 0;
+        .pill {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: .75rem;
+            font-weight: 700;
+            margin: 3px;
+            background: #e2e8f0;
+            color: #334155;
         }
 
-    .info-label {
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        color: #64748b;
-        font-weight: 700;
-        margin-bottom: 3px;
-    }
-
-    .info-value {
-        font-size: 0.9rem;
-        color: #1f2937;
-    }
-
-    .clinical-notes {
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        border-radius: 10px;
-        padding: 12px;
-        color: #1e3a8a;
-        font-size: 0.88rem;
-        line-height: 1.5;
-    }
-
-    .consumable-list {
-        margin: 0;
-        padding-left: 20px;
-        color: #374151;
-    }
-
-    .sample-box {
-        background: #f8fafc;
-        border: 1px solid #dbe3ec;
-        border-radius: 10px;
-        padding: 12px 15px;
-    }
-
-    .sample-label {
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        color: #64748b;
-        font-weight: 700;
-    }
-
-    .sample-value {
-        font-weight: 600;
-        color: #1f2937;
-        margin-top: 3px;
-    }
-
-    .requested-test {
-        background: #f8fafc;
-        border: 1px solid #dbe3ec;
-        border-radius: 8px;
-        padding: 10px 12px;
-        margin-bottom: 8px;
-        color: #1f2937;
-        font-size: 0.88rem;
-    }
-
-        .requested-test:last-child {
-            margin-bottom: 0;
+        .pill-stat {
+            background: #ffedd5;
+            color: #9a3412;
         }
 
-        .requested-test i {
+        .pill-urgent, .pill-out {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .pill-routine {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .pill-low {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .pill-good {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .action-button {
+            border: 1px solid #2563eb;
+            border-radius: 8px;
+            padding: 8px 12px;
+            background: #fff;
             color: #2563eb;
-            margin-right: 8px;
         }
 
-    .view-more-button {
-        min-width: 125px;
-    }
-</style>
+        .stock-row, .test-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
 
+            .stock-row:last-child, .test-row:last-child {
+                border-bottom: 0;
+            }
 
-<!-- MAIN CONTENT -->
-<div class="main-content">
+        .empty-state {
+            padding: 24px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 10px;
+            text-align: center;
+            color: #64748b;
+        }
 
-    <div class="page-container">
+        @@media(max-width: 768px) {
+            .awaiting-page {
+                padding: 10px;
+            }
 
-        <div class="card-dark">
+            .awaiting-card {
+                padding: 14px;
+            }
+        }
+    </style>
 
-            <!-- HEADER -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-
-                <div>
-
-                    <h1>
-                        Awaiting Selection
-                    </h1>
-
-                    <p class="text-muted">
-                        Tests waiting for laboratory technician selection and processing.
-                    </p>
-
+    <div class="main-content">
+        <div class="awaiting-page">
+            <div class="awaiting-card">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                    <div>
+                        <h1 class="mb-1">Awaiting Selection</h1>
+                        <p class="text-muted mb-0">Received samples waiting for laboratory technician selection.</p>
+                    </div>
+                    <a asp-controller="LabTechnician" asp-action="Dashboard" class="btn btn-primary">
+                        <i class="fa-solid fa-arrow-left"></i> Dashboard
+                    </a>
                 </div>
 
-                <a asp-controller="Home"
-                   asp-action="LabTechnicianDashboard"
-                   class="btn-dark-custom">
+                @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+            }
+                @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+            }
 
-                    ← Dashboard
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <input id="sampleSearch" class="form-control" placeholder="Search request, patient or barcode..." />
+                    </div>
+                    <div class="col-md-4">
+                        <select id="priorityFilter" class="form-select">
+                            <option value="">All priorities</option>
+                            <option value="stat">STAT</option>
+                            <option value="urgent">Urgent</option>
+                            <option value="routine">Routine</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="typeFilter" class="form-select">
+                            <option value="">All request types</option>
+                            @foreach (var test in testTypes)
+                        {
+                            if (!string.IsNullOrWhiteSpace(test.TestName))
+                            {
+                            <option value="@test.TestName.ToLowerInvariant()">@test.TestName</option>
+                            }
+                        }
+                        </select>
+                    </div>
+                </div>
 
-                </a>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">Received Samples</h4>
+                    <span class="pill">@samples.Count sample(s)</span>
+                </div>
 
+                @if (samples.Count == 0)
+            {
+                <div class="empty-state">
+                    <i class="fa-solid fa-vials fa-2x mb-3"></i>
+                    <p class="mb-1">No received samples are awaiting selection.</p>
+                    <small>Samples appear here after they have been received in Receive Samples.</small>
+                </div>
+            }
+            else
+            {
+                <div id="sampleList">
+                    @foreach (var sample in samples)
+                    {
+                        var urgency = (sample.Urgency ?? "").Trim();
+                        var requestType = (sample.Type ?? "").Trim();
+                        var searchText = $"{sample.TestRequestID} {sample.PatientName} {sample.Barcode} {requestType}".ToLowerInvariant();
+
+                    <article class="sample-card"
+                             data-search="@searchText"
+                             data-priority="@urgency.ToLowerInvariant()"
+                             data-type="@requestType.ToLowerInvariant()">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                            <div>
+                                <h4 class="mb-2">Request #@sample.TestRequestID</h4>
+                                <p class="mb-1"><strong>Patient:</strong> @(string.IsNullOrWhiteSpace(sample.PatientName) ? "Not available" : sample.PatientName)</p>
+                                <p class="mb-2"><strong>Request type:</strong> @(string.IsNullOrWhiteSpace(requestType) ? "Not specified" : requestType)</p>
+
+                                @if (urgency.Equals("STAT", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                <span class="pill pill-stat">STAT</span>
+                                    }
+                                    else if (urgency.Equals("Urgent", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                <span class="pill pill-urgent">Urgent</span>
+                                    }
+                                    else if (urgency.Equals("Routine", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                <span class="pill pill-routine">Routine</span>
+                                    }
+                                    else
+                                    {
+                                <span class="pill">@(string.IsNullOrWhiteSpace(urgency) ? "Priority not specified" : urgency)</span>
+                                    }
+                                <span class="pill">Received</span>
+                            </div>
+
+                            <button type="button" class="action-button" aria-expanded="false" onclick="toggleDetails(this)">
+                                <i class="fa-solid fa-chevron-down"></i> View More
+                            </button>
+                        </div>
+
+                        <div class="details-panel">
+                            <section class="info-section">
+                                <div class="section-title"><i class="fa-solid fa-vial"></i> Sample Information</div>
+                                <div class="row g-3">
+                                    <div class="col-md-6"><div class="info-box"><div class="info-label">Sample Receipt ID</div><div class="info-value">@sample.SampleReceiptID</div></div></div>
+                                    <div class="col-md-6"><div class="info-box"><div class="info-label">Barcode</div><div class="info-value">@(string.IsNullOrWhiteSpace(sample.Barcode) ? "Not available" : sample.Barcode)</div></div></div>
+                                    <div class="col-md-6"><div class="info-box"><div class="info-label">Request Date</div><div class="info-value">@sample.RequestDate.ToString("yyyy-MM-dd HH:mm")</div></div></div>
+                                    <div class="col-md-6"><div class="info-box"><div class="info-label">Date and Time Received</div><div class="info-value">@(sample.DateTimeReceived?.ToString("yyyy-MM-dd HH:mm") ?? "Not available")</div></div></div>
+                                    <div class="col-md-6"><div class="info-box"><div class="info-label">Patient ID</div><div class="info-value">@sample.PatientID</div></div></div>
+                                    <div class="col-md-6"><div class="info-box"><div class="info-label">Patient Number</div><div class="info-value">@(string.IsNullOrWhiteSpace(sample.PatientNumber) ? "Not available" : sample.PatientNumber)</div></div></div>
+                                </div>
+                            </section>
+
+                            <section class="info-section">
+                                <div class="section-title"><i class="fa-solid fa-clipboard-list"></i> Request Summary</div>
+                                <div class="row g-3">
+                                    <div class="col-md-6"><div class="info-box"><div class="info-label">Request Number</div><div class="info-value">@sample.TestRequestID</div></div></div>
+                                    <div class="col-md-6"><div class="info-box"><div class="info-label">Patient</div><div class="info-value">@sample.PatientName</div></div></div>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="info-label">Request Type from Database</div>
+                                    <div class="info-box">@(string.IsNullOrWhiteSpace(requestType) ? "No request type recorded" : requestType)</div>
+                                </div>
+                                <div class="alert alert-info mt-3 mb-0">
+                                    The database stores a request Type and a separate TestType catalogue, but no confirmed relationship currently maps each request to its individual requested tests. The catalogue is not automatically treated as tests ordered for this patient.
+                                </div>
+                            </section>
+
+                            <section class="info-section">
+                                <div class="section-title"><i class="fa-solid fa-box-open"></i> Consumable Stock</div>
+                                @if (consumables.Count == 0)
+                                    {
+                                <div class="empty-state">No consumable inventory records were returned from the database.</div>
+                                    }
+                                    else
+                                    {
+                                <p class="text-muted small">Live quantities from the Consumable table. The current schema does not map individual consumables to individual tests.</p>
+                                foreach (var item in consumables)
+                                        {
+                                            var outOfStock = item.QtyOnHand <= 0;
+                                            var lowStock = !outOfStock && item.QtyOnHand <= item.ReOrderLevel;
+
+                                <div class="stock-row">
+                                    <div>
+                                        <strong>@item.Name</strong>
+                                        <div class="text-muted small">Reorder level: @item.ReOrderLevel</div>
+                                    </div>
+                                    <div class="text-end">
+                                        <strong>@item.QtyOnHand on hand</strong><br />
+                                        @if (outOfStock)
+                                                    {
+                                        <span class="pill pill-out">Out of stock</span>
+                                                    }
+                                                    else if (lowStock)
+                                                    {
+                                        <span class="pill pill-low">Low stock</span>
+                                                    }
+                                                    else
+                                                    {
+                                        <span class="pill pill-good">Available</span>
+                                                    }
+                                    </div>
+                                </div>
+                                        }
+                                    }
+                            </section>
+
+                            <section class="info-section">
+                                <div class="section-title"><i class="fa-solid fa-flask"></i> Available Test Type Catalogue</div>
+                                @if (testTypes.Count == 0)
+                                    {
+                                <div class="empty-state">No test types were returned from the TestType table.</div>
+                                    }
+                                    else
+                                    {
+                                foreach (var test in testTypes)
+                                        {
+                                <div class="test-row">
+                                    <div>
+                                        <strong>@test.TestName</strong>
+                                        <div class="text-muted small">Test type ID: @test.TestTypeID</div>
+                                    </div>
+                                    <span class="pill">TAT: @test.TurnAroundMinutes min</span>
+                                </div>
+                                        }
+                                    }
+                            </section>
+
+                            <div class="alert alert-warning mt-3 mb-0">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                Test selection and the turnaround timer are not started here because the current schema does not identify which tests belong to this request or which consumables each test requires.
+                            </div>
+                        </div>
+                    </article>
+                    }
+                </div>
+
+                <div id="noMatches" class="empty-state mt-3" style="display:none;">
+                    No samples match your search or filters.
+                </div>
+            }
             </div>
-
-
-            <!-- FILTERS -->
-            <div class="row g-3 mb-4">
-
-                <div class="col-md-4">
-
-                    <input class="form-control filter-box"
-                           placeholder="Search request number..." />
-
-                </div>
-
-                <div class="col-md-4">
-
-                    <select class="form-select filter-box">
-
-                        <option>All Priorities</option>
-                        <option>STAT</option>
-                        <option>Urgent</option>
-                        <option>Routine</option>
-
-                    </select>
-
-                </div>
-
-                <div class="col-md-4">
-
-                    <select class="form-select filter-box">
-
-                        <option>All Test Types</option>
-                        <option>Haematology</option>
-                        <option>Chemistry</option>
-
-                    </select>
-
-                </div>
-
-            </div>
-
-
-            <!-- ===================================================== -->
-            <!-- QUEUE ITEM 1 -->
-            <!-- ===================================================== -->
-
-            <div class="queue-card">
-
-                <!-- ALWAYS VISIBLE SUMMARY -->
-                <div class="d-flex justify-content-between align-items-start">
-
-                    <div class="flex-grow-1">
-
-                        <h4>
-                            REQ-2026-00124
-                        </h4>
-
-                        <p class="mb-2">
-
-                            <strong>Patient:</strong>
-                            Baloyi, Thabo
-
-                        </p>
-
-                        <p class="mb-2">
-
-                            <strong>Test Type:</strong>
-                            FBC + Differential
-
-                        </p>
-
-                        <span class="status-badge badge-stat">
-                            STAT
-                        </span>
-
-                        <span class="status-badge badge-overdue">
-                            Nearing TAT Limit
-                        </span>
-
-                    </div>
-
-
-                    <!-- ACTIONS -->
-                    <div class="text-end ms-4">
-
-                        <p class="text-danger fw-bold">
-                            Due in 12 minutes
-                        </p>
-
-                        <button type="button"
-                                class="btn-outline-custom view-more-button"
-                                onclick="toggleDetails('details1', this)">
-
-                            <i class="fa-solid fa-chevron-down"></i>
-                            View More
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-
-                <!-- HIDDEN DETAILS -->
-                <div id="details1"
-                     class="details-panel">
-
-
-                    <!-- SAMPLE INFORMATION -->
-                    <div class="info-section">
-
-                        <div class="info-section-title">
-
-                            <i class="fa-solid fa-vial"></i>
-                            Sample Information
-
-                        </div>
-
-                        <div class="row g-3">
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Sample Type
-                                    </div>
-
-                                    <div class="sample-value">
-                                        Whole Blood
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Sample Barcode
-                                    </div>
-
-                                    <div class="sample-value">
-                                        BC-889213
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Doctor
-                                    </div>
-
-                                    <div class="sample-value">
-                                        Dr. F. Abrahams
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Technician Receiving Sample
-                                    </div>
-
-                                    <div class="sample-value">
-                                        Keenen James
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Date Received
-                                    </div>
-
-                                    <div class="sample-value">
-                                        2026/08/20
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Time Received
-                                    </div>
-
-                                    <div class="sample-value">
-                                        10:10
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- REQUEST SUMMARY -->
-                    <div class="info-section">
-
-                        <div class="info-section-title">
-
-                            <i class="fa-solid fa-clipboard-list"></i>
-                            Request Summary
-
-                        </div>
-
-                        <div class="row g-3">
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Request Number
-                                    </div>
-
-                                    <div class="sample-value">
-                                        REQ-2026-00124
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Patient
-                                    </div>
-
-                                    <div class="sample-value">
-                                        Baloyi, Thabo
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <!-- REQUESTED TESTS -->
-                        <div class="mt-3">
-
-                            <div class="info-label">
-                                Requested Tests
-                            </div>
-
-                            <div class="requested-test">
-
-                                <i class="fa-solid fa-check"></i>
-                                FBC + Differential
-
-                            </div>
-
-                            <div class="requested-test">
-
-                                <i class="fa-solid fa-check"></i>
-                                ESR
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- CONSUMABLES -->
-                    <div class="info-section">
-
-                        <div class="info-section-title">
-
-                            <i class="fa-solid fa-box-open"></i>
-                            Consumables Required
-
-                        </div>
-
-                        <ul class="consumable-list">
-
-                            <li>EDTA Blood Collection Tube</li>
-                            <li>Gloves</li>
-                            <li>Microscope Slide</li>
-
-                        </ul>
-
-                    </div>
-
-
-                    <!-- PATIENT INFORMATION -->
-                    <div class="info-section">
-
-                        <div class="info-section-title">
-
-                            <i class="fa-solid fa-user"></i>
-                            Patient Clinical Information
-
-                        </div>
-
-                        <div class="row">
-
-                            <div class="col-md-4 info-item">
-
-                                <div class="info-label">
-                                    Conditions
-                                </div>
-
-                                <div class="info-value">
-                                    Anaemia
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-4 info-item">
-
-                                <div class="info-label">
-                                    Allergies
-                                </div>
-
-                                <div class="info-value">
-                                    Penicillin
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-4 info-item">
-
-                                <div class="info-label">
-                                    Medication
-                                </div>
-
-                                <div class="info-value">
-                                    Ferrous Sulphate
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div class="mt-3">
-
-                            <div class="info-label">
-                                Clinical Notes from Doctor
-                            </div>
-
-                            <div class="clinical-notes">
-
-                                Patient presents with fatigue and suspected iron deficiency.
-                                Please process FBC and differential as a priority.
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- START TEST -->
-                    <div class="mt-3">
-
-                        <a asp-controller="LabTechnician"
-                           asp-action="CaptureResults"
-                           asp-route-requestNumber="REQ-2026-00124"
-                           class="btn-dark-custom">
-
-                            <i class="fa-solid fa-play"></i>
-                            Start Test
-
-                        </a>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- ===================================================== -->
-            <!-- QUEUE ITEM 2 -->
-            <!-- ===================================================== -->
-
-            <div class="queue-card">
-
-                <!-- ALWAYS VISIBLE SUMMARY -->
-                <div class="d-flex justify-content-between align-items-start">
-
-                    <div class="flex-grow-1">
-
-                        <h4>
-                            REQ-2026-00125
-                        </h4>
-
-                        <p class="mb-2">
-
-                            <strong>Patient:</strong>
-                            Jacobs, Lerato
-
-                        </p>
-
-                        <p class="mb-2">
-
-                            <strong>Test Type:</strong>
-                            ESR
-
-                        </p>
-
-                        <span class="status-badge badge-routine">
-                            Routine
-                        </span>
-
-                    </div>
-
-
-                    <!-- ACTIONS -->
-                    <div class="text-end ms-4">
-
-                        <p class="text-success fw-bold">
-                            Within TAT
-                        </p>
-
-                        <button type="button"
-                                class="btn-outline-custom view-more-button"
-                                onclick="toggleDetails('details2', this)">
-
-                            <i class="fa-solid fa-chevron-down"></i>
-                            View More
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-
-                <!-- HIDDEN DETAILS -->
-                <div id="details2"
-                     class="details-panel">
-
-
-                    <!-- SAMPLE INFORMATION -->
-                    <div class="info-section">
-
-                        <div class="info-section-title">
-
-                            <i class="fa-solid fa-vial"></i>
-                            Sample Information
-
-                        </div>
-
-                        <div class="row g-3">
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Sample Type
-                                    </div>
-
-                                    <div class="sample-value">
-                                        Serum
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Sample Barcode
-                                    </div>
-
-                                    <div class="sample-value">
-                                        BC-889214
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Doctor
-                                    </div>
-
-                                    <div class="sample-value">
-                                        Dr. M. Williams
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Technician Receiving Sample
-                                    </div>
-
-                                    <div class="sample-value">
-                                        Keenen James
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Date Received
-                                    </div>
-
-                                    <div class="sample-value">
-                                        2026/08/20
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Time Received
-                                    </div>
-
-                                    <div class="sample-value">
-                                        10:15
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- REQUEST SUMMARY -->
-                    <div class="info-section">
-
-                        <div class="info-section-title">
-
-                            <i class="fa-solid fa-clipboard-list"></i>
-                            Request Summary
-
-                        </div>
-
-                        <div class="row g-3">
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Request Number
-                                    </div>
-
-                                    <div class="sample-value">
-                                        REQ-2026-00125
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Patient
-                                    </div>
-
-                                    <div class="sample-value">
-                                        Jacobs, Lerato
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <!-- REQUESTED TESTS -->
-                        <div class="mt-3">
-
-                            <div class="info-label">
-                                Requested Tests
-                            </div>
-
-                            <div class="requested-test">
-
-                                <i class="fa-solid fa-check"></i>
-                                ESR
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- CONSUMABLES -->
-                    <div class="info-section">
-
-                        <div class="info-section-title">
-
-                            <i class="fa-solid fa-box-open"></i>
-                            Consumables Required
-
-                        </div>
-
-                        <ul class="consumable-list">
-
-                            <li>ESR Tube</li>
-                            <li>Gloves</li>
-                            <li>ESR Pipette</li>
-
-                        </ul>
-
-                    </div>
-
-
-                    <!-- PATIENT INFORMATION -->
-                    <div class="info-section">
-
-                        <div class="info-section-title">
-
-                            <i class="fa-solid fa-user"></i>
-                            Patient Clinical Information
-
-                        </div>
-
-                        <div class="row">
-
-                            <div class="col-md-4 info-item">
-
-                                <div class="info-label">
-                                    Conditions
-                                </div>
-
-                                <div class="info-value">
-                                    No known conditions
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-4 info-item">
-
-                                <div class="info-label">
-                                    Allergies
-                                </div>
-
-                                <div class="info-value">
-                                    None reported
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-4 info-item">
-
-                                <div class="info-label">
-                                    Medication
-                                </div>
-
-                                <div class="info-value">
-                                    None reported
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div class="mt-3">
-
-                            <div class="info-label">
-                                Clinical Notes from Doctor
-                            </div>
-
-                            <div class="clinical-notes">
-
-                                Routine ESR requested for inflammatory marker assessment.
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- START TEST -->
-                    <div class="mt-3">
-
-                        <a asp-controller="LabTechnician"
-                           asp-action="CaptureResults"
-                           asp-route-requestNumber="REQ-2026-00125"
-                           class="btn-dark-custom">
-
-                            <i class="fa-solid fa-play"></i>
-                            Start Test
-
-                        </a>
-
-                    </div>
-
-                </div>
-
-            </div>
-
         </div>
-
     </div>
 
-</div>
+    <script>
+        function toggleDetails(button) {
+            const card = button.closest(".sample-card");
+            const panel = card?.querySelector(".details-panel");
+            if (!card || !panel) return;
 
-
-<script>
-
-    function toggleDetails(detailsId, button) {
-
-        const details = document.getElementById(detailsId);
-
-        if (details.style.display === "block") {
-
-            details.style.display = "none";
-
-            button.innerHTML =
-                '<i class="fa-solid fa-chevron-down"></i> View More';
-
-        } else {
-
-            details.style.display = "block";
-
-            button.innerHTML =
-                '<i class="fa-solid fa-chevron-up"></i> View Less';
-
+            const expanded = panel.style.display === "block";
+            panel.style.display = expanded ? "none" : "block";
+            card.classList.toggle("expanded", !expanded);
+            button.setAttribute("aria-expanded", String(!expanded));
+            button.innerHTML = expanded
+                ? '<i class="fa-solid fa-chevron-down"></i> View More'
+                : '<i class="fa-solid fa-chevron-up"></i> View Less';
         }
 
-    }
+        function filterSamples() {
+            const search = (document.getElementById("sampleSearch")?.value || "").trim().toLowerCase();
+            const priority = (document.getElementById("priorityFilter")?.value || "").toLowerCase();
+            const type = (document.getElementById("typeFilter")?.value || "").toLowerCase();
+            const cards = document.querySelectorAll(".sample-card");
+            let visibleCount = 0;
 
-</script>
+            cards.forEach(card => {
+                const visible =
+                    (card.dataset.search || "").includes(search) &&
+                    (!priority || (card.dataset.priority || "").includes(priority)) &&
+                    (!type || (card.dataset.type || "").includes(type));
+
+                card.style.display = visible ? "" : "none";
+                if (visible) visibleCount++;
+            });
+
+            const noMatches = document.getElementById("noMatches");
+            if (noMatches) noMatches.style.display =
+                cards.length > 0 && visibleCount === 0 ? "block" : "none";
+        }
+
+        document.getElementById("sampleSearch")?.addEventListener("input", filterSamples);
+        document.getElementById("priorityFilter")?.addEventListener("change", filterSamples);
+        document.getElementById("typeFilter")?.addEventListener("change", filterSamples);
+    </script>

@@ -1,958 +1,494 @@
-﻿@{
+﻿@model IEnumerable<WebApplication2.Models.LabTechnicianQueueItem>
+
+    @{
     Layout = "~/Views/Shared/_LabTechLayout.cshtml";
     ViewData["Title"] = "Assigned Tests";
-}
 
-<link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    var now = DateTime.Now;
+    var tests = Model?.ToList() ?? new List<WebApplication2.Models.LabTechnicianQueueItem>();
 
-<link href="~/css/dashboardstyles.css" rel="stylesheet" />
+    var completedTests = ViewBag.CompletedTests as HashSet<string>
+                         ?? new HashSet<string>();
 
-<style>
-
-    .page-container {
-        padding: 0;
+    bool IsCompleted(WebApplication2.Models.LabTechnicianQueueItem test)
+    {
+        return completedTests.Contains($"{test.SampleReceiptID}-{test.TestTypeID}");
     }
 
-    .card-dark {
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 30px;
-        border: 1px solid #dbe3ec;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    var urgentCount = tests.Count(x =>
+        string.Equals(x.Urgency, "STAT", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(x.Urgency, "Urgent", StringComparison.OrdinalIgnoreCase));
+
+    var completedCount = tests.Count(IsCompleted);
+    var pendingCount = tests.Count - completedCount;
     }
 
-    .queue-card {
-        background: #f8fafc;
-        border-radius: 16px;
-        padding: 22px;
-        margin-bottom: 20px;
-        border-left: 4px solid #2563eb;
-        border-top: 1px solid #e2e8f0;
-        border-right: 1px solid #e2e8f0;
-        border-bottom: 1px solid #e2e8f0;
-        transition: 0.2s ease;
-    }
-
-        .queue-card:hover {
-            background: #f1f5f9;
+    <style>
+        .assigned-page {
+            max-width: 1250px;
+            margin: 0 auto;
+            padding: 24px;
+            color: #172b4d;
         }
 
-    .status-badge {
-        display: inline-block;
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        margin-right: 6px;
-        margin-top: 5px;
-        font-weight: 600;
-    }
-
-    .badge-stat {
-        background: #f4a261;
-        color: black;
-    }
-
-    .badge-routine {
-        background: #d9e6f2;
-        color: black;
-    }
-
-    .badge-progress {
-        background: #dbeafe;
-        color: #1d4ed8;
-    }
-
-    .badge-overdue {
-        background: #dc3545;
-        color: white;
-    }
-
-    .btn-dark-custom {
-        background: #0d6efd;
-        border: 1px solid #0d6efd;
-        color: white !important;
-        border-radius: 12px;
-        padding: 10px 18px;
-        text-decoration: none;
-        transition: 0.2s ease;
-        display: inline-block;
-    }
-
-        .btn-dark-custom:hover {
-            background: #0b5ed7;
-            border-color: #0b5ed7;
+        .assigned-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
         }
 
-    .btn-outline-custom {
-        background: white;
-        border: 1px solid #0d6efd;
-        color: #0d6efd !important;
-        border-radius: 12px;
-        padding: 10px 18px;
-        text-decoration: none;
-        transition: 0.2s ease;
-        display: inline-block;
-    }
+            .assigned-header h1 {
+                margin: 0 0 6px;
+                font-size: 28px;
+            }
 
-        .btn-outline-custom:hover {
-            background: #eef5ff;
+        .muted {
+            color: #64748b;
+            font-size: 14px;
         }
 
-    .text-muted {
-        color: #6b7280 !important;
-    }
-
-    .filter-box,
-    .form-control,
-    .form-select {
-        background: #ffffff;
-        color: #1f2937;
-        border: 1px solid #d1d5db;
-        box-shadow: none;
-    }
-
-        .form-control:focus,
-        .form-select:focus {
-            background: #ffffff;
-            color: #1f2937;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 0.15rem rgba(59,130,246,0.15);
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 14px;
+            margin-bottom: 22px;
         }
 
-    h1,
-    h4,
-    p,
-    strong {
-        color: #1f2937;
-    }
-
-    .details-panel {
-        display: none;
-        margin-top: 20px;
-    }
-
-    .info-section {
-        margin-top: 15px;
-        padding: 18px;
-        background: #ffffff;
-        border: 1px solid #dbe3ec;
-        border-radius: 12px;
-    }
-
-    .info-section-title {
-        font-size: 0.9rem;
-        font-weight: 700;
-        color: #0f172a;
-        margin-bottom: 12px;
-    }
-
-    .info-item {
-        margin-bottom: 10px;
-    }
-
-        .info-item:last-child {
-            margin-bottom: 0;
+        .summary-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 18px;
         }
 
-    .info-label {
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        color: #64748b;
-        font-weight: 700;
-        margin-bottom: 3px;
-    }
-
-    .info-value {
-        font-size: 0.9rem;
-        color: #1f2937;
-    }
-
-    .clinical-notes {
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        border-radius: 10px;
-        padding: 12px;
-        color: #1e3a8a;
-        font-size: 0.88rem;
-        line-height: 1.5;
-    }
-
-    .sample-box {
-        background: #f8fafc;
-        border: 1px solid #dbe3ec;
-        border-radius: 10px;
-        padding: 12px 15px;
-    }
-
-    .sample-label {
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        color: #64748b;
-        font-weight: 700;
-    }
-
-    .sample-value {
-        font-weight: 600;
-        color: #1f2937;
-        margin-top: 3px;
-    }
-
-    .requested-test {
-        background: #f8fafc;
-        border: 1px solid #dbe3ec;
-        border-radius: 8px;
-        padding: 10px 12px;
-        margin-bottom: 8px;
-        color: #1f2937;
-        font-size: 0.88rem;
-    }
-
-        .requested-test:last-child {
-            margin-bottom: 0;
+        .summary-number {
+            display: block;
+            font-size: 26px;
+            font-weight: 700;
+            margin-top: 8px;
         }
 
-        .requested-test i {
-            color: #2563eb;
-            margin-right: 8px;
+        .test-card {
+            background: #fff;
+            border: 1px solid #dbe3ef;
+            border-left: 4px solid #2563eb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
         }
 
-    .view-more-button {
-        min-width: 125px;
-    }
-</style>
+            .test-card.completed {
+                border-left-color: #16a34a;
+            }
 
+        .test-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
 
-<!-- MAIN CONTENT -->
-<div class="main-content">
+        .test-name {
+            font-size: 19px;
+            font-weight: 700;
+        }
 
-    <div class="page-container">
+        .test-meta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
 
-        <div class="card-dark">
+        .pill {
+            display: inline-block;
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
 
-            <!-- HEADER -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            .pill.stat {
+                background: #ffedd5;
+                color: #9a3412;
+            }
 
-                <div>
+            .pill.complete {
+                background: #dcfce7;
+                color: #166534;
+            }
 
-                    <h1>
-                        Assigned Tests
-                    </h1>
+            .pill.pending {
+                background: #fef3c7;
+                color: #92400e;
+            }
 
-                    <p class="text-muted">
-                        Tests currently assigned to the technician.
-                    </p>
+        .timer {
+            font-size: 22px;
+            font-weight: 700;
+            text-align: right;
+        }
 
+        .timer-label {
+            font-size: 12px;
+            color: #64748b;
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        .progress-track {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 14px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #2563eb;
+            transition: width .5s linear;
+        }
+
+        .completed .progress-bar {
+            background: #16a34a;
+        }
+
+        .empty {
+            background: #fff;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .btn-link {
+            display: inline-block;
+            text-decoration: none;
+            border-radius: 8px;
+            padding: 9px 14px;
+            background: #2563eb;
+            color: #fff;
+            font-weight: 600;
+            border: 1px solid #2563eb;
+        }
+
+            .btn-link:hover {
+                background: #1d4ed8;
+                color: #fff;
+            }
+
+        .btn-secondary {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: #1d4ed8;
+        }
+
+            .btn-secondary:hover {
+                background: #dbeafe;
+                color: #1d4ed8;
+            }
+
+        .message {
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 16px;
+        }
+
+        .success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .test-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        @@media (max-width: 650px) {
+            .assigned-page {
+                padding: 12px;
+            }
+
+            .assigned-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .timer,
+            .timer-label {
+                text-align: left;
+            }
+        }
+    </style>
+
+    <main class="assigned-page">
+        <header class="assigned-header">
+            <div>
+                <h1>Assigned Tests</h1>
+                <div class="muted">
+                    Capture and complete each assigned test independently.
                 </div>
+            </div>
 
-                <a asp-controller="Home"
-                   asp-action="LabTechnicianDashboard"
-                   class="btn-dark-custom">
-
-                    ← Dashboard
-
+            <div class="d-flex gap-2 flex-wrap">
+                <a asp-controller="LabTechnician"
+                   asp-action="CaptureResultsLookup"
+                   class="btn-link">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    Find Patient
                 </a>
 
+                <a asp-controller="LabTechnician"
+                   asp-action="AwaitingSelection"
+                   class="btn-link btn-secondary">
+                    Awaiting Selection
+                </a>
             </div>
-
-
-            <!-- FILTERS -->
-            <div class="row g-3 mb-4">
-
-                <div class="col-md-6">
-
-                    <input class="form-control filter-box"
-                           placeholder="Search patient..." />
-
-                </div>
-
-                <div class="col-md-6">
-
-                    <select class="form-select filter-box">
-
-                        <option>All Statuses</option>
-                        <option>In Progress</option>
-                        <option>Near Due</option>
-
-                    </select>
-
-                </div>
-
-            </div>
-
-
-            <!-- ===================================================== -->
-            <!-- ASSIGNED TEST 1 -->
-            <!-- ===================================================== -->
-
-            <div class="queue-card">
-
-                <!-- ALWAYS VISIBLE SUMMARY -->
-                <div class="d-flex justify-content-between align-items-start">
-
-                    <div class="flex-grow-1">
-
-                        <h4>
-                            REQ-2026-00124
-                        </h4>
-
-                        <p class="mb-2">
-
-                            <strong>Patient:</strong>
-                            Baloyi, Thabo
-
-                        </p>
-
-                        <p class="mb-2">
-
-                            <strong>Test:</strong>
-                            FBC + Differential
-
-                        </p>
-
-                        <p class="mb-2">
-
-                            <strong>Started:</strong>
-                            09:22 AM
-
-                        </p>
-
-                        <span class="status-badge badge-progress">
-                            In Progress
-                        </span>
-
-                        <span class="status-badge badge-stat">
-                            STAT
-                        </span>
-
-                    </div>
-
-
-                    <div class="text-end ms-4">
-
-                        <p class="text-danger fw-bold">
-                            45 minutes overdue
-                        </p>
-
-                        <button type="button"
-                                class="btn-outline-custom view-more-button"
-                                onclick="toggleDetails('details1', this)">
-
-                            <i class="fa-solid fa-chevron-down"></i>
-                            View More
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-
-                <!-- EXPANDED DETAILS -->
-                <div id="details1"
-                     class="details-panel">
-
-
-                    <!-- SAMPLE INFORMATION -->
-                    <div class="info-section">
-
-                        <div class="info-section-title">
-
-                            <i class="fa-solid fa-vial"></i>
-                            Sample Information
-
-                        </div>
-
-                        <div class="row g-3">
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Sample Type
-                                    </div>
-
-                                    <div class="sample-value">
-                                        Whole Blood
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Sample Barcode
-                                    </div>
-
-                                    <div class="sample-value">
-                                        BC-889213
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Doctor
-                                    </div>
-
-                                    <div class="sample-value">
-                                        Dr. F. Abrahams
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Technician
-                                    </div>
-
-                                    <div class="sample-value">
-                                        Keenen James
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- REQUEST INFORMATION -->
-                    <div class="info-section">
-
-                        <div class="info-section-title">
-
-                            <i class="fa-solid fa-clipboard-list"></i>
-                            Request Information
-
-                        </div>
-
-                        <div class="row g-3">
-
-                            <div class="col-md-4">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Request Number
-                                    </div>
-
-                                    <div class="sample-value">
-                                        REQ-2026-00124
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-4">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Date Started
-                                    </div>
-
-                                    <div class="sample-value">
-                                        2026/08/20
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-4">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Priority
-                                    </div>
-
-                                    <div class="sample-value">
-                                        STAT
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div class="mt-3">
-
-                            <div class="info-label">
-                                Requested Tests
-                            </div>
-
-                            <div class="requested-test">
-
-                                <i class="fa-solid fa-check"></i>
-                                FBC + Differential
-
-                            </div>
-
-                            <div class="requested-test">
-
-                                <i class="fa-solid fa-check"></i>
-                                ESR
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- PATIENT INFORMATION -->
-                    <div class="info-section">
-
-                        <div class="info-section-title">
-
-                            <i class="fa-solid fa-user"></i>
-                            Patient Clinical Information
-
-                        </div>
-
-                        <div class="row">
-
-                            <div class="col-md-4 info-item">
-
-                                <div class="info-label">
-                                    Conditions
-                                </div>
-
-                                <div class="info-value">
-                                    Anaemia
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-4 info-item">
-
-                                <div class="info-label">
-                                    Allergies
-                                </div>
-
-                                <div class="info-value">
-                                    Penicillin
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-4 info-item">
-
-                                <div class="info-label">
-                                    Medication
-                                </div>
-
-                                <div class="info-value">
-                                    Ferrous Sulphate
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div class="mt-3">
-
-                            <div class="info-label">
-                                Clinical Notes from Doctor
-                            </div>
-
-                            <div class="clinical-notes">
-
-                                Patient presents with fatigue and suspected iron deficiency.
-                                Please process FBC and differential as a priority.
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- ACTION -->
-                    <div class="mt-3">
-
-                        <a asp-controller="LabTechnician"
-                           asp-action="CaptureResults"
-                           asp-route-requestNumber="REQ-2026-00124"
-                           class="btn-dark-custom">
-
-                            <i class="fa-solid fa-flask"></i>
-                            Capture Results
-
-                        </a>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- ===================================================== -->
-            <!-- ASSIGNED TEST 2 -->
-            <!-- ===================================================== -->
-
-            <div class="queue-card">
-
-                <!-- ALWAYS VISIBLE SUMMARY -->
-                <div class="d-flex justify-content-between align-items-start">
-
-                    <div class="flex-grow-1">
-
-                        <h4>
-                            REQ-2026-00125
-                        </h4>
-
-                        <p class="mb-2">
-
-                            <strong>Patient:</strong>
-                            Jacobs, Lerato
-
-                        </p>
-
-                        <p class="mb-2">
-
-                            <strong>Test:</strong>
-                            ESR
-
-                        </p>
-
-                        <p class="mb-2">
-
-                            <strong>Started:</strong>
-                            10:05 AM
-
-                        </p>
-
-                        <span class="status-badge badge-progress">
-                            In Progress
-                        </span>
-
-                    </div>
-
-
-                    <div class="text-end ms-4">
-
-                        <p class="text-success fw-bold">
-                            Within TAT
-                        </p>
-
-                        <button type="button"
-                                class="btn-outline-custom view-more-button"
-                                onclick="toggleDetails('details2', this)">
-
-                            <i class="fa-solid fa-chevron-down"></i>
-                            View More
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-
-                <!-- EXPANDED DETAILS -->
-                <div id="details2"
-                     class="details-panel">
-
-
-                    <!-- SAMPLE INFORMATION -->
-                    <div class="info-section">
-
-                        <div class="info-section-title">
-
-                            <i class="fa-solid fa-vial"></i>
-                            Sample Information
-
-                        </div>
-
-                        <div class="row g-3">
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Sample Type
-                                    </div>
-
-                                    <div class="sample-value">
-                                        Serum
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Sample Barcode
-                                    </div>
-
-                                    <div class="sample-value">
-                                        BC-889214
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Doctor
-                                    </div>
-
-                                    <div class="sample-value">
-                                        Dr. M. Williams
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-6">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Technician
-                                    </div>
-
-                                    <div class="sample-value">
-                                        Keenen James
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- REQUEST INFORMATION -->
-                    <div class="info-section">
-
-                        <div class="info-section-title">
-
-                            <i class="fa-solid fa-clipboard-list"></i>
-                            Request Information
-
-                        </div>
-
-                        <div class="row g-3">
-
-                            <div class="col-md-4">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Request Number
-                                    </div>
-
-                                    <div class="sample-value">
-                                        REQ-2026-00125
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-4">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Date Started
-                                    </div>
-
-                                    <div class="sample-value">
-                                        2026/08/20
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-4">
-
-                                <div class="sample-box">
-
-                                    <div class="sample-label">
-                                        Priority
-                                    </div>
-
-                                    <div class="sample-value">
-                                        Routine
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div class="mt-3">
-
-                            <div class="info-label">
-                                Requested Tests
-                            </div>
-
-                            <div class="requested-test">
-
-                                <i class="fa-solid fa-check"></i>
-                                ESR
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- PATIENT INFORMATION -->
-                    <div class="info-section">
-
-                        <div class="info-section-title">
-
-                            <i class="fa-solid fa-user"></i>
-                            Patient Clinical Information
-
-                        </div>
-
-                        <div class="row">
-
-                            <div class="col-md-4 info-item">
-
-                                <div class="info-label">
-                                    Conditions
-                                </div>
-
-                                <div class="info-value">
-                                    No known conditions
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-4 info-item">
-
-                                <div class="info-label">
-                                    Allergies
-                                </div>
-
-                                <div class="info-value">
-                                    None reported
-                                </div>
-
-                            </div>
-
-                            <div class="col-md-4 info-item">
-
-                                <div class="info-label">
-                                    Medication
-                                </div>
-
-                                <div class="info-value">
-                                    None reported
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div class="mt-3">
-
-                            <div class="info-label">
-                                Clinical Notes from Doctor
-                            </div>
-
-                            <div class="clinical-notes">
-
-                                Routine ESR requested for inflammatory marker assessment.
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- ACTION -->
-                    <div class="mt-3">
-
-                        <a asp-controller="LabTechnician"
-                           asp-action="CaptureResults"
-                           asp-route-requestNumber="REQ-2026-00125"
-                           class="btn-dark-custom">
-
-                            <i class="fa-solid fa-flask"></i>
-                            Capture Results
-
-                        </a>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<script>
-
-    function toggleDetails(detailsId, button) {
-
-        const details = document.getElementById(detailsId);
-
-        if (details.style.display === "block") {
-
-            details.style.display = "none";
-
-            button.innerHTML =
-                '<i class="fa-solid fa-chevron-down"></i> View More';
-
-        } else {
-
-            details.style.display = "block";
-
-            button.innerHTML =
-                '<i class="fa-solid fa-chevron-up"></i> View Less';
-
-        }
-
+        </header>
+
+        @if (TempData["SuccessMessage"] is string success)
+    {
+        <div class="message success">@success</div>
     }
 
-</script>
+        @if (TempData["ErrorMessage"] is string error)
+    {
+        <div class="message error">@error</div>
+    }
+
+        <section class="summary">
+            <div class="summary-card">
+                <span class="muted">Assigned tests</span>
+                <span class="summary-number">@tests.Count</span>
+            </div>
+
+            <div class="summary-card">
+                <span class="muted">Awaiting results</span>
+                <span class="summary-number">@pendingCount</span>
+            </div>
+
+            <div class="summary-card">
+                <span class="muted">Completed tests</span>
+                <span class="summary-number">@completedCount</span>
+            </div>
+
+            <div class="summary-card">
+                <span class="muted">STAT / urgent</span>
+                <span class="summary-number">@urgentCount</span>
+            </div>
+        </section>
+
+        @if (tests.Count == 0)
+    {
+        <section class="empty">
+            <h2>No assigned tests</h2>
+            <p class="muted">
+                Tests will appear here after they are selected from Awaiting Selection.
+            </p>
+
+            <a asp-controller="LabTechnician"
+               asp-action="AwaitingSelection"
+               class="btn-link">
+                Go to Awaiting Selection
+            </a>
+        </section>
+    }
+    else
+    {
+        foreach (var test in tests)
+        {
+            var isCompleted = IsCompleted(test);
+            var selectedAt = test.SelectedAt ?? now;
+            var tatMinutes = Math.Max(test.TurnAroundMinutes, 0);
+            var deadline = selectedAt.AddMinutes(tatMinutes);
+            var remainingSeconds = Math.Max(
+                0, (int)(deadline - now).TotalSeconds);
+            var elapsedSeconds = Math.Max(
+                0, (int)(now - selectedAt).TotalSeconds);
+            var totalSeconds = Math.Max(1, tatMinutes * 60);
+            var progress = Math.Min(
+                100, elapsedSeconds * 100.0 / totalSeconds);
+
+            var timerId = $"timer-{test.SampleReceiptID}-{test.TestTypeID}";
+            var progressId = $"{timerId}-progress";
+            var progressWidth = progress.ToString(
+                "0.##",
+                System.Globalization.CultureInfo.InvariantCulture);
+            var deadlineText = deadline.ToString("o");
+
+            var isStat =
+                string.Equals(test.Urgency, "STAT",
+                    StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(test.Urgency, "Urgent",
+                    StringComparison.OrdinalIgnoreCase);
+
+        <article class="test-card @(isCompleted ? "completed" : "")"
+                 data-deadline="@deadlineText"
+                 data-timer-id="@timerId"
+                 data-progress-id="@progressId"
+                 data-total-seconds="@totalSeconds"
+                 data-completed="@isCompleted.ToString().ToLowerInvariant()">
+
+            <div class="test-top">
+                <div>
+                    <div class="test-name">
+                        @if (isCompleted)
+                            {
+                        <i class="fa-solid fa-circle-check text-success me-1"></i>
+                            }
+                        @test.TestName
+                    </div>
+
+                    <div class="muted">
+                        Request #@test.TestRequestID · Sample @test.Barcode
+                    </div>
+
+                    <div class="muted">
+                        Patient: @test.PatientName
+                    </div>
+
+                    <div class="test-meta">
+                        @if (isCompleted)
+                            {
+                        <span class="pill complete">Completed</span>
+                            }
+                            else
+                            {
+                        <span class="pill pending">Awaiting Result</span>
+                            }
+
+                        @if (isStat)
+                            {
+                        <span class="pill stat">STAT / Urgent</span>
+                            }
+
+                        <span class="pill">TAT: @tatMinutes min</span>
+                    </div>
+                </div>
+
+                <div>
+                    @if (!isCompleted)
+                        {
+                    <div class="timer" id="@timerId">--:--</div>
+                    <div class="timer-label">Time remaining</div>
+                        }
+                        else
+                        {
+                    <div class="pill complete">
+                        <i class="fa-solid fa-check"></i>
+                        Result captured
+                    </div>
+                        }
+                </div>
+            </div>
+
+            @if (!isCompleted)
+                {
+            <div class="progress-track">
+                <div class="progress-bar"
+                     id="@progressId"
+                     style="@($"width: {progressWidth}%;")"></div>
+            </div>
+
+            <div class="muted" style="margin-top: 10px;">
+                Selected: @selectedAt.ToString("dd MMM yyyy HH:mm:ss")
+                · Due: @deadline.ToString("dd MMM yyyy HH:mm:ss")
+            </div>
+                }
+
+            <div class="test-actions">
+                @if (!isCompleted)
+                    {
+                <a asp-controller="LabTechnician"
+                   asp-action="CaptureResults"
+                   asp-route-sampleReceiptId="@test.SampleReceiptID"
+                   asp-route-testTypeId="@test.TestTypeID"
+                   class="btn-link">
+                    <i class="fa-solid fa-pen-to-square me-1"></i>
+                    Capture Result
+                </a>
+                    }
+                    else
+                    {
+                <span class="muted">
+                    This test is marked complete.
+                </span>
+                    }
+
+                <a asp-controller="LabTechnician"
+                   asp-action="TestDetail"
+                   asp-route-id="@test.TestRequestID"
+                   class="btn-link btn-secondary">
+                    View Test Detail
+                </a>
+            </div>
+        </article>
+        }
+    }
+    </main>
+
+    <script>
+        (() => {
+            function updateTimers() {
+                document.querySelectorAll("[data-deadline]").forEach(card => {
+                    if (card.dataset.completed === "true") {
+                        return;
+                    }
+
+                    const deadline = new Date(card.dataset.deadline).getTime();
+                    const currentTime = Date.now();
+                    const remaining = Math.max(
+                        0, Math.floor((deadline - currentTime) / 1000));
+
+                    const total = Math.max(
+                        1, Number(card.dataset.totalSeconds || 1));
+
+                    const timer = document.getElementById(
+                        card.dataset.timerId);
+
+                    const progress = document.getElementById(
+                        card.dataset.progressId);
+
+                    if (timer) {
+                        const hours = Math.floor(remaining / 3600);
+                        const minutes = Math.floor((remaining % 3600) / 60);
+                        const seconds = remaining % 60;
+
+                        timer.textContent = hours > 0
+                            ? `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+                            : `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
+                        if (remaining === 0) {
+                            timer.textContent = "TAT exceeded";
+                            timer.style.color = "#dc2626";
+                        } else {
+                            timer.style.color = "";
+                        }
+                    }
+
+                    if (progress) {
+                        const elapsed = Math.max(0, total - remaining);
+                        const width = Math.min(100, elapsed * 100 / total);
+                        progress.style.width = `${width}%`;
+                    }
+                });
+            }
+
+            updateTimers();
+            window.setInterval(updateTimers, 1000);
+        })();
+    </script>

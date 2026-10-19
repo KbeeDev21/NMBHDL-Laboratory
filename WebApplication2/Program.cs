@@ -2,6 +2,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<WebApplication2.Services.LabTechnicianDataService>();
 
 var app = builder.Build();
 

@@ -1,358 +1,437 @@
-﻿@{
+﻿
+@model IReadOnlyList<WebApplication2.Models.LabTechnicianQueueItem>
+
+    @{
     Layout = "~/Views/Shared/_LabTechLayout.cshtml";
     ViewData["Title"] = "Receive Samples";
-}
 
-<link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    var pendingSamples = Model
+        .Where(x => x.SampleReceiptID <= 0)
+        .ToList();
 
-<link href="~/css/dashboardstyles.css" rel="stylesheet" />
-
-<style>
-    .page-container {
-        max-width: 1300px;
-        margin: 0 auto;
+    var receivedSamples = Model
+        .Where(x => x.SampleReceiptID > 0)
+        .ToList();
     }
 
-    .card-dark {
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 30px;
-        border: 1px solid #dbe3ec;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link href="~/css/dashboardstyles.css" rel="stylesheet" />
 
-    .table-container {
-        background: #f8fafc;
-        border-radius: 16px;
-        padding: 20px;
-        border: 1px solid #e2e8f0;
-        overflow-x: auto;
-    }
+    <style>
+        .page-container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
 
-    .sample-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 0;
-    }
+        .card-dark {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid #dbe3ec;
+            box-shadow: 0 2px 8px rgba(0,0,0,.05);
+        }
 
-        .sample-table th {
-            background: #0d6efd;
-            color: white;
-            padding: 14px 16px;
-            text-align: left;
-            font-size: 0.9rem;
+        .table-container {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+
+        .sample-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+            .sample-table th {
+                background: #0d6efd;
+                color: white;
+                padding: 14px 16px;
+                text-align: left;
+                font-size: .9rem;
+                white-space: nowrap;
+            }
+
+            .sample-table td {
+                padding: 16px;
+                border-bottom: 1px solid #e2e8f0;
+                color: #1f2937;
+                vertical-align: middle;
+                background: white;
+            }
+
+            .sample-table tbody tr:hover td {
+                background: #f8fafc;
+            }
+
+        .priority-badge,
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: .8rem;
             font-weight: 600;
             white-space: nowrap;
         }
 
-            .sample-table th:first-child {
-                border-radius: 10px 0 0 0;
+        .priority-stat {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .priority-urgent {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .priority-routine {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-received {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .btn-select,
+        .btn-dashboard,
+        .btn-reject {
+            border: 1px solid transparent;
+            color: white !important;
+            border-radius: 10px;
+            padding: 8px 16px;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .btn-select,
+        .btn-dashboard {
+            background: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+            .btn-select:hover,
+            .btn-dashboard:hover {
+                background: #0b5ed7;
             }
 
-            .sample-table th:last-child {
-                border-radius: 0 10px 0 0;
+        .btn-reject {
+            background: #dc3545;
+            border-color: #dc3545;
+        }
+
+            .btn-reject:hover {
+                background: #bb2d3b;
             }
 
-        .sample-table td {
-            padding: 16px;
-            border-bottom: 1px solid #e2e8f0;
+        .sample-count {
+            display: inline-block;
+            background: #e8f1ff;
+            color: #0d6efd;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: .85rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 35px 20px;
+            color: #6b7280;
+        }
+
+        h1, h4, p {
             color: #1f2937;
-            vertical-align: middle;
-            background: white;
         }
 
-        .sample-table tbody tr:hover td {
-            background: #f8fafc;
+        .text-muted {
+            color: #6b7280 !important;
         }
 
-        .sample-table tbody tr:last-child td {
-            border-bottom: none;
+        .barcode-input {
+            min-width: 150px;
         }
 
-    .priority-badge {
-        display: inline-block;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-    }
-
-    .priority-stat {
-        background: #fee2e2;
-        color: #b91c1c;
-    }
-
-    .priority-urgent {
-        background: #fef3c7;
-        color: #92400e;
-    }
-
-    .priority-routine {
-        background: #dcfce7;
-        color: #166534;
-    }
-
-    .sample-type {
-        color: #4b5563;
-    }
-
-    .btn-select {
-        background: #0d6efd;
-        border: 1px solid #0d6efd;
-        color: white !important;
-        border-radius: 10px;
-        padding: 8px 16px;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 0.9rem;
-        font-weight: 600;
-        transition: 0.2s;
-    }
-
-        .btn-select:hover {
-            background: #0b5ed7;
-            border-color: #0b5ed7;
-            color: white;
+        .reason-input {
+            min-width: 180px;
+            max-width: 240px;
         }
 
-    .btn-dashboard {
-        background: #0d6efd;
-        border: 1px solid #0d6efd;
-        color: white !important;
-        border-radius: 12px;
-        padding: 10px 18px;
-        text-decoration: none;
-    }
-
-        .btn-dashboard:hover {
-            background: #0b5ed7;
+        .action-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
         }
 
-    .empty-message {
-        text-align: center;
-        padding: 40px 20px;
-        color: #6b7280;
-    }
+        .section-heading {
+            margin-top: 25px;
+        }
 
-    h1,
-    h4,
-    p {
-        color: #1f2937;
-    }
+        .rejection-reason {
+            color: #b91c1c;
+            font-size: .85rem;
+            margin-top: 6px;
+        }
+    </style>
 
-    .text-muted {
-        color: #6b7280 !important;
-    }
+    <div class="main-content">
+        <div class="page-container">
+            <div class="card-dark">
 
-    .sample-count {
-        display: inline-block;
-        background: #e8f1ff;
-        color: #0d6efd;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        margin-bottom: 15px;
-    }
-</style>
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                    <div>
+                        <h1>Receive Samples</h1>
+                        <p class="text-muted mb-0">
+                            Receive individual samples and reject unsuitable samples without rejecting the entire request.
+                        </p>
+                    </div>
 
-<div class="main-content">
-
-    <div class="page-container">
-
-        <div class="card-dark">
-
-            <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-
-                <div>
-                    <h1>Receive Samples</h1>
-
-                    <p class="text-muted mb-0">
-                        Select a patient sample waiting to be accepted.
-                    </p>
+                    <a asp-controller="Home"
+                       asp-action="LabTechnicianDashboard"
+                       class="btn-dashboard">
+                        <i class="fa-solid fa-arrow-left me-1"></i>
+                        Dashboard
+                    </a>
                 </div>
 
-                <a asp-controller="Home"
-                   asp-action="LabTechnicianDashboard"
-                   class="btn-dashboard">
-                    ← Dashboard
-                </a>
+                @if (TempData["SuccessMessage"] is string success)
+            {
+                <div class="alert alert-success" role="status">
+                    @success
+                </div>
+            }
 
-            </div>
+                @if (TempData["ErrorMessage"] is string error)
+            {
+                <div class="alert alert-danger" role="alert">
+                    @error
+                </div>
+            }
 
-            <!-- Samples Waiting -->
-            <div>
-
-                <h4 class="mb-2">
-                    Samples Waiting to be Accepted
+                <h4 class="section-heading mb-2">
+                    Samples Waiting to Be Accepted
                 </h4>
 
                 <span class="sample-count">
                     <i class="fa-solid fa-vials me-1"></i>
-                    4 Samples Waiting
+                    @pendingSamples.Count request(s) awaiting receipt
                 </span>
 
                 <div class="table-container">
-
+                    @if (pendingSamples.Count == 0)
+                {
+                    <div class="empty-message">
+                        <i class="fa-solid fa-inbox fa-2x mb-3"></i>
+                        <p>No requests are currently waiting for sample receipt.</p>
+                    </div>
+                }
+                else
+                {
                     <table class="sample-table">
-
                         <thead>
                             <tr>
-                                <th>Request Number</th>
+                                <th>Request ID</th>
                                 <th>Patient</th>
-                                <th>Sample Type</th>
-                                <th>Doctor</th>
+                                <th>Patient Number</th>
+                                <th>Test Type</th>
                                 <th>Priority</th>
-                                <th>Action</th>
+                                <th>Request Date</th>
+                                <th>Barcode / Action</th>
                             </tr>
                         </thead>
 
                         <tbody>
+                            @foreach (var sample in pendingSamples)
+                            {
+                                var priority =
+                                    (sample.Urgency ?? "").ToUpperInvariant();
 
-                            <!-- Sample 1 -->
+                                var badgeClass = priority == "STAT"
+                                    ? "priority-stat"
+                                    : priority == "URGENT"
+                                        ? "priority-urgent"
+                                        : "priority-routine";
+
                             <tr>
                                 <td>
-                                    <strong>REQ-2026-00124</strong>
+                                    <strong>@sample.TestRequestID</strong>
                                 </td>
+
+                                <td>@sample.PatientName</td>
+                                <td>@sample.PatientNumber</td>
+                                <td>@sample.Type</td>
 
                                 <td>
-                                    Baloyi, Thabo
-                                </td>
-
-                                <td class="sample-type">
-                                    Whole Blood
-                                </td>
-
-                                <td>
-                                    Dr. F. Abrahams
-                                </td>
-
-                                <td>
-                                    <span class="priority-badge priority-stat">
-                                        STAT
+                                    <span class="priority-badge @badgeClass">
+                                        @(string.IsNullOrWhiteSpace(sample.Urgency)
+                                                ? "Routine"
+                                                : sample.Urgency)
                                     </span>
                                 </td>
 
                                 <td>
-                                    <a asp-controller="LabTechnician"
-                                       asp-action="TestDetail"
-                                       class="btn-select">
-                                        Select Sample
-                                    </a>
+                                    @sample.RequestDate.ToString("yyyy-MM-dd HH:mm")
+                                </td>
+
+                                <td>
+                                    <form asp-controller="LabTechnician"
+                                          asp-action="ReceiveSample"
+                                          method="post"
+                                          class="action-form">
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden"
+                                               name="testRequestId"
+                                               value="@sample.TestRequestID" />
+
+                                        <input class="form-control barcode-input"
+                                               name="barcode"
+                                               value=""
+                                               placeholder="Scan barcode"
+                                               aria-label="Barcode for request @sample.TestRequestID"
+                                               required />
+
+                                        <button type="submit" class="btn-select">
+                                            <i class="fa-solid fa-check me-1"></i>
+                                            Receive
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
-
-                            <!-- Sample 2 -->
-                            <tr>
-                                <td>
-                                    <strong>REQ-2026-00125</strong>
-                                </td>
-
-                                <td>
-                                    Mbeki, Sarah
-                                </td>
-
-                                <td class="sample-type">
-                                    Serum
-                                </td>
-
-                                <td>
-                                    Dr. M. Williams
-                                </td>
-
-                                <td>
-                                    <span class="priority-badge priority-urgent">
-                                        Urgent
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <a asp-controller="LabTechnician"
-                                       asp-action="TestDetail"
-                                       class="btn-select">
-                                        Select Sample
-                                    </a>
-                                </td>
-                            </tr>
-
-                            <!-- Sample 3 -->
-                            <tr>
-                                <td>
-                                    <strong>REQ-2026-00126</strong>
-                                </td>
-
-                                <td>
-                                    Jacobs, Daniel
-                                </td>
-
-                                <td class="sample-type">
-                                    Plasma
-                                </td>
-
-                                <td>
-                                    Dr. T. Adams
-                                </td>
-
-                                <td>
-                                    <span class="priority-badge priority-routine">
-                                        Routine
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <a asp-controller="LabTechnician"
-                                       asp-action="TestDetail"
-                                       class="btn-select">
-                                        Select Sample
-                                    </a>
-                                </td>
-                            </tr>
-
-                            <!-- Sample 4 -->
-                            <tr>
-                                <td>
-                                    <strong>REQ-2026-00127</strong>
-                                </td>
-
-                                <td>
-                                    Williams, Lerato
-                                </td>
-
-                                <td class="sample-type">
-                                    Whole Blood
-                                </td>
-
-                                <td>
-                                    Dr. N. Petersen
-                                </td>
-
-                                <td>
-                                    <span class="priority-badge priority-routine">
-                                        Routine
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <a asp-controller="LabTechnician"
-                                       asp-action="TestDetail"
-                                       class="btn-select">
-                                        Select Sample
-                                    </a>
-                                </td>
-                            </tr>
-
+                            }
                         </tbody>
-
                     </table>
+                }
+                </div>
 
+                <h4 class="mb-2">Received Samples</h4>
+
+                <span class="sample-count">
+                    <i class="fa-solid fa-flask me-1"></i>
+                    @receivedSamples.Count sample(s) received
+                </span>
+
+                <div class="table-container">
+                    @if (receivedSamples.Count == 0)
+                {
+                    <div class="empty-message">
+                        <i class="fa-solid fa-vials fa-2x mb-3"></i>
+                        <p>No received samples are available yet.</p>
+                    </div>
+                }
+                else
+                {
+                    <table class="sample-table">
+                        <thead>
+                            <tr>
+                                <th>Request ID</th>
+                                <th>Barcode</th>
+                                <th>Patient</th>
+                                <th>Test Type</th>
+                                <th>Received At</th>
+                                <th>Status</th>
+                                <th>Reject Sample</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var sample in receivedSamples)
+                            {
+                            <tr>
+                                <td>
+                                    <strong>@sample.TestRequestID</strong>
+                                </td>
+
+                                <td>@sample.Barcode</td>
+                                <td>@sample.PatientName</td>
+                                <td>@sample.Type</td>
+
+                                <td>
+                                    @(sample.DateTimeReceived.HasValue
+                                            ? sample.DateTimeReceived.Value.ToString("yyyy-MM-dd HH:mm")
+                                            : "—")
+                                </td>
+
+                                <td>
+                                    @{
+                                            if (sample.IsRejected)
+                                            {
+                                        <span class="status-badge status-rejected">
+                                            Rejected
+                                        </span>
+
+                                                if (!string.IsNullOrWhiteSpace(sample.RejectionReason))
+                                                {
+                                        <div class="rejection-reason">
+                                            Reason: @sample.RejectionReason
+                                        </div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                        <span class="status-badge status-received">
+                                            Received
+                                        </span>
+                                            }
+                                    }
+                                </td>
+
+                                <td>
+                                    @if (!sample.IsRejected)
+                                        {
+                                    <form asp-controller="LabTechnician"
+                                          asp-action="RejectSample"
+                                          method="post"
+                                          class="action-form"
+                                          onsubmit="return confirm('Reject this sample only? Other samples on the request will remain unaffected.');">
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden"
+                                               name="sampleReceiptId"
+                                               value="@sample.SampleReceiptID" />
+
+                                        <input class="form-control reason-input"
+                                               name="reason"
+                                               placeholder="Rejection reason"
+                                               aria-label="Rejection reason for barcode @sample.Barcode"
+                                               maxlength="250"
+                                               required />
+
+                                        <button type="submit" class="btn-reject">
+                                            <i class="fa-solid fa-ban me-1"></i>
+                                            Reject
+                                        </button>
+                                    </form>
+                                        }
+                                        else
+                                        {
+                                    <span class="text-muted">
+                                        Already rejected
+                                    </span>
+                                        }
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
                 </div>
 
             </div>
-
         </div>
-
     </div>
-
-</div>
