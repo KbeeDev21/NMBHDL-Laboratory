@@ -1,7 +1,11 @@
+using NMBHLabSys.LabManagerSubsystem;           //Lab manager subsystem refrence 
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddLabManagerSubsystem(builder.Configuration);
 
 var app = builder.Build();
 
@@ -17,6 +21,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseSession();                                                  // Lab Manager: reads the logged-in user
 
 app.UseAuthorization();
 
