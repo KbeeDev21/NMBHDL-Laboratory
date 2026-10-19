@@ -2,6 +2,7 @@
 using System.Globalization;
 using Dapper;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using WebApplication2.Models;
 
 namespace WebApplication2.Services;
@@ -85,15 +86,29 @@ public sealed class LabTechnicianDataService
             INNER JOIN dbo.[User] u ON u.UserID = p.UserID
             WHERE COALESCE(tr.Status, '') NOT IN
                 ('Cancelled', 'Canceled', 'Completed', 'Awaiting Selection')
-            ORDER BY CASE WHEN UPPER(COALESCE(tr.Urgency, '')) = 'STAT'
-                          THEN 0 ELSE 1 END,
-                     tr.RequestDate DESC;
+              AND NOT EXISTS
+                (
+                    SELECT 1
+                    FROM dbo.SampleReceipt sr
+                    WHERE sr.TestRequestID = tr.TestRequestID
+                )
+            ORDER BY
+                CASE
+                    WHEN UPPER(LTRIM(RTRIM(COALESCE(tr.Urgency, '')))) = 'STAT'
+                    THEN 0
+                    WHEN UPPER(LTRIM(RTRIM(COALESCE(tr.Urgency, '')))) = 'URGENT'
+                    THEN 1
+                    ELSE 2
+                END,
+                tr.RequestDate DESC;
             """;
 
         await using var connection = new SqlConnection(_connectionString);
 
         var rows = await connection.QueryAsync<LabTechnicianQueueItem>(
-            new CommandDefinition(sql, cancellationToken: cancellationToken));
+            new CommandDefinition(
+                sql,
+                cancellationToken: cancellationToken));
 
         return rows.AsList();
     }
@@ -124,7 +139,9 @@ public sealed class LabTechnicianDataService
         await using var connection = new SqlConnection(_connectionString);
 
         var rows = (await connection.QueryAsync<LabTechnicianQueueItem>(
-            new CommandDefinition(sql, cancellationToken: cancellationToken)))
+            new CommandDefinition(
+                sql,
+                cancellationToken: cancellationToken)))
             .AsList();
 
         foreach (var sample in rows)
@@ -149,10 +166,12 @@ public sealed class LabTechnicianDataService
 
         const string sql = """
             SET XACT_ABORT ON;
+
             BEGIN TRY
                 BEGIN TRANSACTION;
 
-                IF NOT EXISTS (
+                IF NOT EXISTS
+                (
                     SELECT 1
                     FROM dbo.TestRequest WITH (UPDLOCK, HOLDLOCK)
                     WHERE TestRequestID = @TestRequestID
@@ -163,7 +182,8 @@ public sealed class LabTechnicianDataService
                     ROLLBACK TRANSACTION;
                     SELECT CAST(0 AS bit);
                 END
-                ELSE IF EXISTS (
+                ELSE IF EXISTS
+                (
                     SELECT 1
                     FROM dbo.SampleReceipt WITH (UPDLOCK, HOLDLOCK)
                     WHERE Barcode = @Barcode
@@ -184,7 +204,9 @@ public sealed class LabTechnicianDataService
                 END
             END TRY
             BEGIN CATCH
-                IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+                IF @@TRANCOUNT > 0
+                    ROLLBACK TRANSACTION;
+
                 THROW;
             END CATCH;
             """;
@@ -246,7 +268,9 @@ public sealed class LabTechnicianDataService
         await using var connection = new SqlConnection(_connectionString);
 
         var rows = await connection.QueryAsync<LabTechnicianQueueItem>(
-            new CommandDefinition(sql, cancellationToken: cancellationToken));
+            new CommandDefinition(
+                sql,
+                cancellationToken: cancellationToken));
 
         return rows.AsList();
     }
@@ -267,7 +291,9 @@ public sealed class LabTechnicianDataService
         await using var connection = new SqlConnection(_connectionString);
 
         var rows = await connection.QueryAsync<ConsumableStockItem>(
-            new CommandDefinition(sql, cancellationToken: cancellationToken));
+            new CommandDefinition(
+                sql,
+                cancellationToken: cancellationToken));
 
         return rows.AsList();
     }
@@ -281,8 +307,11 @@ public sealed class LabTechnicianDataService
             return false;
 
         const string sql = """
-            SELECT CASE WHEN QtyOnHand >= @RequiredQuantity
-                        THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END
+            SELECT CASE
+                WHEN QtyOnHand >= @RequiredQuantity
+                THEN CAST(1 AS bit)
+                ELSE CAST(0 AS bit)
+            END
             FROM dbo.Consumable
             WHERE ConsumableID = @ConsumableID;
             """;
@@ -318,7 +347,8 @@ public sealed class LabTechnicianDataService
                    COALESCE(tt.TestName, '') AS TestName,
                    COALESCE(tt.TurnAroundMinutes, 0) AS TurnAroundMinutes
             FROM dbo.SampleReceipt sr
-            INNER JOIN dbo.TestRequest tr ON tr.TestRequestID = sr.TestRequestID
+            INNER JOIN dbo.TestRequest tr
+                ON tr.TestRequestID = sr.TestRequestID
             CROSS JOIN dbo.TestType tt
             WHERE sr.SampleReceiptID = @SampleReceiptID
               AND tt.TestTypeID = @TestTypeID;
@@ -529,10 +559,14 @@ public sealed class LabTechnicianDataService
                    COALESCE(tr.Urgency, '') AS Urgency,
                    COALESCE(tr.Status, '') AS RequestStatus
             FROM dbo.SampleReceipt sr
-            INNER JOIN dbo.TestRequest tr ON tr.TestRequestID = sr.TestRequestID
-            INNER JOIN dbo.Patient p ON p.PatientID = tr.PatientID
-            INNER JOIN dbo.[User] u ON u.UserID = p.UserID
-            INNER JOIN dbo.TestType tt ON tt.TestTypeID = @TestTypeID
+            INNER JOIN dbo.TestRequest tr
+                ON tr.TestRequestID = sr.TestRequestID
+            INNER JOIN dbo.Patient p
+                ON p.PatientID = tr.PatientID
+            INNER JOIN dbo.[User] u
+                ON u.UserID = p.UserID
+            INNER JOIN dbo.TestType tt
+                ON tt.TestTypeID = @TestTypeID
             WHERE sr.SampleReceiptID = @SampleReceiptID
               AND tr.TestRequestID = @TestRequestID;
             """;
@@ -692,7 +726,6 @@ public sealed class LabTechnicianDataService
                  x.TestRequestID == testRequestId);
     }
 
-
     public async Task<IReadOnlyList<VerificationQueueItemViewModel>>
         GetVerificationQueueAsync(
             CancellationToken cancellationToken = default)
@@ -705,31 +738,31 @@ public sealed class LabTechnicianDataService
             return Array.Empty<VerificationQueueItemViewModel>();
 
         const string sql = """
-        SELECT
-            tr.TestRequestID,
-            sr.SampleReceiptID,
-            tt.TestTypeID,
-            p.PatientID,
-            COALESCE(sr.Barcode, '') AS Barcode,
-            LTRIM(RTRIM(CONCAT(u.Surname, ', ', u.Name))) AS PatientName,
-            COALESCE(u.IDNumber, '') AS PatientNumber,
-            COALESCE(tt.TestName, '') AS TestName,
-            COALESCE(tt.Units, '') AS Units,
-            tt.NormalRangeMin,
-            tt.NormalRangeMax,
-            COALESCE(tr.Urgency, '') AS Urgency
-        FROM dbo.SampleReceipt sr
-        INNER JOIN dbo.TestRequest tr
-            ON tr.TestRequestID = sr.TestRequestID
-        INNER JOIN dbo.Patient p
-            ON p.PatientID = tr.PatientID
-        INNER JOIN dbo.[User] u
-            ON u.UserID = p.UserID
-        INNER JOIN dbo.TestType tt
-            ON tt.TestTypeID = @TestTypeID
-        WHERE sr.SampleReceiptID = @SampleReceiptID
-          AND tr.TestRequestID = @TestRequestID;
-        """;
+            SELECT
+                tr.TestRequestID,
+                sr.SampleReceiptID,
+                tt.TestTypeID,
+                p.PatientID,
+                COALESCE(sr.Barcode, '') AS Barcode,
+                LTRIM(RTRIM(CONCAT(u.Surname, ', ', u.Name))) AS PatientName,
+                COALESCE(u.IDNumber, '') AS PatientNumber,
+                COALESCE(tt.TestName, '') AS TestName,
+                COALESCE(tt.Units, '') AS Units,
+                tt.NormalRangeMin,
+                tt.NormalRangeMax,
+                COALESCE(tr.Urgency, '') AS Urgency
+            FROM dbo.SampleReceipt sr
+            INNER JOIN dbo.TestRequest tr
+                ON tr.TestRequestID = sr.TestRequestID
+            INNER JOIN dbo.Patient p
+                ON p.PatientID = tr.PatientID
+            INNER JOIN dbo.[User] u
+                ON u.UserID = p.UserID
+            INNER JOIN dbo.TestType tt
+                ON tt.TestTypeID = @TestTypeID
+            WHERE sr.SampleReceiptID = @SampleReceiptID
+              AND tr.TestRequestID = @TestRequestID;
+            """;
 
         await using var connection = new SqlConnection(_connectionString);
         var items = new List<VerificationQueueItemViewModel>();
@@ -756,10 +789,9 @@ public sealed class LabTechnicianDataService
             patient.TestResultID = completed.TestResultID;
             patient.Result = completed.Result;
             patient.ResultStatus = completed.Status;
-            patient.IsAbnormal =
-                !completed.Status.Equals(
-                    "Within Normal Range",
-                    StringComparison.OrdinalIgnoreCase);
+            patient.IsAbnormal = !completed.Status.Equals(
+                "Within Normal Range",
+                StringComparison.OrdinalIgnoreCase);
             patient.CompletionDateTime = completed.CompletionDateTime;
             patient.RequestNumber = $"REQ-{completed.TestRequestID}";
             patient.CapturedBy = "Unknown";
@@ -785,31 +817,31 @@ public sealed class LabTechnicianDataService
             return null;
 
         const string sql = """
-        SELECT
-            tr.TestRequestID,
-            sr.SampleReceiptID,
-            tt.TestTypeID,
-            p.PatientID,
-            COALESCE(sr.Barcode, '') AS Barcode,
-            LTRIM(RTRIM(CONCAT(u.Surname, ', ', u.Name))) AS PatientName,
-            COALESCE(u.IDNumber, '') AS PatientNumber,
-            COALESCE(tt.TestName, '') AS TestName,
-            COALESCE(tt.Units, '') AS Units,
-            tt.NormalRangeMin,
-            tt.NormalRangeMax,
-            COALESCE(tr.Urgency, '') AS Urgency
-        FROM dbo.SampleReceipt sr
-        INNER JOIN dbo.TestRequest tr
-            ON tr.TestRequestID = sr.TestRequestID
-        INNER JOIN dbo.Patient p
-            ON p.PatientID = tr.PatientID
-        INNER JOIN dbo.[User] u
-            ON u.UserID = p.UserID
-        INNER JOIN dbo.TestType tt
-            ON tt.TestTypeID = @TestTypeID
-        WHERE sr.SampleReceiptID = @SampleReceiptID
-          AND tr.TestRequestID = @TestRequestID;
-        """;
+            SELECT
+                tr.TestRequestID,
+                sr.SampleReceiptID,
+                tt.TestTypeID,
+                p.PatientID,
+                COALESCE(sr.Barcode, '') AS Barcode,
+                LTRIM(RTRIM(CONCAT(u.Surname, ', ', u.Name))) AS PatientName,
+                COALESCE(u.IDNumber, '') AS PatientNumber,
+                COALESCE(tt.TestName, '') AS TestName,
+                COALESCE(tt.Units, '') AS Units,
+                tt.NormalRangeMin,
+                tt.NormalRangeMax,
+                COALESCE(tr.Urgency, '') AS Urgency
+            FROM dbo.SampleReceipt sr
+            INNER JOIN dbo.TestRequest tr
+                ON tr.TestRequestID = sr.TestRequestID
+            INNER JOIN dbo.Patient p
+                ON p.PatientID = tr.PatientID
+            INNER JOIN dbo.[User] u
+                ON u.UserID = p.UserID
+            INNER JOIN dbo.TestType tt
+                ON tt.TestTypeID = @TestTypeID
+            WHERE sr.SampleReceiptID = @SampleReceiptID
+              AND tr.TestRequestID = @TestRequestID;
+            """;
 
         await using var connection = new SqlConnection(_connectionString);
 
@@ -831,21 +863,21 @@ public sealed class LabTechnicianDataService
         item.TestResultID = completed.TestResultID;
         item.Result = completed.Result;
         item.ResultStatus = completed.Status;
-        item.IsAbnormal =
-            !completed.Status.Equals(
-                "Within Normal Range",
-                StringComparison.OrdinalIgnoreCase);
+        item.IsAbnormal = !completed.Status.Equals(
+            "Within Normal Range",
+            StringComparison.OrdinalIgnoreCase);
         item.CompletionDateTime = completed.CompletionDateTime;
         item.RequestNumber = $"REQ-{completed.TestRequestID}";
         item.CapturedBy = "Unknown";
 
         return item;
     }
+
     public async Task<(bool Success, string Message)> SaveVerificationDecisionAsync(
-    int testResultId,
-    int labTechnicianId,
-    string decision,
-    CancellationToken cancellationToken = default)
+        int testResultId,
+        int labTechnicianId,
+        string decision,
+        CancellationToken cancellationToken = default)
     {
         if (testResultId <= 0)
             return (false, "A valid test result is required.");
@@ -865,43 +897,45 @@ public sealed class LabTechnicianDataService
         }
 
         const string sql = """
-        SET XACT_ABORT ON;
+            SET XACT_ABORT ON;
 
-        BEGIN TRY
-            BEGIN TRANSACTION;
+            BEGIN TRY
+                BEGIN TRANSACTION;
 
-            IF NOT EXISTS (
-                SELECT 1
-                FROM dbo.LabTechnician WITH (UPDLOCK, HOLDLOCK)
-                WHERE LabTechnicianID = @LabTechnicianID
-            )
-            BEGIN
-                THROW 50001, 'The selected lab technician does not exist.', 1;
-            END;
+                IF NOT EXISTS
+                (
+                    SELECT 1
+                    FROM dbo.LabTechnician WITH (UPDLOCK, HOLDLOCK)
+                    WHERE LabTechnicianID = @LabTechnicianID
+                )
+                BEGIN
+                    THROW 50001, 'The selected lab technician does not exist.', 1;
+                END;
 
-            IF NOT EXISTS (
-                SELECT 1
-                FROM dbo.TestResult WITH (UPDLOCK, HOLDLOCK)
-                WHERE TestResultID = @TestResultID
-            )
-            BEGIN
-                THROW 50002, 'The selected test result does not exist.', 1;
-            END;
+                IF NOT EXISTS
+                (
+                    SELECT 1
+                    FROM dbo.TestResult WITH (UPDLOCK, HOLDLOCK)
+                    WHERE TestResultID = @TestResultID
+                )
+                BEGIN
+                    THROW 50002, 'The selected test result does not exist.', 1;
+                END;
 
-            INSERT INTO dbo.ResultVerification
-                (VerificationDateTime, Decision, TestResultID, LabTechnicianID)
-            VALUES
-                (SYSDATETIME(), @Decision, @TestResultID, @LabTechnicianID);
+                INSERT INTO dbo.ResultVerification
+                    (VerificationDateTime, Decision, TestResultID, LabTechnicianID)
+                VALUES
+                    (SYSDATETIME(), @Decision, @TestResultID, @LabTechnicianID);
 
-            COMMIT TRANSACTION;
-        END TRY
-        BEGIN CATCH
-            IF @@TRANCOUNT > 0
-                ROLLBACK TRANSACTION;
+                COMMIT TRANSACTION;
+            END TRY
+            BEGIN CATCH
+                IF @@TRANCOUNT > 0
+                    ROLLBACK TRANSACTION;
 
-            THROW;
-        END CATCH;
-        """;
+                THROW;
+            END CATCH;
+            """;
 
         try
         {

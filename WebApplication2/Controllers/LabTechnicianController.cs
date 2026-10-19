@@ -1,4 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Dapper;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using WebApplication2.Models;
 using WebApplication2.Services;
 
@@ -7,28 +15,202 @@ namespace WebApplication2.Controllers
     public class LabTechnicianController : Controller
     {
         private readonly LabTechnicianDataService _labTechnicianData;
+        private readonly IConfiguration _configuration;
 
         public LabTechnicianController(
-            LabTechnicianDataService labTechnicianData)
+            LabTechnicianDataService labTechnicianData,
+            IConfiguration configuration)
         {
             _labTechnicianData = labTechnicianData;
+            _configuration = configuration;
         }
 
-        public IActionResult Dashboard() => View();
+        // Dashboard
 
+        [HttpGet]
+        public async Task<IActionResult> Dashboard(
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var connectionString =
+                    _configuration.GetConnectionString("DefaultConnection");
+
+                if (string.IsNullOrWhiteSpace(connectionString))
+                {
+                    throw new InvalidOperationException(
+                        "The DefaultConnection connection string is missing.");
+                }
+
+                const string statsSql = """
+                    SELECT
+                        (
+                            SELECT COUNT(*)
+                            FROM dbo.TestRequest tr
+                            WHERE COALESCE(tr.Status, '') NOT IN
+                                ('Cancelled', 'Canceled', 'Completed',
+                                 'Awaiting Selection')
+                              AND NOT EXISTS
+                              (
+                                  SELECT 1
+                                  FROM dbo.SampleReceipt sr
+                                  WHERE sr.TestRequestID = tr.TestRequestID
+                              )
+                        ) AS RequestsAwaitingReceipt,
+                        (
+                            SELECT COUNT(*)
+                            FROM dbo.TestRequest tr
+                            WHERE UPPER(LTRIM(RTRIM(
+                                COALESCE(tr.Urgency, '')))) IN ('STAT', 'URGENT')
+                              AND COALESCE(tr.Status, '') NOT IN
+                                ('Cancelled', 'Canceled', 'Completed')
+                        ) AS UrgentRequests,
+                        (
+                            SELECT COUNT(*)
+                            FROM dbo.TestResult
+                            WHERE CompletionDateTime >= CONVERT(date, GETDATE())
+                              AND CompletionDateTime <
+                                  DATEADD(day, 1, CONVERT(date, GETDATE()))
+                        ) AS ResultsCompletedToday,
+                        (
+                            SELECT COUNT(*)
+                            FROM dbo.TestResult tr
+                            WHERE NOT EXISTS
+                            (
+                                SELECT 1
+                                FROM dbo.ResultVerification rv
+                                WHERE rv.TestResultID = tr.TestResultID
+                                  AND UPPER(LTRIM(RTRIM(
+                                      COALESCE(rv.Decision, '')))) = 'APPROVED'
+                            )
+                        ) AS AwaitingVerification;
+                    """;
+
+                const string urgentSql = """
+                    SELECT TOP (6)
+                        tr.TestRequestID,
+                        COALESCE(tr.barcode, '') AS Barcode,
+                        COALESCE(tr.Type, '') AS TestType,
+                        COALESCE(tr.Urgency, '') AS Urgency,
+                        COALESCE(tr.Status, '') AS Status,
+                        tr.RequestDate,
+                        LTRIM(RTRIM(CONCAT(u.Surname, ', ', u.Name)))
+                            AS PatientName
+                    FROM dbo.TestRequest tr
+                    INNER JOIN dbo.Patient p
+                        ON p.PatientID = tr.PatientID
+                    INNER JOIN dbo.[User] u
+                        ON u.UserID = p.UserID
+                    WHERE UPPER(LTRIM(RTRIM(
+                        COALESCE(tr.Urgency, '')))) IN ('STAT', 'URGENT')
+                      AND COALESCE(tr.Status, '') NOT IN
+                        ('Cancelled', 'Canceled', 'Completed')
+                    ORDER BY
+                        CASE
+                            WHEN UPPER(LTRIM(RTRIM(
+                                COALESCE(tr.Urgency, '')))) = 'STAT'
+                            THEN 0 ELSE 1
+                        END,
+                        tr.RequestDate ASC;
+                    """;
+
+                await using var connection =
+                    new SqlConnection(connectionString);
+
+                await connection.OpenAsync(cancellationToken);
+
+                var stats = await connection.QuerySingleAsync<DashboardStats>(
+                    new CommandDefinition(
+                        statsSql,
+                        cancellationToken: cancellationToken));
+
+                var urgentRequests =
+                    (await connection.QueryAsync<DashboardUrgentItem>(
+                        new CommandDefinition(
+                            urgentSql,
+                            cancellationToken: cancellationToken)))
+                    .ToList();
+
+                var assignedTests = await _labTechnicianData
+                    .GetAssignedTestsAsync(cancellationToken);
+
+                var assignedTestsCount = assignedTests.Count(test =>
+                    !_labTechnicianData.IsTestCompleted(
+                        test.SampleReceiptID,
+                        test.TestTypeID));
+
+                ViewBag.Stats = stats;
+                ViewBag.AssignedTestsCount = assignedTestsCount;
+                ViewBag.RequestsAwaitingReceipt = stats.RequestsAwaitingReceipt;
+                ViewBag.UrgentRequestsCount = stats.UrgentRequests;
+                ViewBag.ResultsCompletedToday = stats.ResultsCompletedToday;
+                ViewBag.AwaitingVerification = stats.AwaitingVerification;
+                ViewBag.urgentRequests = urgentRequests;
+                ViewBag.UrgentRequests = urgentRequests;
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Dashboard failed: {ex}");
+
+                TempData["ErrorMessage"] =
+                    "Could not load dashboard statistics. Check the application logs.";
+
+                ViewBag.Stats = new DashboardStats();
+                ViewBag.AssignedTestsCount = 0;
+                ViewBag.RequestsAwaitingReceipt = 0;
+                ViewBag.UrgentRequestsCount = 0;
+                ViewBag.ResultsCompletedToday = 0;
+                ViewBag.AwaitingVerification = 0;
+                ViewBag.urgentRequests = new List<DashboardUrgentItem>();
+                ViewBag.UrgentRequests = new List<DashboardUrgentItem>();
+
+                return View();
+            }
+        }
+
+        private sealed class DashboardStats
+        {
+            public int RequestsAwaitingReceipt { get; set; }
+            public int UrgentRequests { get; set; }
+            public int ResultsCompletedToday { get; set; }
+            public int AwaitingVerification { get; set; }
+        }
+
+        private sealed class DashboardUrgentItem
+        {
+            public int TestRequestID { get; set; }
+            public string Barcode { get; set; } = string.Empty;
+            public string TestType { get; set; } = string.Empty;
+            public string Urgency { get; set; } = string.Empty;
+            public string Status { get; set; } = string.Empty;
+            public DateTime? RequestDate { get; set; }
+            public string PatientName { get; set; } = string.Empty;
+        }
+
+        [HttpGet]
         public IActionResult StatUrgent() => View();
 
+        [HttpGet]
         public IActionResult TestDetail() => View();
 
+        [HttpGet]
         public IActionResult Escalations() => View();
 
+        [HttpGet]
         public IActionResult Reports() => View();
 
+        [HttpGet]
         public IActionResult Profile() => View();
 
+        [HttpGet]
         public IActionResult EditProfile() => View();
 
+        [HttpGet]
         public IActionResult ChangePassword() => View();
+
+        // Sample receipt and test selection
 
         [HttpGet]
         public async Task<IActionResult> AwaitingSelection(
@@ -95,6 +277,8 @@ namespace WebApplication2.Controllers
             return RedirectToAction(nameof(AwaitingSelection));
         }
 
+        // Assigned tests and result capture
+
         [HttpGet]
         public async Task<IActionResult> AssignedTests(
             CancellationToken cancellationToken)
@@ -118,7 +302,6 @@ namespace WebApplication2.Controllers
                 }
 
                 ViewBag.CompletedTests = completedTests;
-
                 return View(tests);
             }
             catch (Exception ex)
@@ -173,7 +356,6 @@ namespace WebApplication2.Controllers
                 }
 
                 ViewBag.MatchingTests = matchingTests;
-
                 return View();
             }
             catch (Exception ex)
@@ -182,7 +364,6 @@ namespace WebApplication2.Controllers
 
                 ViewBag.LookupMessage =
                     "The patient lookup failed. Check the application logs.";
-
                 ViewBag.RegistrationNumber = registrationNumber;
 
                 return View();
@@ -266,12 +447,10 @@ namespace WebApplication2.Controllers
                 if (!saveResult.Success)
                 {
                     ModelState.AddModelError(string.Empty, saveResult.Message);
-
                     return await ReloadCaptureFormAsync(model, cancellationToken);
                 }
 
                 TempData["SuccessMessage"] = saveResult.Message;
-
                 return RedirectToAction(nameof(AssignedTests));
             }
             catch (Exception ex)
@@ -314,14 +493,13 @@ namespace WebApplication2.Controllers
             {
                 Console.Error.WriteLine($"ReloadCaptureForm failed: {ex}");
 
-                TempData["ErrorMessage"] =
-                    "Could not reload the capture form.";
-
+                TempData["ErrorMessage"] = "Could not reload the capture form.";
                 return RedirectToAction(nameof(AssignedTests));
             }
         }
 
-        // Displays individually captured results awaiting verification.
+        // Result verification
+
         [HttpGet]
         public async Task<IActionResult> VerificationQueue(
             CancellationToken cancellationToken)
@@ -344,7 +522,6 @@ namespace WebApplication2.Controllers
             }
         }
 
-        // Opens one specific result for verification.
         [HttpGet]
         public async Task<IActionResult> VerifyResults(
             int testResultId,
@@ -386,8 +563,90 @@ namespace WebApplication2.Controllers
             }
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitVerificationDecision(
+            int testResultId,
+            string decision,
+            string? returnReason,
+            CancellationToken cancellationToken)
+        {
+            if (testResultId <= 0)
+            {
+                TempData["ErrorMessage"] = "Invalid test result.";
+                return RedirectToAction(nameof(VerificationQueue));
+            }
+
+            var normalizedDecision = decision?.Trim();
+
+            if (!string.Equals(
+                    normalizedDecision,
+                    "Approved",
+                    StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(
+                    normalizedDecision,
+                    "Returned",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["ErrorMessage"] =
+                    "Select a valid verification decision.";
+
+                return RedirectToAction(
+                    nameof(VerifyResults),
+                    new { testResultId });
+            }
+
+            if (string.Equals(
+                    normalizedDecision,
+                    "Returned",
+                    StringComparison.OrdinalIgnoreCase)
+                && string.IsNullOrWhiteSpace(returnReason))
+            {
+                TempData["ErrorMessage"] =
+                    "A reason is required when returning a result for recapture.";
+
+                return RedirectToAction(
+                    nameof(VerifyResults),
+                    new { testResultId });
+            }
+
+            try
+            {
+                var result = await _labTechnicianData
+                    .GetVerificationResultAsync(
+                        testResultId,
+                        cancellationToken);
+
+                if (result == null)
+                {
+                    TempData["ErrorMessage"] =
+                        "The selected test result could not be found.";
+
+                    return RedirectToAction(nameof(VerificationQueue));
+                }
+
+                TempData["ErrorMessage"] =
+                    "The decision was not saved. This login must be linked to a valid lab technician before verification can be recorded.";
+
+                return RedirectToAction(
+                    nameof(VerifyResults),
+                    new { testResultId });
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(
+                    $"SubmitVerificationDecision failed: {ex}");
+
+                TempData["ErrorMessage"] =
+                    "Could not process the verification decision. Check the application logs.";
+
+                return RedirectToAction(nameof(VerificationQueue));
+            }
+        }
+
         [HttpGet]
-        public async Task<IActionResult> ReviewQueue(CancellationToken cancellationToken)
+        public async Task<IActionResult> ReviewQueue(
+            CancellationToken cancellationToken)
         {
             try
             {
@@ -412,14 +671,18 @@ namespace WebApplication2.Controllers
 
                 return View(returnedTests);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.Error.WriteLine($"ReviewQueue failed: {ex}");
+
                 TempData["ErrorMessage"] =
                     "The Review Queue could not be loaded. Please try again.";
 
                 return View(new List<VerificationQueueItemViewModel>());
             }
         }
+
+        // Receive and reject samples
 
         [HttpGet]
         public async Task<IActionResult> ReceiveSamples(

@@ -1,426 +1,303 @@
-﻿@{
+﻿
+@{
     ViewData["Title"] = "Lab Technician Dashboard";
     Layout = "_LabTechLayout";
+
+    int assignedTests = ViewBag.AssignedTestsCount ?? 0;
+    int awaitingSelection = ViewBag.RequestsAwaitingReceipt ?? 0;
+    int awaitingVerification = ViewBag.AwaitingVerification ?? 0;
+    int urgentCount = ViewBag.UrgentRequestsCount ?? 0;
+    int completedToday = ViewBag.ResultsCompletedToday ?? 0;
+
+    var urgentRequests = ViewBag.urgentRequests as
+        System.Collections.Generic.IEnumerable<dynamic>
+        ?? System.Linq.Enumerable.Empty<dynamic>();
 }
 
 <style>
-
     body {
-        background-color: #f4f6f9 !important;
+        background: #f4f6f9 !important;
         color: #1f2937 !important;
     }
 
     .main-dashboard {
-        padding: 40px;
+        padding: 32px;
     }
 
-    h1 {
-        font-weight: 700;
-        margin-bottom: 30px;
-        color: #1f2937;
-    }
-
-    /* KPI Cards */
-    .metric-card {
-        background: #ffffff;
-        border-radius: 18px;
-        padding: 20px;
-        text-align: center;
+    .metric-card,
+    .section-card {
+        background: #fff;
         border: 1px solid #dbe3ec;
-        margin-bottom: 20px;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
+    }
+
+    .metric-card {
+        text-align: center;
         height: 100%;
-        transition: 0.2s ease;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        transition: transform .2s ease;
     }
 
         .metric-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-            cursor: pointer;
         }
 
     .metric-number {
-        font-size: 2.5rem;
-        font-weight: bold;
+        font-size: 2.3rem;
+        font-weight: 700;
     }
 
-    /* Sections */
+    .metric-label {
+        color: #64748b;
+        margin-top: 6px;
+    }
+
     .section-card {
-        background: #ffffff;
-        border-radius: 18px;
-        padding: 24px;
-        border: 1px solid #dbe3ec;
-        margin-top: 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        margin-top: 24px;
     }
 
-    /* Priority Flags */
     .priority-item {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 14px 18px;
-        margin-bottom: 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        transition: all 0.2s ease;
-    }
-
-    .priority-left {
-        display: flex;
-        align-items: center;
-        gap: 10px;
+        gap: 16px;
+        flex-wrap: wrap;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 12px;
     }
 
     .badge-pill {
-        padding: 4px 12px;
+        display: inline-block;
+        padding: 4px 10px;
         border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
+        font-size: .8rem;
+        font-weight: 700;
     }
 
     .badge-stat {
-        background: #f4a261;
-        color: #000;
+        background: #fee2e2;
+        color: #991b1b;
     }
 
-    .badge-overdue {
-        background: #e9c46a;
-        color: #000;
+    .badge-urgent {
+        background: #fef3c7;
+        color: #92400e;
     }
 
     .badge-routine {
-        background: #d9e6f2;
-        color: #0f172a;
+        background: #dbeafe;
+        color: #1e40af;
     }
 
-    /* Progress Bars */
-    .progress-row {
-        margin-bottom: 18px;
+    .empty-state {
+        color: #64748b;
+        padding: 18px 0;
     }
 
-    .progress {
-        height: 12px;
-        background: #e5e7eb;
-        border-radius: 10px;
-    }
-
-    /* Hover */
-    .priority-link {
-        text-decoration: none;
+    .dashboard-link {
         color: inherit;
-        display: block;
+        text-decoration: none;
     }
 
-        .priority-link:hover {
-            text-decoration: none;
+        .dashboard-link:hover {
             color: inherit;
         }
 
-            .priority-link:hover .priority-item {
-                background: #f1f5f9;
-                transform: translateX(4px);
-                cursor: pointer;
-            }
-
-    .text-secondary {
-        color: #6b7280 !important;
+    @@media (max-width: 768px) {
+        .main-dashboard {
+            padding: 18px;
+        }
     }
-
 </style>
+
 <div class="main-dashboard">
-
-    <h1>My Workload</h1>
-
-    <!-- KPI Cards -->
-    <div class="row g-4">
-
-        <div class="col-md-6">
-
-            <a asp-controller="LabTechnician"
-               asp-action="AssignedTests"
-               class="text-decoration-none">
-
-                <div class="metric-card">
-
-                    <div class="metric-number text-primary">
-                        47
-                    </div>
-
-                    <div>
-                        Tests Assigned
-                    </div>
-
-                </div>
-
-            </a>
-
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <div>
+            <h1 class="fw-bold mb-1">Lab Technician Dashboard</h1>
+            <p class="text-secondary mb-0">
+                Overview of laboratory workload and outstanding priorities.
+            </p>
         </div>
 
-        <div class="col-md-6">
+        <div class="text-secondary">
+            @DateTime.Now.ToString("dd MMM yyyy")
+        </div>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+    <div class="alert alert-warning" role="alert">
+        @TempData["ErrorMessage"]
+    </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-12 col-md-6 col-xl-3">
+            <a asp-controller="LabTechnician"
+               asp-action="ReceiveSamples"
+               class="dashboard-link">
+                <div class="metric-card">
+                    <div class="metric-number text-primary">
+                        @awaitingSelection
+                    </div>
+                    <div class="metric-label">Requests Awaiting Receipt</div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <a asp-controller="LabTechnician"
+               asp-action="StatUrgent"
+               class="dashboard-link">
+                <div class="metric-card">
+                    <div class="metric-number text-danger">
+                        @urgentCount
+                    </div>
+                    <div class="metric-label">Urgent / STAT Requests</div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <a asp-controller="LabTechnician"
+               asp-action="VerificationQueue"
+               class="dashboard-link">
+                <div class="metric-card">
+                    <div class="metric-number" style="color:#d97706">
+                        @awaitingVerification
+                    </div>
+                    <div class="metric-label">Awaiting Verification</div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-number text-success">
+                    @completedToday
+                </div>
+                <div class="metric-label">Results Completed Today</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <h3 class="fw-bold mb-0">Urgent and STAT Requests</h3>
+
+            <a asp-controller="LabTechnician"
+               asp-action="StatUrgent"
+               class="btn btn-outline-primary btn-sm">
+                View all
+            </a>
+        </div>
+
+        @if (!urgentRequests.Any())
+        {
+        <div class="empty-state">
+            No active urgent or STAT requests were returned by the database.
+        </div>
+        }
+        else
+        {
+            foreach (var item in urgentRequests)
+            {
+                var urgency = Convert.ToString(item?.Urgency) ?? string.Empty;
+                var isStat = urgency.Equals(
+                    "STAT",
+                    StringComparison.OrdinalIgnoreCase);
+
+                var patientName =
+                    Convert.ToString(item?.PatientName) ?? string.Empty;
+
+                var barcode =
+                    Convert.ToString(item?.Barcode) ?? string.Empty;
+
+                var testType =
+                    Convert.ToString(item?.TestType) ?? string.Empty;
+
+                var requestId = item?.TestRequestID;
+
+        <div class="priority-item">
+            <div>
+                <span class="badge-pill @(isStat ? "badge-stat" : "badge-urgent")">
+                    @(string.IsNullOrWhiteSpace(urgency) ? "URGENT" : urgency)
+                </span>
+
+                <strong class="ms-2">
+                    @(string.IsNullOrWhiteSpace(patientName)
+                                ? "Patient name unavailable"
+                                : patientName)
+                </strong>
+
+                <div class="small text-secondary mt-2">
+                    Request #@requestId
+
+                    @if (!string.IsNullOrWhiteSpace(barcode))
+                            {
+                    <span> · Barcode: @barcode</span>
+                            }
+
+                    @if (!string.IsNullOrWhiteSpace(testType))
+                            {
+                    <span> · @testType</span>
+                            }
+                </div>
+            </div>
+
+            <a asp-controller="LabTechnician"
+               asp-action="ReceiveSamples"
+               class="btn btn-outline-secondary btn-sm">
+                Open requests
+            </a>
+        </div>
+            }
+        }
+    </div>
+
+    <div class="section-card">
+        <h3 class="fw-bold mb-3">Quick Actions</h3>
+
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-controller="LabTechnician"
+               asp-action="ReceiveSamples"
+               class="btn btn-primary">
+                Receive Samples
+            </a>
 
             <a asp-controller="LabTechnician"
                asp-action="AwaitingSelection"
-               class="text-decoration-none">
-
-                <div class="metric-card">
-
-                    <div class="metric-number text-warning">
-                        12
-                    </div>
-
-                    <div>
-                        Awaiting Selection
-                    </div>
-
-                </div>
-
+               class="btn btn-outline-primary">
+                Select Tests
             </a>
 
-        </div>
-
-        <div class="col-md-6">
+            <a asp-controller="LabTechnician"
+               asp-action="AssignedTests"
+               class="btn btn-outline-primary">
+                Assigned Tests
+            </a>
 
             <a asp-controller="LabTechnician"
                asp-action="VerificationQueue"
-               class="text-decoration-none">
-
-                <div class="metric-card">
-
-                    <div class="metric-number"
-                         style="color:#d97706;">
-
-                        8
-
-                    </div>
-
-                    <div>
-                        Awaiting Verification
-                    </div>
-
-                </div>
-
+               class="btn btn-outline-primary">
+                Verification Queue
             </a>
-
-        </div>
-
-        <div class="col-md-6">
 
             <a asp-controller="LabTechnician"
-               asp-action="ReviewQueue"
-               class="text-decoration-none">
-
-                <div class="metric-card">
-
-                    <div class="metric-number text-success">
-                        19
-                    </div>
-
-                    <div>
-                        Awaiting Review
-                    </div>
-
-                </div>
-
+               asp-action="Escalations"
+               class="btn btn-outline-primary">
+                Escalations
             </a>
 
+            <a asp-controller="LabTechnician"
+               asp-action="Reports"
+               class="btn btn-outline-primary">
+                Reports
+            </a>
         </div>
-
     </div>
-
-    <!-- Priority Flags -->
-    <div class="section-card">
-
-        <h3 class="mb-4">
-            Priority Flags
-        </h3>
-
-        <a asp-controller="LabTechnician"
-           asp-action="TestDetail"
-           class="priority-link">
-
-            <div class="priority-item">
-
-                <div class="priority-left">
-
-                    <span class="badge-pill badge-stat">
-                        STAT
-                    </span>
-
-                    <span>
-                        FBC + Diff — Baloyi, T
-                    </span>
-
-                </div>
-
-                <span class="text-danger">
-                    45 min overdue
-                </span>
-
-            </div>
-
-        </a>
-
-        <a asp-controller="LabTechnician"
-           asp-action="TestDetail"
-           class="priority-link">
-
-            <div class="priority-item">
-
-                <div class="priority-left">
-
-                    <span class="badge-pill badge-stat">
-                        STAT
-                    </span>
-
-                    <span>
-                        PT/INR — Van Wyk, M
-                    </span>
-
-                </div>
-
-                <span class="text-warning">
-                    Due in 15 min
-                </span>
-
-            </div>
-
-        </a>
-
-        <a asp-controller="LabTechnician"
-           asp-action="TestDetail"
-           class="priority-link">
-
-            <div class="priority-item">
-
-                <div class="priority-left">
-
-                    <span class="badge-pill badge-overdue">
-                        Overdue
-                    </span>
-
-                    <span>
-                        Malaria Screen — Jacobs, L
-                    </span>
-
-                </div>
-
-                <span class="text-danger">
-                    Exceeded by 1h 10m
-                </span>
-
-            </div>
-
-        </a>
-
-        <a asp-controller="LabTechnician"
-           asp-action="TestDetail"
-           class="priority-link">
-
-            <div class="priority-item">
-
-                <div class="priority-left">
-
-                    <span class="badge-pill badge-routine">
-                        Routine
-                    </span>
-
-                    <span>
-                        ESR — Mkize, P
-                    </span>
-
-                </div>
-
-                <span class="text-secondary">
-                    Within TAT
-                </span>
-
-            </div>
-
-        </a>
-
-    </div>
-
-    <!-- Workload Progress -->
-    <div class="section-card">
-
-        <h3 class="mb-4">
-            Workload Progress
-        </h3>
-
-        <div class="progress-row">
-
-            <div class="d-flex justify-content-between mb-1">
-
-                <span>
-                    Selected
-                </span>
-
-                <span>
-                    28/47
-                </span>
-
-            </div>
-
-            <div class="progress">
-
-                <div class="progress-bar bg-primary"
-                     style="width:60%">
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="progress-row">
-
-            <div class="d-flex justify-content-between mb-1">
-
-                <span>
-                    Verified
-                </span>
-
-                <span>
-                    19/47
-                </span>
-
-            </div>
-
-            <div class="progress">
-
-                <div class="progress-bar bg-success"
-                     style="width:40%">
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="progress-row">
-
-            <div class="d-flex justify-content-between mb-1">
-
-                <span>
-                    Reviewed
-                </span>
-
-                <span>
-                    12/47
-                </span>
-
-            </div>
-
-            <div class="progress">
-
-                <div class="progress-bar bg-warning"
-                     style="width:25%">
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
 </div>
