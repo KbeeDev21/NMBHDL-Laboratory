@@ -368,23 +368,23 @@
 
             <div style="margin: 20px 0;">
                 <label for="returnReason" class="reason-label">
-                    Reason for recapture
+                    Reason for rejection
                 </label>
 
                 <textarea id="returnReason"
                           name="returnReason"
                           class="reason-input"
                           maxlength="1000"
-                          placeholder="Explain why this result needs to be recaptured..."></textarea>
+                          placeholder="Explain why this result is being rejected..."></textarea>
 
                 <p class="reason-help">
-                    Required when selecting Return for Recapture.
+                    Required when selecting Reject Results.
                 </p>
 
                 <p id="reasonError"
                    class="validation-message"
                    role="alert">
-                    Please provide a reason before returning this result.
+                    Please provide a reason before rejecting this result.
                 </p>
             </div>
 
@@ -401,7 +401,7 @@
                             value="Returned"
                             class="decision-button return-button"
                             onclick="return validateReturn();">
-                        Return for Recapture
+                        Reject Result
                     </button>
 
                     <button type="submit"

@@ -703,13 +703,9 @@ namespace WebApplication2.Controllers
 
                 TempData["SuccessMessage"] = saveResult.Message;
 
-                return RedirectToAction(
-                    string.Equals(
-                        normalizedDecision,
-                        "Returned",
-                        StringComparison.OrdinalIgnoreCase)
-                        ? nameof(ReviewQueue)
-                        : nameof(VerificationQueue));
+                // After a result is returned, stay on the Verification Queue.
+                // The returned result can be opened for recapture from Review Queue.
+                return RedirectToAction(nameof(VerificationQueue));
             }
             catch (Exception ex)
             {
@@ -732,23 +728,11 @@ namespace WebApplication2.Controllers
                 var results = await _labTechnicianData
                     .GetVerificationQueueAsync(cancellationToken);
 
-                var returnedTests = results
-                    .Where(x =>
-                        string.Equals(
-                            x.LatestVerificationDecision,
-                            "Returned",
-                            StringComparison.OrdinalIgnoreCase)
-                        || string.Equals(
-                            x.LatestVerificationDecision,
-                            "Return",
-                            StringComparison.OrdinalIgnoreCase)
-                        || string.Equals(
-                            x.LatestVerificationDecision,
-                            "Rejected",
-                            StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-
-                return View(returnedTests);
+                // Pass all results to the view. ReviewQueue.cshtml must first
+                // select the newest result for each request/test type and only
+                // then filter for Returned/Return/Rejected. Filtering here first
+                // would leave an older returned result visible after recapture.
+                return View(results);
             }
             catch (Exception ex)
             {

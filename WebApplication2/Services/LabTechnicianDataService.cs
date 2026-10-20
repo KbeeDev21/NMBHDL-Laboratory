@@ -828,159 +828,255 @@ public sealed class LabTechnicianDataService
         if (string.IsNullOrWhiteSpace(result))
             return (false, "Enter a result value before saving.", 0);
 
-        string key = $"{sampleReceiptId}:{testTypeId}";
-
-        if (!Assignments.TryGetValue(key, out var assignment))
-            return (false, "This test is not currently assigned.", 0);
-
-        const string latestResultSql = """
-            SELECT TOP (1)
-                   tres.TestResultID,
-                   latest.Decision
-            FROM dbo.TestResult tres
-            OUTER APPLY
-            (
-                SELECT TOP (1) rv.Decision
-                FROM dbo.ResultVerification rv
-                WHERE rv.TestResultID = tres.TestResultID
-                ORDER BY rv.VerificationDateTime DESC, rv.ResultVerificationID DESC
-            ) latest
-            WHERE tres.TestRequestID = @TestRequestID
-              AND tres.TestTypeID = @TestTypeID
-            ORDER BY tres.CompletionDateTime DESC, tres.TestResultID DESC;
-            """;
-
-        await using var checkConnection = new SqlConnection(_connectionString);
-        var latestResult = await checkConnection.QuerySingleOrDefaultAsync<dynamic>(
-            new CommandDefinition(
-                latestResultSql,
-                new { TestRequestID = assignment.TestRequestID, TestTypeID = testTypeId },
-                cancellationToken: cancellationToken));
-
-        string? latestDecision = latestResult == null
-            ? null
-            : (string?)latestResult.Decision;
-
-        bool wasRecapture =
-            string.Equals(latestDecision, "Returned", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(latestDecision, "Return", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(latestDecision, "Rejected", StringComparison.OrdinalIgnoreCase);
-
-        if (latestResult != null && !wasRecapture)
-            return (false, "This test already has a saved result. Only a returned result can be recaptured.", 0);
-
-        if (Rejections.ContainsKey(sampleReceiptId))
-            return (false, "This sample has been rejected.", 0);
-
         if (!decimal.TryParse(
                 result,
                 NumberStyles.Number,
                 CultureInfo.InvariantCulture,
                 out decimal numericResult))
-        {
             return (false, "Enter a valid numeric result.", 0);
-        }
 
-        const string rangeSql = """
-            SELECT NormalRangeMin, NormalRangeMax
-            FROM dbo.TestType
-            WHERE TestTypeID = @TestTypeID;
-            """;
+        string key = $"{sampleReceiptId}:{testTypeId}";
+
+        if (!Assignments.TryGetValue(key, out var assignment))
+            return (false, "This test is not currently assigned. Please select the test again.", 0);
+
+        if (Rejections.ContainsKey(sampleReceiptId))
+            return (false, "This sample has been rejected.", 0);
 
         await using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync(cancellationToken);
+        await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync(
+            System.Data.IsolationLevel.Serializable, cancellationToken);
 
-        var range = await connection.QuerySingleOrDefaultAsync<TestRangeRow>(
-            new CommandDefinition(
-                rangeSql,
-                new { TestTypeID = testTypeId },
-                cancellationToken: cancellationToken));
+        try
+        {
+            // Application lock serializes capture/verification workflow for this request + test
+            // across concurrent requests and application instances using this service.
+            const string lockSql = """
+                DECLARE @LockResult INT;
+                EXEC @LockResult = sys.sp_getapplock
+                    @Resource = @Resource,
+                    @LockMode = 'Exclusive',
+                    @LockOwner = 'Transaction',
+                    @LockTimeout = 10000;
+                SELECT @LockResult;
+                """;
 
-        if (range == null)
-            return (false, "The selected test type could not be found.", 0);
+            int lockResult = await connection.ExecuteScalarAsync<int>(
+                new CommandDefinition(
+                    lockSql,
+                    new { Resource = $"LabTechWorkflow:{assignment.TestRequestID}:{testTypeId}" },
+                    transaction,
+                    cancellationToken: cancellationToken));
 
-        bool isLow = range.NormalRangeMin.HasValue &&
-                     numericResult < range.NormalRangeMin.Value;
+            if (lockResult < 0)
+                throw new InvalidOperationException("Could not obtain the test workflow lock. Please retry.");
 
-        bool isHigh = range.NormalRangeMax.HasValue &&
-                      numericResult > range.NormalRangeMax.Value;
+            // Re-check the current state AFTER obtaining the lock.
+            const string latestResultSql = """
+                SELECT TOP (1)
+                    tres.TestResultID,
+                    latest.Decision
+                FROM dbo.TestResult tres WITH (UPDLOCK, HOLDLOCK)
+                OUTER APPLY
+                (
+                    SELECT TOP (1) rv.Decision
+                    FROM dbo.ResultVerification rv
+                    WHERE rv.TestResultID = tres.TestResultID
+                    ORDER BY rv.VerificationDateTime DESC, rv.ResultVerificationID DESC
+                ) latest
+                WHERE tres.TestRequestID = @TestRequestID
+                  AND tres.TestTypeID = @TestTypeID
+                ORDER BY tres.CompletionDateTime DESC, tres.TestResultID DESC;
+                """;
 
-        bool isAbnormal = isLow || isHigh;
+            var latest = await connection.QuerySingleOrDefaultAsync<dynamic>(
+                new CommandDefinition(
+                    latestResultSql,
+                    new { TestRequestID = assignment.TestRequestID, TestTypeID = testTypeId },
+                    transaction,
+                    cancellationToken: cancellationToken));
 
-        string status = isLow
-            ? "Abnormally Low"
-            : isHigh
-                ? "Abnormally High"
-                : "Within Normal Range";
+            int? previousResultId = latest == null ? null : (int?)latest.TestResultID;
+            string? latestDecision = latest == null ? null : (string?)latest.Decision;
 
+            bool isReturned =
+                string.Equals(latestDecision, "Returned", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(latestDecision, "Return", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(latestDecision, "Rejected", StringComparison.OrdinalIgnoreCase);
 
-        const string insertSql = """
-    INSERT INTO dbo.TestResult
-    (
-        Result,
-        IsAbnormal,
-        Status,
-        CompletionDateTime,
-        TestTypeID,
-        TestRequestID,
-        TechnicianNotes
-    )
-    OUTPUT INSERTED.TestResultID
-    VALUES
-    (
-        @Result,
-        @IsAbnormal,
-        @Status,
-        SYSDATETIME(),
-        @TestTypeID,
-        @TestRequestID,
-        @TechnicianNotes
-    );
-    """;
+            if (previousResultId.HasValue && !isReturned)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return (false,
+                    "This test already has a saved result. A new result is allowed only after the latest result is returned for recapture.",
+                    0);
+            }
 
+            // If this is a recapture, require the predecessor's most recent decision to be
+            // Returned/Return/Rejected and ensure no link already exists for that predecessor.
+            if (previousResultId.HasValue)
+            {
+                const string existingLinkSql = """
+                    SELECT COUNT(1)
+                    FROM dbo.TestResultRecaptureLink WITH (UPDLOCK, HOLDLOCK)
+                    WHERE PreviousTestResultID = @PreviousTestResultID;
+                    """;
 
-        int testResultId = await connection.ExecuteScalarAsync<int>(
-            new CommandDefinition(
-                insertSql,
-                new
+                int existingLink = await connection.ExecuteScalarAsync<int>(
+                    new CommandDefinition(
+                        existingLinkSql,
+                        new { PreviousTestResultID = previousResultId.Value },
+                        transaction,
+                        cancellationToken: cancellationToken));
+
+                if (existingLink > 0)
                 {
-                    Result = result.Trim(),
-                    IsAbnormal = isAbnormal,
-                    Status = status,
-                    TestTypeID = testTypeId,
-                    TestRequestID = assignment.TestRequestID,
-                    TechnicianNotes = string.IsNullOrWhiteSpace(technicianNotes)
-                    ? null
-                    : technicianNotes.Trim()
-                },
-                cancellationToken: cancellationToken));
+                    await transaction.RollbackAsync(cancellationToken);
+                    return (false, "This returned result already has a recapture linked to it.", 0);
+                }
+            }
 
-        CompletedTests[key] = new CompletedTest(
-            testResultId,
-            sampleReceiptId,
-            assignment.TestRequestID,
-            testTypeId,
-            assignment.TestName,
-            result.Trim(),
-            status,
-            DateTime.Now);
+            const string rangeSql = """
+                SELECT NormalRangeMin, NormalRangeMax
+                FROM dbo.TestType WITH (HOLDLOCK)
+                WHERE TestTypeID = @TestTypeID;
+                """;
 
-        await RecordAuditEventAsync(
-            testResultId,
-            wasRecapture ? "Recaptured" : "Captured",
-            details: wasRecapture
-                ? $"Recaptured {assignment.TestName}; prior returned result retained in history."
-                : $"Captured {assignment.TestName}; result status: {status}.",
-            cancellationToken: cancellationToken);
+            var range = await connection.QuerySingleOrDefaultAsync<TestRangeRow>(
+                new CommandDefinition(
+                    rangeSql,
+                    new { TestTypeID = testTypeId },
+                    transaction,
+                    cancellationToken: cancellationToken));
 
-        return (
-            true,
-            wasRecapture
-                ? $"Recaptured result saved for {assignment.TestName}: {status}. It is ready for verification."
-                : $"Result saved for {assignment.TestName}: {status}.",
-            testResultId);
+            if (range == null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return (false, "The selected test type could not be found.", 0);
+            }
+
+            bool isLow = range.NormalRangeMin.HasValue && numericResult < range.NormalRangeMin.Value;
+            bool isHigh = range.NormalRangeMax.HasValue && numericResult > range.NormalRangeMax.Value;
+            bool isAbnormal = isLow || isHigh;
+
+            string status = isLow
+                ? "Abnormally Low"
+                : isHigh
+                    ? "Abnormally High"
+                    : "Within Normal Range";
+
+            const string insertResultSql = """
+                INSERT INTO dbo.TestResult
+                (
+                    Result, IsAbnormal, Status, CompletionDateTime,
+                    TestTypeID, TestRequestID, TechnicianNotes
+                )
+                OUTPUT INSERTED.TestResultID
+                VALUES
+                (
+                    @Result, @IsAbnormal, @Status, SYSDATETIME(),
+                    @TestTypeID, @TestRequestID, @TechnicianNotes
+                );
+                """;
+
+            int newResultId = await connection.ExecuteScalarAsync<int>(
+                new CommandDefinition(
+                    insertResultSql,
+                    new
+                    {
+                        Result = result.Trim(),
+                        IsAbnormal = isAbnormal,
+                        Status = status,
+                        TestTypeID = testTypeId,
+                        TestRequestID = assignment.TestRequestID,
+                        TechnicianNotes = string.IsNullOrWhiteSpace(technicianNotes)
+                            ? null
+                            : technicianNotes.Trim()
+                    },
+                    transaction,
+                    cancellationToken: cancellationToken));
+
+            if (previousResultId.HasValue)
+            {
+                const string insertLinkSql = """
+                    INSERT INTO dbo.TestResultRecaptureLink
+                        (PreviousTestResultID, NewTestResultID)
+                    VALUES
+                        (@PreviousTestResultID, @NewTestResultID);
+                    """;
+
+                await connection.ExecuteAsync(
+                    new CommandDefinition(
+                        insertLinkSql,
+                        new
+                        {
+                            PreviousTestResultID = previousResultId.Value,
+                            NewTestResultID = newResultId
+                        },
+                        transaction,
+                        cancellationToken: cancellationToken));
+            }
+
+            const string auditSql = """
+                INSERT INTO dbo.TestResultAuditHistory
+                    (TestResultID, EventType, LabTechnicianID, Details)
+                VALUES
+                    (@TestResultID, @EventType, NULL, @Details);
+                """;
+
+            await connection.ExecuteAsync(
+                new CommandDefinition(
+                    auditSql,
+                    new
+                    {
+                        TestResultID = newResultId,
+                        EventType = previousResultId.HasValue ? "Recaptured" : "Captured",
+                        Details = previousResultId.HasValue
+                            ? $"Recaptured {assignment.TestName}; previous result ID {previousResultId.Value} retained and linked."
+                            : $"Captured {assignment.TestName}; result status: {status}."
+                    },
+                    transaction,
+                    cancellationToken: cancellationToken));
+
+            await transaction.CommitAsync(cancellationToken);
+
+            CompletedTests[key] = new CompletedTest(
+                newResultId,
+                sampleReceiptId,
+                assignment.TestRequestID,
+                testTypeId,
+                assignment.TestName,
+                result.Trim(),
+                status,
+                DateTime.Now);
+
+            return (
+                true,
+                previousResultId.HasValue
+                    ? $"Recaptured result saved for {assignment.TestName}: {status}. It is ready for verification."
+                    : $"Result saved for {assignment.TestName}: {status}.",
+                newResultId);
+        }
+        catch (SqlException ex) when (ex.Number == 2601 || ex.Number == 2627)
+        {
+            if (transaction.Connection != null)
+                await transaction.RollbackAsync(CancellationToken.None);
+
+            return (false, "A duplicate recapture link was detected. No partial result was saved; refresh the queue and try again if appropriate.", 0);
+        }
+        catch (Exception ex)
+        {
+            if (transaction.Connection != null)
+            {
+                try { await transaction.RollbackAsync(CancellationToken.None); }
+                catch { /* Preserve the original failure. */ }
+            }
+
+            Console.Error.WriteLine($"SaveTestResultAsync failed: {ex}");
+            return (false, "The result could not be saved. No partial result, link, or audit event should remain. Check application logs.", 0);
+        }
     }
-
     public bool IsTestCompleted(int sampleReceiptId, int testTypeId)
     {
         return CompletedTests.ContainsKey($"{sampleReceiptId}:{testTypeId}");
@@ -1067,27 +1163,30 @@ public sealed class LabTechnicianDataService
 
         const string historySql = """
         SELECT
-            rv.ResultVerificationID,
-            rv.Decision,
+            COALESCE(rv.ResultVerificationID, 0) AS ResultVerificationID,
+            COALESCE(rv.Decision, '') AS Decision,
             COALESCE(rv.Reason, '') AS Reason,
             rv.VerificationDateTime,
             COALESCE(
                 NULLIF(LTRIM(RTRIM(CONCAT(usr.Surname, ', ', usr.Name))), ','),
                 'Unknown'
             ) AS TechnicianName,
-            rv.TestResultID,
+            related.TestResultID,
             related.TestRequestID,
             related.TestTypeID,
             COALESCE(related.Result, '') AS RelatedResultValue,
+            COALESCE(related.TechnicianNotes, '') AS RelatedTechnicianNotes,
             related.CompletionDateTime AS RelatedCompletionDateTime
-        FROM dbo.ResultVerification rv
-        INNER JOIN dbo.TestResult related
-            ON related.TestResultID = rv.TestResultID
+        FROM dbo.TestResult related
+        LEFT JOIN dbo.ResultVerification rv
+            ON rv.TestResultID = related.TestResultID
         LEFT JOIN dbo.LabTechnician lt
             ON lt.LabTechnicianID = rv.LabTechnicianID
         LEFT JOIN dbo.[User] usr
             ON usr.UserID = lt.UserID
-        ORDER BY rv.VerificationDateTime, rv.ResultVerificationID;
+        WHERE related.TestRequestID IS NOT NULL
+        ORDER BY related.CompletionDateTime, related.TestResultID,
+                 rv.VerificationDateTime, rv.ResultVerificationID;
         """;
 
         var historyRows = await connection.QueryAsync<VerificationHistoryItemViewModelWithResultId>(
@@ -1102,6 +1201,7 @@ public sealed class LabTechnicianDataService
                     ResultVerificationID = x.ResultVerificationID,
                     RelatedTestResultID = x.TestResultID,
                     RelatedResultValue = x.RelatedResultValue ?? string.Empty,
+                    TechnicianNotes = x.RelatedTechnicianNotes ?? string.Empty,
                     Decision = x.Decision ?? string.Empty,
                     Reason = x.Reason ?? string.Empty,
                     TechnicianName = x.TechnicianName ?? "Unknown",
@@ -1130,6 +1230,7 @@ public sealed class LabTechnicianDataService
         public int TestTypeID { get; set; }
         public int ResultVerificationID { get; set; }
         public string? RelatedResultValue { get; set; }
+        public string? RelatedTechnicianNotes { get; set; }
         public string? Decision { get; set; }
         public string? Reason { get; set; }
         public string? TechnicianName { get; set; }
@@ -1205,26 +1306,31 @@ public sealed class LabTechnicianDataService
 
         const string historySql = """
         SELECT
-            rv.ResultVerificationID,
-            rv.TestResultID,
-            rv.Decision,
+            COALESCE(rv.ResultVerificationID, 0) AS ResultVerificationID,
+            related.TestResultID,
+            COALESCE(rv.Decision, '') AS Decision,
             COALESCE(rv.Reason, '') AS Reason,
             rv.VerificationDateTime,
-            COALESCE(NULLIF(LTRIM(RTRIM(CONCAT(usr.Surname, ', ', usr.Name))), ','), 'Unknown') AS TechnicianName,
+            COALESCE(
+                NULLIF(LTRIM(RTRIM(CONCAT(usr.Surname, ', ', usr.Name))), ','),
+                'Unknown'
+            ) AS TechnicianName,
             related.TestRequestID,
             related.TestTypeID,
             COALESCE(related.Result, '') AS RelatedResultValue,
+            COALESCE(related.TechnicianNotes, '') AS RelatedTechnicianNotes,
             related.CompletionDateTime AS RelatedCompletionDateTime
-        FROM dbo.ResultVerification rv
-        INNER JOIN dbo.TestResult related
-            ON related.TestResultID = rv.TestResultID
+        FROM dbo.TestResult related
+        LEFT JOIN dbo.ResultVerification rv
+            ON rv.TestResultID = related.TestResultID
         LEFT JOIN dbo.LabTechnician lt
             ON lt.LabTechnicianID = rv.LabTechnicianID
         LEFT JOIN dbo.[User] usr
             ON usr.UserID = lt.UserID
         WHERE related.TestRequestID = @TestRequestID
           AND related.TestTypeID = @TestTypeID
-        ORDER BY rv.VerificationDateTime, rv.ResultVerificationID;
+        ORDER BY related.CompletionDateTime, related.TestResultID,
+                 rv.VerificationDateTime, rv.ResultVerificationID;
         """;
 
         var history = await connection.QueryAsync<VerificationHistoryItemViewModelWithResultId>(
@@ -1238,6 +1344,7 @@ public sealed class LabTechnicianDataService
             ResultVerificationID = x.ResultVerificationID,
             RelatedTestResultID = x.TestResultID,
             RelatedResultValue = x.RelatedResultValue ?? string.Empty,
+            TechnicianNotes = x.RelatedTechnicianNotes ?? string.Empty,
             Decision = x.Decision ?? string.Empty,
             Reason = x.Reason ?? string.Empty,
             TechnicianName = x.TechnicianName ?? "Unknown",
@@ -1268,11 +1375,11 @@ public sealed class LabTechnicianDataService
 
 
     public async Task<(bool Success, string Message)> SaveVerificationDecisionAsync(
-    int testResultId,
-    int labTechnicianId,
-    string decision,
-    string? reason,
-    CancellationToken cancellationToken = default)
+        int testResultId,
+        int labTechnicianId,
+        string decision,
+        string? reason,
+        CancellationToken cancellationToken = default)
     {
         if (testResultId <= 0)
             return (false, "A valid test result is required.");
@@ -1283,108 +1390,181 @@ public sealed class LabTechnicianDataService
         if (string.IsNullOrWhiteSpace(decision))
             return (false, "Select a verification decision.");
 
-        var normalizedDecision = decision.Trim();
-
-        if (!normalizedDecision.Equals("Approved", StringComparison.OrdinalIgnoreCase)
-            && !normalizedDecision.Equals("Returned", StringComparison.OrdinalIgnoreCase))
-        {
+        string normalizedDecision = decision.Trim();
+        if (!normalizedDecision.Equals("Approved", StringComparison.OrdinalIgnoreCase) &&
+            !normalizedDecision.Equals("Returned", StringComparison.OrdinalIgnoreCase))
             return (false, "The decision must be Approved or Returned.");
-        }
 
-        const string sql = """
-            SET XACT_ABORT ON;
+        if (normalizedDecision.Equals("Returned", StringComparison.OrdinalIgnoreCase) &&
+            string.IsNullOrWhiteSpace(reason))
+            return (false, "A reason is required when returning a result for recapture.");
 
-            BEGIN TRY
-                BEGIN TRANSACTION;
-
-                IF NOT EXISTS
-                (
-                    SELECT 1
-                    FROM dbo.LabTechnician WITH (UPDLOCK, HOLDLOCK)
-                    WHERE LabTechnicianID = @LabTechnicianID
-                )
-                BEGIN
-                    THROW 50001, 'The selected lab technician does not exist.', 1;
-                END;
-
-                IF NOT EXISTS
-                (
-                    SELECT 1
-                    FROM dbo.TestResult WITH (UPDLOCK, HOLDLOCK)
-                    WHERE TestResultID = @TestResultID
-                )
-                BEGIN
-                    THROW 50002, 'The selected test result does not exist.', 1;
-                END;
-
-               INSERT INTO dbo.ResultVerification
-                (VerificationDateTime, Decision, TestResultID, LabTechnicianID, Reason)
-               VALUES
-                (SYSDATETIME(), @Decision, @TestResultID, @LabTechnicianID, @Reason);
-
-                COMMIT TRANSACTION;
-            END TRY
-            BEGIN CATCH
-                IF @@TRANCOUNT > 0
-                    ROLLBACK TRANSACTION;
-
-                THROW;
-            END CATCH;
-            """;
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync(
+            System.Data.IsolationLevel.Serializable, cancellationToken);
 
         try
         {
-            await using var connection = new SqlConnection(_connectionString);
+            // Resolve workflow key, then lock it. The key is revalidated after the lock.
+            const string keySql = """
+                SELECT TestRequestID, TestTypeID
+                FROM dbo.TestResult WITH (UPDLOCK, HOLDLOCK)
+                WHERE TestResultID = @TestResultID;
+                """;
+
+            var key = await connection.QuerySingleOrDefaultAsync<dynamic>(
+                new CommandDefinition(
+                    keySql,
+                    new { TestResultID = testResultId },
+                    transaction,
+                    cancellationToken: cancellationToken));
+
+            if (key == null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return (false, "The test result was not found. No decision was saved.");
+            }
+
+            int requestId = (int)key.TestRequestID;
+            int typeId = (int)key.TestTypeID;
+
+            const string lockSql = """
+                DECLARE @LockResult INT;
+                EXEC @LockResult = sys.sp_getapplock
+                    @Resource = @Resource,
+                    @LockMode = 'Exclusive',
+                    @LockOwner = 'Transaction',
+                    @LockTimeout = 10000;
+                SELECT @LockResult;
+                """;
+
+            int lockResult = await connection.ExecuteScalarAsync<int>(
+                new CommandDefinition(
+                    lockSql,
+                    new { Resource = $"LabTechWorkflow:{requestId}:{typeId}" },
+                    transaction,
+                    cancellationToken: cancellationToken));
+
+            if (lockResult < 0)
+                throw new InvalidOperationException("Could not obtain the test workflow lock. Please retry.");
+
+            const string technicianSql = """
+                SELECT COUNT(1)
+                FROM dbo.LabTechnician WITH (UPDLOCK, HOLDLOCK)
+                WHERE LabTechnicianID = @LabTechnicianID;
+                """;
+
+            int technicianExists = await connection.ExecuteScalarAsync<int>(
+                new CommandDefinition(
+                    technicianSql,
+                    new { LabTechnicianID = labTechnicianId },
+                    transaction,
+                    cancellationToken: cancellationToken));
+
+            if (technicianExists == 0)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return (false, "The lab technician record was not found. No decision was saved.");
+            }
+
+            const string latestResultSql = """
+                SELECT TOP (1) tres.TestResultID
+                FROM dbo.TestResult tres WITH (UPDLOCK, HOLDLOCK)
+                WHERE tres.TestRequestID = @TestRequestID
+                  AND tres.TestTypeID = @TestTypeID
+                ORDER BY tres.CompletionDateTime DESC, tres.TestResultID DESC;
+                """;
+
+            int? latestResultId = await connection.QuerySingleOrDefaultAsync<int?>(
+                new CommandDefinition(
+                    latestResultSql,
+                    new { TestRequestID = requestId, TestTypeID = typeId },
+                    transaction,
+                    cancellationToken: cancellationToken));
+
+            if (latestResultId != testResultId)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return (false, "This is no longer the latest result for this test. Refresh the verification queue before deciding.");
+            }
+
+            const string existingDecisionSql = """
+                SELECT COUNT(1)
+                FROM dbo.ResultVerification WITH (UPDLOCK, HOLDLOCK)
+                WHERE TestResultID = @TestResultID;
+                """;
+
+            int existingDecisionCount = await connection.ExecuteScalarAsync<int>(
+                new CommandDefinition(
+                    existingDecisionSql,
+                    new { TestResultID = testResultId },
+                    transaction,
+                    cancellationToken: cancellationToken));
+
+            if (existingDecisionCount > 0)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return (false, "A verification decision already exists for this result. It cannot be decided again.");
+            }
+
+            const string insertDecisionSql = """
+                INSERT INTO dbo.ResultVerification
+                    (VerificationDateTime, Decision, TestResultID, LabTechnicianID, Reason)
+                VALUES
+                    (SYSDATETIME(), @Decision, @TestResultID, @LabTechnicianID, @Reason);
+                """;
 
             await connection.ExecuteAsync(
                 new CommandDefinition(
-                    sql,
+                    insertDecisionSql,
+                    new
+                    {
+                        Decision = normalizedDecision,
+                        TestResultID = testResultId,
+                        LabTechnicianID = labTechnicianId,
+                        Reason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim()
+                    },
+                    transaction,
+                    cancellationToken: cancellationToken));
+
+            const string auditSql = """
+                INSERT INTO dbo.TestResultAuditHistory
+                    (TestResultID, EventType, LabTechnicianID, Details)
+                VALUES
+                    (@TestResultID, @EventType, @LabTechnicianID, @Details);
+                """;
+
+            await connection.ExecuteAsync(
+                new CommandDefinition(
+                    auditSql,
                     new
                     {
                         TestResultID = testResultId,
+                        EventType = normalizedDecision,
                         LabTechnicianID = labTechnicianId,
-                        Decision = normalizedDecision,
-                        Reason = reason
+                        Details = string.IsNullOrWhiteSpace(reason)
+                            ? $"Verification decision: {normalizedDecision}."
+                            : $"Verification decision: {normalizedDecision}. Reason: {reason.Trim()}"
                     },
+                    transaction,
                     cancellationToken: cancellationToken));
 
-            await RecordAuditEventAsync(
-                testResultId,
-                normalizedDecision,
-                labTechnicianId,
-                string.IsNullOrWhiteSpace(reason)
-                    ? $"Verification decision: {normalizedDecision}."
-                    : $"Verification decision: {normalizedDecision}. Reason: {reason.Trim()}",
-                cancellationToken);
-
+            await transaction.CommitAsync(cancellationToken);
             return (true, $"Verification decision '{normalizedDecision}' was saved.");
-        }
-        catch (SqlException ex) when (ex.Number == 50001)
-        {
-            return (false, "The lab technician record was not found. No decision was saved.");
-        }
-        catch (SqlException ex) when (ex.Number == 50002)
-        {
-            return (false, "The test result was not found. No decision was saved.");
-        }
-        catch (SqlException ex)
-        {
-            Console.Error.WriteLine(
-                $"SaveVerificationDecisionAsync SQL error {ex.Number}: {ex.Message}");
-
-            return (false,
-                $"Database error ({ex.Number}): {ex.Message}");
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine(
-                $"SaveVerificationDecisionAsync error: {ex}");
+            if (transaction.Connection != null)
+            {
+                try { await transaction.RollbackAsync(CancellationToken.None); }
+                catch { /* Preserve the original failure. */ }
+            }
 
-            return (false,
-                "The verification decision could not be saved. Check application logs.");
+            Console.Error.WriteLine($"SaveVerificationDecisionAsync failed: {ex}");
+            return (false, "The verification decision could not be saved. No partial decision/audit record should remain. Check application logs.");
         }
     }
-
     public async Task<int?> GetLabTechnicianIdForUserAsync(
     int userId,
     CancellationToken cancellationToken = default)

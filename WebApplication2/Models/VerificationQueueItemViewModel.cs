@@ -33,6 +33,7 @@ public sealed class VerificationHistoryItemViewModel
     public int ResultVerificationID { get; set; }
     public int RelatedTestResultID { get; set; }
     public string RelatedResultValue { get; set; } = string.Empty;
+    public string TechnicianNotes { get; set; } = string.Empty;
     public DateTime? RelatedCompletionDateTime { get; set; }
     public string Decision { get; set; } = string.Empty;
     public string Reason { get; set; } = string.Empty;

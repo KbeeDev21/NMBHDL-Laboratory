@@ -147,9 +147,9 @@
 
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
                 <div>
-                    <h1>Capture Test Result</h1>
+                    <h1>Capture Selected Test Result</h1>
                     <p class="text-muted mb-0">
-                        Enter and complete the result for this individual assigned test.
+                        Enter and complete the result for the selected test type only.
                     </p>
                 </div>
 
@@ -157,7 +157,7 @@
                    asp-action="AssignedTests"
                    class="btn-outline-custom">
                     <i class="fa-solid fa-arrow-left me-1"></i>
-                    Back to Assigned Tests
+                    Back to Select Test
                 </a>
             </div>
 
@@ -324,8 +324,7 @@
                               class="text-danger"></span>
 
                         <small class="text-muted d-block mt-1">
-                            Note: the current database schema has no technician-notes
-                            column, so these notes are not persisted by the current save operation.
+                            These notes are saved with the result and can be viewed in Verification History.
                         </small>
                     </div>
                 </div>
@@ -339,7 +338,7 @@
                     <a asp-controller="LabTechnician"
                        asp-action="AssignedTests"
                        class="btn-outline-custom">
-                        Cancel
+                        Back to Select Test
                     </a>
                 </div>
             </form>

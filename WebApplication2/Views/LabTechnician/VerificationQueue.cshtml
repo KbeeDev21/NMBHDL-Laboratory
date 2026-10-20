@@ -372,12 +372,12 @@
                     </div>
 
                     <section class="history-panel" id="@historyId" hidden>
-                        <h4>Verification History — Result #@item.TestResultID</h4>
+                        <h4>Verification History</h4>
                         @if (item.VerificationHistory != null && item.VerificationHistory.Any())
                         {
                         <div class="history-table-wrap">
                             <table class="history-table">
-                                <thead><tr><th>Result</th><th>Decision date / time</th><th>Decision</th><th>Reason / Notes</th><th>Verified by</th></tr></thead>
+                                <thead><tr><th>Result</th><th>Decision date / time</th><th>Decision</th><th>Return reason</th><th>Technician notes</th><th>Verified by</th></tr></thead>
                                 <tbody>
                                     @foreach (var history in item.VerificationHistory.OrderBy(x => x.VerificationDateTime).ThenBy(x => x.ResultVerificationID))
                                     {
@@ -387,6 +387,7 @@
                                         <td>@(history.VerificationDateTime?.ToString("dd MMM yyyy, HH:mm:ss") ?? "Not recorded")</td>
                                         <td><span class="history-decision @(decisionClass == "returned" ? "returned" : decisionClass == "rejected" ? "rejected" : decisionClass == "approved" ? "approved" : "")">@history.Decision</span></td>
                                         <td>@(string.IsNullOrWhiteSpace(history.Reason) ? "No reason recorded" : history.Reason)</td>
+                                        <td>@(string.IsNullOrWhiteSpace(history.TechnicianNotes) ? "No technician note recorded" : history.TechnicianNotes)</td>
                                         <td>@(string.IsNullOrWhiteSpace(history.TechnicianName) ? "Unknown" : history.TechnicianName)</td>
                                     </tr>
                                     }

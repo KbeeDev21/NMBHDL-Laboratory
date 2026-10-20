@@ -2,7 +2,7 @@
 
     @{
     Layout = "~/Views/Shared/_LabTechLayout.cshtml";
-    ViewData["Title"] = "Assigned Tests";
+    ViewData["Title"] = "Select Test";
 
     var now = DateTime.Now;
     var tests = Model?.ToList() ?? new List<WebApplication2.Models.LabTechnicianQueueItem>();
@@ -238,7 +238,7 @@
     <main class="assigned-page">
         <header class="assigned-header">
             <div>
-                <h1>Assigned Tests</h1>
+                <h1>Assigned Test</h1>
                 <div class="muted">
                     Capture and complete each assigned test independently.
                 </div>
@@ -272,7 +272,7 @@
 
         <section class="summary">
             <div class="summary-card">
-                <span class="muted">Assigned tests</span>
+                <span class="muted">Available tests</span>
                 <span class="summary-number">@tests.Count</span>
             </div>
 
@@ -295,7 +295,7 @@
         @if (tests.Count == 0)
     {
         <section class="empty">
-            <h2>No assigned tests</h2>
+            <h2>No tests available to select</h2>
             <p class="muted">
                 Tests will appear here after they are selected from Awaiting Selection.
             </p>
