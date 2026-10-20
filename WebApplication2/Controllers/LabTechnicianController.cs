@@ -12,6 +12,57 @@ using WebApplication2.Services;
 
 namespace WebApplication2.Controllers
 {
+    public sealed class StatUrgentTestViewModel
+    {
+        public int TestRequestID { get; set; }
+        public int SampleReceiptID { get; set; }
+        public int TestTypeID { get; set; }
+        public int TestResultID { get; set; }
+        public int PatientID { get; set; }
+        public string Barcode { get; set; } = string.Empty;
+        public DateTime? RequestDate { get; set; }
+        public string Urgency { get; set; } = string.Empty;
+        public string RequestStatus { get; set; } = string.Empty;
+        public string TestName { get; set; } = string.Empty;
+        public int TurnAroundMinutes { get; set; }
+        public DateTime? DateTimeReceived { get; set; }
+        public string PatientName { get; set; } = string.Empty;
+        public string PatientNumber { get; set; } = string.Empty;
+        public string ResultStatus { get; set; } = string.Empty;
+        public DateTime? CompletionDateTime { get; set; }
+        public string LatestDecision { get; set; } = string.Empty;
+        public string Stage { get; set; } = string.Empty;
+        public DateTime? DueDateTime { get; set; }
+        public string TatStatus { get; set; } = string.Empty;
+    }
+
+    public sealed class TestDetailViewModel
+    {
+        public int TestRequestID { get; set; }
+        public int SampleReceiptID { get; set; }
+        public int PatientID { get; set; }
+        public string RequestNumber => $"REQ-{TestRequestID:D5}";
+        public string Barcode { get; set; } = string.Empty;
+        public string SampleType { get; set; } = "Not specified";
+        public DateTime? RequestDate { get; set; }
+        public DateTime? DateTimeReceived { get; set; }
+        public string Urgency { get; set; } = string.Empty;
+        public string RequestStatus { get; set; } = string.Empty;
+        public string PatientName { get; set; } = string.Empty;
+        public string PatientNumber { get; set; } = string.Empty;
+        public string DoctorName { get; set; } = string.Empty;
+        public string RequestedTypeText { get; set; } = string.Empty;
+        public List<string> RequestedTests { get; set; } = new();
+        public bool HasActiveSample { get; set; }
+        public bool IsRejectedSample { get; set; }
+        public bool IsSelectedTest { get; set; }
+        public bool HasResult { get; set; }
+        public bool IsComplete { get; set; }
+        public int TestTypeID { get; set; }
+        public string SelectedTestName { get; set; } = string.Empty;
+        public string StageMessage { get; set; } = string.Empty;
+    }
+
     public class LabTechnicianController : Controller
     {
         private readonly LabTechnicianDataService _labTechnicianData;
@@ -193,10 +244,413 @@ namespace WebApplication2.Controllers
         }
 
         [HttpGet]
-        public IActionResult StatUrgent() => View();
+        public async Task<IActionResult> StatUrgent(
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var connectionString =
+                    _configuration.GetConnectionString("DefaultConnection");
+
+                if (string.IsNullOrWhiteSpace(connectionString))
+                {
+                    throw new InvalidOperationException(
+                        "The DefaultConnection connection string is missing.");
+                }
+
+                const string sql = """
+                    SELECT
+                        tr.TestRequestID,
+                        COALESCE(sr.SampleReceiptID, 0) AS SampleReceiptID,
+                        COALESCE(tt.TestTypeID, 0) AS TestTypeID,
+                        COALESCE(sr.Barcode, tr.Barcode, '') AS Barcode,
+                        tr.RequestDate,
+                        COALESCE(tr.Urgency, '') AS Urgency,
+                        COALESCE(tr.Status, '') AS RequestStatus,
+                        COALESCE(tt.TestName, LTRIM(RTRIM(requested.value)), '') AS TestName,
+                        COALESCE(tt.TurnAroundMinutes, 0) AS TurnAroundMinutes,
+                        sr.DateTimeReceived,
+                        p.PatientID,
+                        LTRIM(RTRIM(CONCAT(u.Surname, ', ', u.Name))) AS PatientName,
+                        COALESCE(u.IDNumber, '') AS PatientNumber,
+                        COALESCE(latestResult.TestResultID, 0) AS TestResultID,
+                        COALESCE(latestResult.ResultStatus, '') AS ResultStatus,
+                        latestResult.CompletionDateTime,
+                        COALESCE(latestDecision.Decision, '') AS LatestDecision,
+                        CASE
+                            WHEN COALESCE(latestDecision.Decision, '') IN
+                                ('Returned', 'Return', 'Rejected')
+                                THEN 'Review'
+                            WHEN COALESCE(latestDecision.Decision, '') IN
+                                ('Approved', 'Verified')
+                                THEN 'Complete'
+                            WHEN latestResult.TestResultID IS NOT NULL
+                                THEN 'Verification'
+                            WHEN COALESCE(tr.Status, '') IN ('Completed', 'Verified')
+                                THEN 'Complete'
+                            WHEN COALESCE(tr.Status, '') IN ('In Progress', 'Processing')
+                                THEN 'Processing'
+                            WHEN sr.SampleReceiptID IS NOT NULL
+                                THEN 'Sample Received'
+                            ELSE 'Awaiting Sample'
+                        END AS Stage
+                    FROM dbo.TestRequest tr
+                    INNER JOIN dbo.Patient p
+                        ON p.PatientID = tr.PatientID
+                    INNER JOIN dbo.[User] u
+                        ON u.UserID = p.UserID
+                    CROSS APPLY STRING_SPLIT(
+                        REPLACE(
+                            REPLACE(
+                                REPLACE(
+                                    REPLACE(COALESCE(tr.Type, ''), ';', ','),
+                                    '+', ','
+                                ),
+                                CHAR(13), ','
+                            ),
+                            CHAR(10), ','
+                        ),
+                        ','
+                    ) requested
+                    LEFT JOIN dbo.TestType tt
+                        ON LTRIM(RTRIM(requested.value)) = LTRIM(RTRIM(tt.TestName))
+                    LEFT JOIN dbo.SampleReceipt sr
+                        ON sr.TestRequestID = tr.TestRequestID
+                       AND NOT EXISTS
+                       (
+                           SELECT 1
+                           FROM dbo.SampleReceiptRejection rejected
+                           WHERE rejected.SampleReceiptID = sr.SampleReceiptID
+                       )
+                    OUTER APPLY
+                    (
+                        SELECT TOP (1)
+                            result.TestResultID,
+                            COALESCE(result.Status, '') AS ResultStatus,
+                            result.CompletionDateTime
+                        FROM dbo.TestResult result
+                        WHERE result.TestRequestID = tr.TestRequestID
+                          AND result.TestTypeID = tt.TestTypeID
+                        ORDER BY result.CompletionDateTime DESC, result.TestResultID DESC
+                    ) latestResult
+                    OUTER APPLY
+                    (
+                        SELECT TOP (1)
+                            verification.Decision
+                        FROM dbo.ResultVerification verification
+                        WHERE verification.TestResultID = latestResult.TestResultID
+                        ORDER BY verification.VerificationDateTime DESC,
+                                 verification.ResultVerificationID DESC
+                    ) latestDecision
+                    WHERE UPPER(LTRIM(RTRIM(COALESCE(tr.Urgency, ''))))
+                        IN ('STAT', 'URGENT')
+                      AND COALESCE(tr.Status, '') NOT IN
+                        ('Cancelled', 'Canceled')
+                    ORDER BY
+                        CASE
+                            WHEN UPPER(LTRIM(RTRIM(COALESCE(tr.Urgency, '')))) = 'STAT'
+                                THEN 0
+                            ELSE 1
+                        END,
+                        tr.RequestDate ASC,
+                        tr.TestRequestID,
+                        tt.TestName;
+                    """;
+
+                await using var connection = new SqlConnection(connectionString);
+
+                var rows = (await connection.QueryAsync<StatUrgentTestViewModel>(
+                    new CommandDefinition(
+                        sql,
+                        cancellationToken: cancellationToken))).ToList();
+
+                var assignedTests = await _labTechnicianData
+                    .GetAssignedTestsAsync(cancellationToken);
+
+                var assignedKeys = new HashSet<string>(
+                    assignedTests
+                        .Where(test => !_labTechnicianData.IsTestCompleted(
+                            test.SampleReceiptID, test.TestTypeID))
+                        .Select(test => $"{test.SampleReceiptID}:{test.TestTypeID}"),
+                    StringComparer.OrdinalIgnoreCase);
+
+                var now = DateTime.Now;
+
+                foreach (var test in rows)
+                {
+                    if (test.SampleReceiptID > 0 && test.TestTypeID > 0 &&
+                        assignedKeys.Contains($"{test.SampleReceiptID}:{test.TestTypeID}") &&
+                        test.TestResultID == 0)
+                    {
+                        test.Stage = "Processing";
+                    }
+
+                    if (test.DateTimeReceived.HasValue &&
+                        test.TurnAroundMinutes > 0 &&
+                        test.TestResultID == 0 &&
+                        !string.Equals(test.Stage, "Complete",
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        test.DueDateTime = test.DateTimeReceived.Value
+                            .AddMinutes(test.TurnAroundMinutes);
+
+                        var minutesRemaining =
+                            (test.DueDateTime.Value - now).TotalMinutes;
+
+                        test.TatStatus = minutesRemaining < 0
+                            ? "Breached"
+                            : minutesRemaining <= Math.Max(15, test.TurnAroundMinutes * 0.2)
+                                ? "At Risk"
+                                : "Within TAT";
+                    }
+                    else if (test.TestResultID > 0 ||
+                             string.Equals(test.Stage, "Complete",
+                                 StringComparison.OrdinalIgnoreCase))
+                    {
+                        test.TatStatus = "Complete";
+                    }
+                    else
+                    {
+                        test.TatStatus = "Unknown";
+                    }
+                }
+
+                ViewBag.TatBreachedCount = rows.Count(x => x.TatStatus == "Breached");
+                ViewBag.AtRiskCount = rows.Count(x => x.TatStatus == "At Risk");
+                ViewBag.ActiveStatCount = rows.Count(x =>
+                    string.Equals(x.Urgency, "STAT",
+                        StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(x.Stage, "Complete",
+                        StringComparison.OrdinalIgnoreCase));
+                ViewBag.CompletedTodayCount = rows.Count(x =>
+                    x.CompletionDateTime.HasValue &&
+                    x.CompletionDateTime.Value.Date == now.Date);
+                var completedToday = rows
+                    .Where(x => x.CompletionDateTime.HasValue &&
+                                x.DateTimeReceived.HasValue &&
+                                x.CompletionDateTime.Value.Date == now.Date &&
+                                x.CompletionDateTime.Value >= x.DateTimeReceived.Value)
+                    .Select(x => (x.CompletionDateTime!.Value -
+                                  x.DateTimeReceived!.Value).TotalMinutes)
+                    .ToList();
+                ViewBag.AverageTatToday = completedToday.Count == 0
+                    ? "—"
+                    : $"{Math.Round(completedToday.Average())}m";
+
+                return View(rows);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"StatUrgent failed: {ex}");
+                TempData["ErrorMessage"] =
+                    "Could not load STAT and urgent tests from the database. Check the application logs.";
+
+                ViewBag.TatBreachedCount = 0;
+                ViewBag.AtRiskCount = 0;
+                ViewBag.ActiveStatCount = 0;
+                ViewBag.CompletedTodayCount = 0;
+                ViewBag.AverageTatToday = "—";
+
+                return View(new List<StatUrgentTestViewModel>());
+            }
+        }
 
         [HttpGet]
-        public IActionResult TestDetail() => View();
+        public async Task<IActionResult> TestDetail(
+            int id,
+            int testRequestId = 0,
+            int sampleReceiptId = 0,
+            int testTypeId = 0,
+            CancellationToken cancellationToken = default)
+        {
+            // Support the common route/query names used by existing links.
+            var requestId = testRequestId > 0 ? testRequestId : id;
+            if (requestId <= 0)
+            {
+                TempData["ErrorMessage"] = "Select a valid test request first.";
+                return RedirectToAction(nameof(ReceiveSamples));
+            }
+
+            try
+            {
+                const string sql = """
+                    SELECT
+                        tr.TestRequestID,
+                        tr.PatientID,
+                        tr.RequestDate,
+                        COALESCE(tr.Urgency, '') AS Urgency,
+                        COALESCE(tr.Status, '') AS RequestStatus,
+                        COALESCE(tr.Type, '') AS RequestedTypeText,
+                        COALESCE(tr.Barcode, '') AS RequestBarcode,
+                        LTRIM(RTRIM(CONCAT(u.Surname, ', ', u.Name))) AS PatientName,
+                        COALESCE(u.IDNumber, '') AS PatientNumber,
+                        LTRIM(RTRIM(CONCAT(
+                            COALESCE(doctor.Surname, ''),
+                            CASE WHEN doctor.Surname IS NOT NULL THEN ', ' ELSE '' END,
+                            COALESCE(doctor.Name, '')
+                        ))) AS DoctorName,
+                        COALESCE(sr.SampleReceiptID, 0) AS SampleReceiptID,
+                        COALESCE(sr.Barcode, tr.Barcode, '') AS SampleBarcode,
+                        sr.DateTimeReceived,
+                        CAST(CASE WHEN rejection.SampleReceiptID IS NULL THEN 0 ELSE 1 END AS bit) AS IsRejectedSample
+                    FROM dbo.TestRequest tr
+                    INNER JOIN dbo.Patient p ON p.PatientID = tr.PatientID
+                    INNER JOIN dbo.[User] u ON u.UserID = p.UserID
+                    LEFT JOIN dbo.Doctor d ON d.DoctorID = tr.DoctorID
+                    LEFT JOIN dbo.[User] doctor ON doctor.UserID = d.UserID
+                    OUTER APPLY
+                    (
+                        SELECT TOP (1) receipt.*
+                        FROM dbo.SampleReceipt receipt
+                        WHERE receipt.TestRequestID = tr.TestRequestID
+                          AND (@SampleReceiptID = 0 OR receipt.SampleReceiptID = @SampleReceiptID)
+                        ORDER BY
+                            CASE WHEN EXISTS
+                            (
+                                SELECT 1
+                                FROM dbo.SampleReceiptRejection r
+                                WHERE r.SampleReceiptID = receipt.SampleReceiptID
+                            ) THEN 1 ELSE 0 END,
+                            receipt.DateTimeReceived DESC,
+                            receipt.SampleReceiptID DESC
+                    ) sr
+                    LEFT JOIN dbo.SampleReceiptRejection rejection
+                        ON rejection.SampleReceiptID = sr.SampleReceiptID
+                    WHERE tr.TestRequestID = @TestRequestID;
+                    """;
+
+                var connectionString = _configuration.GetConnectionString("DefaultConnection");
+                if (string.IsNullOrWhiteSpace(connectionString))
+                    throw new InvalidOperationException("The DefaultConnection connection string is missing.");
+
+                await using var connection = new SqlConnection(connectionString);
+                var row = await connection.QuerySingleOrDefaultAsync<TestDetailQueryRow>(
+                    new CommandDefinition(
+                        sql,
+                        new { TestRequestID = requestId, SampleReceiptID = sampleReceiptId },
+                        cancellationToken: cancellationToken));
+
+                if (row == null)
+                {
+                    TempData["ErrorMessage"] = "The selected test request could not be found.";
+                    return RedirectToAction(nameof(ReceiveSamples));
+                }
+
+                var model = new TestDetailViewModel
+                {
+                    TestRequestID = row.TestRequestID,
+                    SampleReceiptID = row.SampleReceiptID,
+                    PatientID = row.PatientID,
+                    Barcode = row.SampleBarcode,
+                    RequestDate = row.RequestDate,
+                    DateTimeReceived = row.DateTimeReceived,
+                    Urgency = row.Urgency,
+                    RequestStatus = row.RequestStatus,
+                    PatientName = row.PatientName,
+                    PatientNumber = row.PatientNumber,
+                    DoctorName = string.IsNullOrWhiteSpace(row.DoctorName) ? "Not specified" : row.DoctorName,
+                    RequestedTypeText = row.RequestedTypeText,
+                    HasActiveSample = row.SampleReceiptID > 0 && !row.IsRejectedSample,
+                    IsRejectedSample = row.IsRejectedSample
+                };
+
+                model.RequestedTests = (row.RequestedTypeText ?? string.Empty)
+                    .Split(new[] { ',', ';', '+', '\r', '\n' },
+                        StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                if (testTypeId > 0 && model.SampleReceiptID > 0 && model.HasActiveSample)
+                {
+                    const string selectedSql = """
+                        SELECT
+                            tt.TestTypeID,
+                            COALESCE(tt.TestName, '') AS TestName,
+                            COALESCE(latest.TestResultID, 0) AS TestResultID,
+                            COALESCE(latest.Decision, '') AS LatestDecision
+                        FROM dbo.TestType tt
+                        OUTER APPLY
+                        (
+                            SELECT TOP (1)
+                                result.TestResultID,
+                                verification.Decision
+                            FROM dbo.TestResult result
+                            OUTER APPLY
+                            (
+                                SELECT TOP (1) rv.Decision
+                                FROM dbo.ResultVerification rv
+                                WHERE rv.TestResultID = result.TestResultID
+                                ORDER BY rv.VerificationDateTime DESC, rv.ResultVerificationID DESC
+                            ) verification
+                            WHERE result.TestRequestID = @TestRequestID
+                              AND result.TestTypeID = tt.TestTypeID
+                            ORDER BY result.CompletionDateTime DESC, result.TestResultID DESC
+                        ) latest
+                        WHERE tt.TestTypeID = @TestTypeID;
+                        """;
+
+                    var selected = await connection.QuerySingleOrDefaultAsync<TestDetailSelectedRow>(
+                        new CommandDefinition(
+                            selectedSql,
+                            new { TestRequestID = requestId, TestTypeID = testTypeId },
+                            cancellationToken: cancellationToken));
+
+                    if (selected != null &&
+                        model.RequestedTests.Contains(selected.TestName, StringComparer.OrdinalIgnoreCase))
+                    {
+                        model.IsSelectedTest = true;
+                        model.TestTypeID = selected.TestTypeID;
+                        model.SelectedTestName = selected.TestName;
+                        model.HasResult = selected.TestResultID > 0;
+                        model.IsComplete = string.Equals(selected.LatestDecision, "Approved", StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(selected.LatestDecision, "Verified", StringComparison.OrdinalIgnoreCase);
+
+                        model.StageMessage = model.IsComplete
+                            ? "This test has already been verified."
+                            : model.HasResult && (string.Equals(selected.LatestDecision, "Returned", StringComparison.OrdinalIgnoreCase)
+                                || string.Equals(selected.LatestDecision, "Return", StringComparison.OrdinalIgnoreCase)
+                                || string.Equals(selected.LatestDecision, "Rejected", StringComparison.OrdinalIgnoreCase))
+                                ? "This result was returned and is available for recapture."
+                                : model.HasResult
+                                    ? "This test has a result awaiting verification."
+                                    : "This test is selected and ready for result capture.";
+                    }
+                }
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"TestDetail failed: {ex}");
+                TempData["ErrorMessage"] = "Could not load the selected test details. Check the application logs.";
+                return RedirectToAction(nameof(ReceiveSamples));
+            }
+        }
+
+        private sealed class TestDetailQueryRow
+        {
+            public int TestRequestID { get; set; }
+            public int PatientID { get; set; }
+            public DateTime? RequestDate { get; set; }
+            public string Urgency { get; set; } = string.Empty;
+            public string RequestStatus { get; set; } = string.Empty;
+            public string RequestedTypeText { get; set; } = string.Empty;
+            public string PatientName { get; set; } = string.Empty;
+            public string PatientNumber { get; set; } = string.Empty;
+            public string DoctorName { get; set; } = string.Empty;
+            public int SampleReceiptID { get; set; }
+            public string SampleBarcode { get; set; } = string.Empty;
+            public DateTime? DateTimeReceived { get; set; }
+            public bool IsRejectedSample { get; set; }
+        }
+
+        private sealed class TestDetailSelectedRow
+        {
+            public int TestTypeID { get; set; }
+            public string TestName { get; set; } = string.Empty;
+            public int TestResultID { get; set; }
+            public string LatestDecision { get; set; } = string.Empty;
+        }
 
         [HttpGet]
         public async Task<IActionResult> Escalations(

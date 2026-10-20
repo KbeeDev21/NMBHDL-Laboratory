@@ -1,316 +1,305 @@
-﻿@{
+﻿@model WebApplication2.Models.LabTechnicianReportViewModel
+
+@{
     Layout = "~/Views/Shared/_LabTechLayout.cshtml";
-    ViewData["Title"] = "TAT Performance Report";
+    ViewData["Title"] = "Lab Technician Report";
+
+    var startDateValue = Model?.StartDate?.ToString("yyyy-MM-dd") ?? "";
+    var endDateValue = Model?.EndDate?.ToString("yyyy-MM-dd") ?? "";
 }
 
 <link rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
 <link href="~/css/dashboardstyles.css" rel="stylesheet" />
 
 <style>
-
-    .page-container {
-        padding: 0;
+    .report-page {
+        max-width: 1250px;
+        margin: 0 auto;
+        padding: 24px;
+        color: #172b4d;
     }
 
-    .card-dark {
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 30px;
+    .report-card {
+        background: #fff;
         border: 1px solid #dbe3ec;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.05);
     }
 
-    .metric-card {
-        background: #f8fafc;
-        border-radius: 16px;
-        padding: 20px;
-        text-align: center;
-        height: 100%;
-        border: 1px solid #e2e8f0;
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
     }
 
-    .metric-number {
-        font-size: 2.2rem;
-        font-weight: bold;
-    }
-
-    .form-control {
-        background: #ffffff;
-        color: #1f2937;
-        border: 1px solid #d1d5db;
-    }
-
-    .btn-dark-custom {
-        background: #0d6efd;
-        border: 1px solid #0d6efd;
-        color: white !important;
-        border-radius: 12px;
-        padding: 10px 20px;
-        text-decoration: none;
-        transition: 0.2s ease;
-        display: inline-block;
-    }
-
-        .btn-dark-custom:hover {
-            background: #0b5ed7;
-            border-color: #0b5ed7;
+        .report-header h1 {
+            margin: 0 0 6px;
+            color: #1f2937;
+            font-size: 2rem;
         }
 
-    table {
-        color: #1f2937 !important;
+    .report-muted {
+        color: #6b7280;
     }
 
-    th,
-    td {
-        border-color: #e2e8f0 !important;
-        vertical-align: middle;
+    .report-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit,minmax(170px,1fr));
+        gap: 14px;
+        margin-bottom: 24px;
     }
 
-    .table-dark {
-        --bs-table-bg: #ffffff;
-        --bs-table-striped-bg: #f8fafc;
-        --bs-table-hover-bg: #dbeafe;
-        --bs-table-color: #1f2937;
+    .report-metric {
+        background: #f8fafc;
         border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 18px;
+        text-align: center;
     }
 
-    .text-muted {
-        color: #6b7280 !important;
+        .report-metric .number {
+            display: block;
+            font-size: 2rem;
+            line-height: 1.3;
+            font-weight: 700;
+            color: #1d4ed8;
+        }
+
+        .report-metric .label {
+            color: #64748b;
+            font-size: .9rem;
+        }
+
+    .report-filters {
+        display: flex;
+        align-items: end;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-bottom: 24px;
     }
 
-    h1,
-    label {
+    .report-filter {
+        flex: 1 1 180px;
+    }
+
+        .report-filter label {
+            display: block;
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .report-filter input {
+            width: 100%;
+            min-height: 43px;
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+            padding: 9px 11px;
+        }
+
+    .report-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 1px solid #0d6efd;
+        border-radius: 9px;
+        padding: 10px 15px;
+        background: #0d6efd;
+        color: #fff !important;
+        text-decoration: none;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+        .report-btn:hover {
+            background: #0b5ed7;
+        }
+
+        .report-btn.secondary {
+            background: #fff;
+            color: #1d4ed8 !important;
+            border-color: #bfdbfe;
+        }
+
+            .report-btn.secondary:hover {
+                background: #eff6ff;
+            }
+
+    .report-table-wrap {
+        overflow-x: auto;
+    }
+
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
         color: #1f2937;
+    }
+
+        .report-table th, .report-table td {
+            border: 1px solid #e2e8f0;
+            padding: 11px 12px;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .report-table th {
+            background: #f1f5f9;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+    .report-empty {
+        border: 1px dashed #cbd5e1;
+        border-radius: 10px;
+        background: #f8fafc;
+        padding: 24px;
+        text-align: center;
+        color: #64748b;
+    }
+
+    .report-note {
+        border-radius: 9px;
+        padding: 12px 14px;
+        margin-bottom: 18px;
+    }
+
+        .report-note.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .report-note.info {
+            background: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+    .report-section-title {
+        color: #1f2937;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin: 0 0 14px;
+    }
+
+    @@media (max-width:650px) {
+        .report-page {
+            padding: 12px;
+        }
+
+        .report-card {
+            padding: 18px;
+        }
     }
 </style>
 
-
-<div class="main-content">
-
-    <div class="page-container">
-
-        <div class="card-dark">
-
-            <!-- HEADER -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-
-                <div>
-
-                    <h1>
-                        TAT Performance Report
-                    </h1>
-
-                    <p class="text-muted mb-0">
-                        Analyze turnaround time compliance and export results to PDF.
-                    </p>
-
-                </div>
-
-                <a asp-controller="Home"
-                   asp-action="LabTechnicianDashboard"
-                   class="btn-dark-custom">
-
-                    ← Dashboard
-
-                </a>
-
+<main class="report-page">
+    <section class="report-card">
+        <header class="report-header">
+            <div>
+                <h1>Tests Completed by Technician</h1>
+                <p class="report-muted mb-0">Completed tests grouped by category for the selected date range.</p>
             </div>
+            <a asp-controller="Home"
+               asp-action="LabTechnicianDashboard"
+               class="report-btn secondary">
+                <i class="fa-solid fa-arrow-left"></i> Dashboard
+            </a>
+        </header>
 
+        @if (TempData["ErrorMessage"] is string errorMessage && !string.IsNullOrWhiteSpace(errorMessage))
+        {
+        <div class="report-note error" role="alert">@errorMessage</div>
+        }
 
-            <!-- KPI CARDS -->
-            <div class="row g-3 mb-4">
+        @if (Model != null && Model.StartDate.HasValue && Model.EndDate.HasValue)
+        {
+        <div class="report-note info">
+            <strong>Report period:</strong>
+            @Model.StartDate.Value.ToString("dd MMM yyyy") – @Model.EndDate.Value.ToString("dd MMM yyyy")
+            <span class="ms-2"><strong>Generated:</strong> @DateTime.Now.ToString("dd MMM yyyy HH:mm")</span>
+        </div>
+        }
 
-                <div class="col-md-3">
-
-                    <div class="metric-card">
-
-                        <div class="metric-number text-success">
-                            94%
-                        </div>
-
-                        <div>
-                            TAT Compliance
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="col-md-3">
-
-                    <div class="metric-card">
-
-                        <div class="metric-number text-primary">
-                            38m
-                        </div>
-
-                        <div>
-                            Average TAT
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="col-md-3">
-
-                    <div class="metric-card">
-
-                        <div class="metric-number text-danger">
-                            4
-                        </div>
-
-                        <div>
-                            Breaches
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="col-md-3">
-
-                    <div class="metric-card">
-
-                        <div class="metric-number text-warning">
-                            3
-                        </div>
-
-                        <div>
-                            At Risk
-                        </div>
-
-                    </div>
-
-                </div>
-
+        <form asp-controller="LabTechnician" asp-action="Reports" method="get" class="report-filters">
+            <div class="report-filter">
+                <label for="startDate">Start date</label>
+                <input id="startDate" name="startDate" type="date" value="@startDateValue" required />
             </div>
-
-
-            <!-- FILTERS -->
-            <div class="row g-3 mb-4">
-
-                <div class="col-md-4">
-
-                    <label class="form-label">
-                        Start Date
-                    </label>
-
-                    <input type="date"
-                           class="form-control" />
-
-                </div>
-
-                <div class="col-md-4">
-
-                    <label class="form-label">
-                        End Date
-                    </label>
-
-                    <input type="date"
-                           class="form-control" />
-
-                </div>
-
-                <div class="col-md-4 d-flex align-items-end">
-
-                    <button type="button"
-                            class="btn-dark-custom me-2"
-                            onclick="generateReport()">
-
-                        <i class="fa-solid fa-chart-column"></i>
-                        Generate Report
-
-                    </button>
-
-                    <button type="button"
-                            class="btn-dark-custom"
-                            onclick="exportReport()">
-
-                        <i class="fa-solid fa-file-pdf"></i>
-                        Export PDF
-
-                    </button>
-
-                </div>
-
+            <div class="report-filter">
+                <label for="endDate">End date</label>
+                <input id="endDate" name="endDate" type="date" value="@endDateValue" required />
             </div>
+            <button type="submit" class="report-btn">
+                <i class="fa-solid fa-chart-column"></i> Generate Report
+            </button>
+            <button type="submit"
+                    class="report-btn secondary"
+                    formaction="@Url.Action("ExportTechnicianReportPdf", "LabTechnician")"
+                    formmethod="get">
+                <i class="fa-solid fa-file-pdf"></i> Export PDF
+            </button>
+        </form>
 
-
-            <!-- PERFORMANCE TABLE -->
-            <table class="table table-dark table-hover">
-
-                <thead>
-
-                    <tr>
-
-                        <th>Test Type</th>
-                        <th>Target TAT</th>
-                        <th>Average TAT</th>
-                        <th>Compliance</th>
-                        <th>Breaches</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    <tr>
-
-                        <td>Full Blood Count</td>
-                        <td>90 min</td>
-                        <td>38 min</td>
-                        <td>96%</td>
-                        <td>1</td>
-
-                    </tr>
-
-                    <tr>
-
-                        <td>PT / INR</td>
-                        <td>60 min</td>
-                        <td>42 min</td>
-                        <td>92%</td>
-                        <td>2</td>
-
-                    </tr>
-
-                    <tr>
-
-                        <td>APTT</td>
-                        <td>60 min</td>
-                        <td>47 min</td>
-                        <td>89%</td>
-                        <td>1</td>
-
-                    </tr>
-
-                </tbody>
-
-            </table>
-
+        <div class="report-metrics">
+            <div class="report-metric">
+                <span class="number">@(Model?.TotalCompletedTests ?? 0)</span>
+                <span class="label">Completed tests</span>
+            </div>
+            <div class="report-metric">
+                <span class="number">@(Model?.Categories?.Count ?? 0)</span>
+                <span class="label">Categories</span>
+            </div>
+            <div class="report-metric">
+                <span class="number">@(Model?.AverageTurnaroundMinutes?.ToString("0.#") ?? "—")</span>
+                <span class="label">Average turnaround (minutes)</span>
+            </div>
+            <div class="report-metric">
+                <span class="number">@(Model?.OverdueTests ?? 0)</span>
+                <span class="label">Completed after target TAT</span>
+            </div>
         </div>
 
-    </div>
+        <h2 class="report-section-title">Completed Tests by Category</h2>
 
-</div>
-
-
-<script>
-
-    function generateReport() {
-
-        alert("Report generated successfully.");
-
-    }
-
-    function exportReport() {
-
-        alert("Report exported as PDF.");
-
-    }
-
-</script>
+        @if (Model?.Categories != null && Model.Categories.Count > 0)
+        {
+        <div class="report-table-wrap">
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Tests completed</th>
+                        <th>Average turnaround (minutes)</th>
+                        <th>Tests over target TAT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var category in Model.Categories.OrderBy(x => x.CategoryName))
+                        {
+                    <tr>
+                        <td>@category.CategoryName</td>
+                        <td>@category.CompletedCount</td>
+                        <td>@category.AverageTurnaroundMinutes.ToString("0.#")</td>
+                        <td>@category.OverdueCount</td>
+                    </tr>
+                        }
+                </tbody>
+            </table>
+        </div>
+        }
+        else
+        {
+        <div class="report-empty">
+            <i class="fa-solid fa-circle-info fa-lg mb-2"></i>
+            <p class="mb-0">No completed tests were found for the selected date range. Choose another date range and generate the report again.</p>
+        </div>
+        }
+    </section>
+</main>

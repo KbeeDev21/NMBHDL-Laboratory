@@ -432,6 +432,9 @@
                 <a asp-controller="LabTechnician"
                    asp-action="TestDetail"
                    asp-route-id="@test.TestRequestID"
+                   asp-route-sampleReceiptId="@test.SampleReceiptID"
+                   asp-route-testTypeId="@test.TestTypeID"
+                   asp-route-returnUrl="@Url.Action("AssignedTests", "LabTechnician")"
                    class="btn-link btn-secondary">
                     View Test Detail
                 </a>
