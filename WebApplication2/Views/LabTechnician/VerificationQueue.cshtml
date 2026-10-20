@@ -3,9 +3,7 @@
     @{
     ViewData["Title"] = "Verification Queue";
     Layout = "~/Views/Shared/_LabTechLayout.cshtml";
-
-    var queue = Model ?? Enumerable.Empty<WebApplication2.Models.VerificationQueueItemViewModel>();
-    var items = queue.ToList();
+    var items = (Model ?? Enumerable.Empty<WebApplication2.Models.VerificationQueueItemViewModel>()).ToList();
     }
 
     <link rel="stylesheet" href="~/css/dashboardstyles.css" asp-append-version="true" />
@@ -66,8 +64,7 @@
             margin-bottom: 20px;
         }
 
-            .queue-toolbar input,
-            .queue-toolbar select {
+            .queue-toolbar input, .queue-toolbar select {
                 padding: 11px 12px;
                 border: 1px solid #d1d5db;
                 border-radius: 8px;
@@ -118,7 +115,7 @@
 
         .verification-details {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
             gap: 12px;
             margin-bottom: 18px;
         }
@@ -169,16 +166,86 @@
         .verification-btn {
             display: inline-block;
             padding: 10px 15px;
+            border: 0;
             border-radius: 8px;
             background: #2563eb;
             color: #fff;
             text-decoration: none;
             font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
         }
 
             .verification-btn:hover {
                 background: #1d4ed8;
                 color: #fff;
+            }
+
+            .verification-btn.secondary {
+                background: #e5e7eb;
+                color: #111827;
+            }
+
+                .verification-btn.secondary:hover {
+                    background: #d1d5db;
+                }
+
+        .history-panel {
+            margin-top: 18px;
+            padding: 16px;
+            border: 1px solid #dbeafe;
+            background: #f8fbff;
+            border-radius: 10px;
+        }
+
+            .history-panel h4 {
+                margin: 0 0 12px;
+            }
+
+        .history-empty {
+            margin: 0;
+            color: #6b7280;
+        }
+
+        .history-table-wrap {
+            overflow-x: auto;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+        }
+
+            .history-table th, .history-table td {
+                text-align: left;
+                padding: 10px;
+                border-bottom: 1px solid #e5e7eb;
+                vertical-align: top;
+                font-size: 13px;
+            }
+
+            .history-table th {
+                background: #eff6ff;
+            }
+
+        .history-decision {
+            display: inline-block;
+            border-radius: 14px;
+            padding: 4px 8px;
+            background: #e5e7eb;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+            .history-decision.returned, .history-decision.rejected {
+                background: #fee2e2;
+                color: #991b1b;
+            }
+
+            .history-decision.approved {
+                background: #dcfce7;
+                color: #166534;
             }
 
         .empty-queue {
@@ -198,11 +265,11 @@
                 margin: 0;
             }
 
-        .verification-card[hidden] {
+        .verification-card[hidden], .history-panel[hidden] {
             display: none;
         }
 
-        @@media (max-width: 600px) {
+        @@media (max-width:600px) {
             .verification-page {
                 padding: 14px;
             }
@@ -215,8 +282,7 @@
                 padding: 0 16px 16px;
             }
 
-            .queue-toolbar input,
-            .queue-toolbar select {
+            .queue-toolbar input, .queue-toolbar select {
                 width: 100%;
             }
         }
@@ -231,32 +297,18 @@
         </div>
 
         <div class="queue-summary">
-            <div class="summary-card">
-                <span>Awaiting verification</span>
-                <strong>@items.Count</strong>
-            </div>
-            <div class="summary-card">
-                <span>Abnormal results</span>
-                <strong>@items.Count(x => x.IsAbnormal)</strong>
-            </div>
-            <div class="summary-card">
-                <span>STAT results</span>
-                <strong>@items.Count(x => string.Equals(x.Urgency, "STAT", StringComparison.OrdinalIgnoreCase))</strong>
-            </div>
+            <div class="summary-card"><span>Awaiting verification</span><strong>@items.Count</strong></div>
+            <div class="summary-card"><span>Abnormal results</span><strong>@items.Count(x => x.IsAbnormal)</strong></div>
+            <div class="summary-card"><span>STAT results</span><strong>@items.Count(x => string.Equals(x.Urgency, "STAT", StringComparison.OrdinalIgnoreCase))</strong></div>
         </div>
 
         <div class="queue-toolbar">
-            <input id="verificationSearch"
-                   type="search"
-                   placeholder="Search patient, registration number, barcode or test..."
-                   aria-label="Search verification queue" />
-
+            <input id="verificationSearch" type="search" placeholder="Search patient, registration number, barcode or test..." aria-label="Search verification queue" />
             <select id="urgencyFilter" aria-label="Filter by urgency">
                 <option value="">All urgency levels</option>
                 <option value="stat">STAT</option>
                 <option value="routine">Routine / other</option>
             </select>
-
             <select id="resultFilter" aria-label="Filter by result status">
                 <option value="">All result statuses</option>
                 <option value="abnormal">Abnormal</option>
@@ -266,24 +318,20 @@
 
         @if (!items.Any())
     {
-        <div class="empty-queue">
-            <h3>No results awaiting verification</h3>
-            <p>Completed tests will appear here when they are available for verification.</p>
-        </div>
+        <div class="empty-queue"><h3>No results awaiting verification</h3><p>Completed tests will appear here when they are available for verification.</p></div>
     }
     else
     {
         <div class="verification-list" id="verificationList">
             @foreach (var item in items)
-            {
-                var isStat = string.Equals(item.Urgency, "STAT", StringComparison.OrdinalIgnoreCase);
-                var searchableText = $"{item.PatientName} {item.PatientNumber} {item.Barcode} {item.RequestNumber} {item.TestName}";
-
+        {
+            var isStat = string.Equals(item.Urgency, "STAT", StringComparison.OrdinalIgnoreCase);
+            var searchableText = $"{item.PatientName} {item.PatientNumber} {item.Barcode} {item.RequestNumber} {item.TestName} {item.Result}";
+            var historyId = $"history-{item.TestResultID}";
             <article class="verification-card"
                      data-search="@searchableText.ToLowerInvariant()"
                      data-urgency="@(isStat ? "stat" : "routine")"
                      data-result="@(item.IsAbnormal ? "abnormal" : "normal")">
-
                 <div class="verification-card-header">
                     <div>
                         <h3>@item.TestName</h3>
@@ -291,79 +339,73 @@
                             <span>Request: @item.RequestNumber</span>
                             <span>Barcode: @item.Barcode</span>
                             <span>Completed: @(item.CompletionDateTime?.ToString("dd MMM yyyy, HH:mm") ?? "Not recorded")</span>
+                            <span>Result ID: @item.TestResultID</span>
                         </div>
                     </div>
-
                     <div>
-                        @if (item.IsAbnormal)
-                            {
-                        <span class="status-pill abnormal">Abnormal result</span>
-                            }
-                            else
-                            {
-                        <span class="status-pill normal">Within normal range</span>
-                            }
-
-                        @if (isStat)
-                            {
-                        <span class="status-pill abnormal">STAT</span>
-                            }
+                        @if (item.IsAbnormal) { <span class="status-pill abnormal">Abnormal result</span> }
+                        else { <span class="status-pill normal">Within normal range</span> }
+                        @if (isStat) { <span class="status-pill abnormal">STAT</span> }
                     </div>
                 </div>
-
                 <div class="verification-card-body">
                     <div class="verification-details">
-                        <div class="detail-item">
-                            <span>Patient</span>
-                            <strong>@item.PatientName</strong>
-                        </div>
-
-                        <div class="detail-item">
-                            <span>Registration number</span>
-                            <strong>@item.PatientNumber</strong>
-                        </div>
-
-                        <div class="detail-item">
-                            <span>Result</span>
-                            <strong>@item.Result @(string.IsNullOrWhiteSpace(item.Units) ? "" : item.Units)</strong>
-                        </div>
-
-                        <div class="detail-item">
-                            <span>Reference range</span>
-                            <strong>
-                                @if (item.NormalRangeMin.HasValue || item.NormalRangeMax.HasValue)
-                                    {
-                                <text>@(item.NormalRangeMin?.ToString() ?? "—") – @(item.NormalRangeMax?.ToString() ?? "—") @(item.Units)</text>
-                                    }
-                                    else
-                                    {
-                                <text>Not configured</text>
-                                    }
-                            </strong>
-                        </div>
-
-                        <div class="detail-item">
-                            <span>Result status</span>
-                            <strong>@item.ResultStatus</strong>
-                        </div>
-
-                        <div class="detail-item">
-                            <span>Captured by</span>
-                            <strong>@item.CapturedBy</strong>
-                        </div>
+                        <div class="detail-item"><span>Patient</span><strong>@item.PatientName</strong></div>
+                        <div class="detail-item"><span>Registration number</span><strong>@item.PatientNumber</strong></div>
+                        <div class="detail-item"><span>Result</span><strong>@item.Result @(string.IsNullOrWhiteSpace(item.Units) ? "" : item.Units)</strong></div>
+                        <div class="detail-item"><span>Reference range</span><strong>@if (item.NormalRangeMin.HasValue || item.NormalRangeMax.HasValue) { <text>@(item.NormalRangeMin?.ToString() ?? "—") – @(item.NormalRangeMax?.ToString() ?? "—") @item.Units</text> } else { <text>Not configured</text> }</strong></div>
+                        <div class="detail-item"><span>Result status</span><strong>@item.ResultStatus</strong></div>
+                        <div class="detail-item"><span>Captured by</span><strong>@item.CapturedBy</strong></div>
+                        @if (!string.IsNullOrWhiteSpace(item.LatestVerificationDecision))
+                        {
+                        <div class="detail-item"><span>Latest verification</span><strong>@item.LatestVerificationDecision</strong></div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(item.LatestVerificationReason))
+                        {
+                        <div class="detail-item"><span>Latest decision reason</span><strong>@item.LatestVerificationReason</strong></div>
+                        }
                     </div>
 
                     <div class="verification-actions">
-                        <a class="verification-btn"
-                           asp-controller="LabTechnician"
-                           asp-action="VerifyResults"
-                           asp-route-testResultId="@item.TestResultID">
-                            Review result
-                        </a>
+                        <a class="verification-btn" asp-controller="LabTechnician" asp-action="VerifyResults" asp-route-testResultId="@item.TestResultID">Verify Result</a>
+                        <button class="verification-btn secondary history-toggle" type="button" aria-expanded="false" aria-controls="@historyId" data-target="@historyId">View More / History</button>
                     </div>
+
+                    <section class="history-panel" id="@historyId" hidden>
+                        <h4>Verification History — Result #@item.TestResultID</h4>
+                        @if (item.VerificationHistory != null && item.VerificationHistory.Any())
+                        {
+                        <div class="history-table-wrap">
+                            <table class="history-table">
+                                <thead><tr><th>Result</th><th>Decision date / time</th><th>Decision</th><th>Reason / Notes</th><th>Verified by</th></tr></thead>
+                                <tbody>
+                                    @foreach (var history in item.VerificationHistory.OrderBy(x => x.VerificationDateTime).ThenBy(x => x.ResultVerificationID))
+                                    {
+                                        var decisionClass = (history.Decision ?? "").Trim().ToLowerInvariant();
+                                    <tr>
+                                        <td>Result #@history.RelatedTestResultID<br />Value: @history.RelatedResultValue<br /><small>Captured: @(history.RelatedCompletionDateTime?.ToString("dd MMM yyyy, HH:mm") ?? "Not recorded")</small></td>
+                                        <td>@(history.VerificationDateTime?.ToString("dd MMM yyyy, HH:mm:ss") ?? "Not recorded")</td>
+                                        <td><span class="history-decision @(decisionClass == "returned" ? "returned" : decisionClass == "rejected" ? "rejected" : decisionClass == "approved" ? "approved" : "")">@history.Decision</span></td>
+                                        <td>@(string.IsNullOrWhiteSpace(history.Reason) ? "No reason recorded" : history.Reason)</td>
+                                        <td>@(string.IsNullOrWhiteSpace(history.TechnicianName) ? "Unknown" : history.TechnicianName)</td>
+                                    </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        }
+                        else
+                        {
+                        <p class="history-empty">No verification decisions have been recorded for this result yet.</p>
+                        }
+                        @if (item.HasBeenReturnedForRecapture)
+                        {
+                        <p style="margin:12px 0 0;color:#991b1b;font-weight:600;">This result has a returned or rejected decision in its history.</p>
+                        }
+                    </section>
                 </div>
             </article>
-            }
+        }
         </div>
     }
     </div>
@@ -379,15 +421,24 @@
                 const search = (searchInput?.value || "").trim().toLowerCase();
                 const urgency = urgencyFilter?.value || "";
                 const result = resultFilter?.value || "";
-
                 cards.forEach(card => {
                     const matchesSearch = (card.dataset.search || "").includes(search);
                     const matchesUrgency = !urgency || card.dataset.urgency === urgency;
                     const matchesResult = !result || card.dataset.result === result;
-
                     card.hidden = !(matchesSearch && matchesUrgency && matchesResult);
                 });
             }
+
+            document.querySelectorAll(".history-toggle").forEach(button => {
+                button.addEventListener("click", () => {
+                    const panel = document.getElementById(button.dataset.target);
+                    if (!panel) return;
+                    const willOpen = panel.hidden;
+                    panel.hidden = !willOpen;
+                    button.setAttribute("aria-expanded", String(willOpen));
+                    button.textContent = willOpen ? "Hide History" : "View More / History";
+                });
+            });
 
             searchInput?.addEventListener("input", filterQueue);
             urgencyFilter?.addEventListener("change", filterQueue);

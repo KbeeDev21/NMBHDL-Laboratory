@@ -648,45 +648,111 @@ public sealed class LabTechnicianDataService
         int testTypeId,
         CancellationToken cancellationToken = default)
     {
+        if (sampleReceiptId <= 0 || testTypeId <= 0)
+            return null;
 
         string key = $"{sampleReceiptId}:{testTypeId}";
 
-        if (!Assignments.TryGetValue(key, out var assignment))
-            return null;
-
         await using var connection = new SqlConnection(_connectionString);
 
-        const string latestDecisionSql = """
-            SELECT latest.Decision
-            FROM
-            (
-                SELECT TOP (1) tres.TestResultID
-                FROM dbo.TestResult tres
-                WHERE tres.TestRequestID = @TestRequestID
-                  AND tres.TestTypeID = @TestTypeID
-                ORDER BY tres.CompletionDateTime DESC, tres.TestResultID DESC
-            ) newest
+        // Resolve the sample and test from SQL first. Returned tests must remain
+        // recapturable even when the app restarts and its in-memory assignment is lost.
+        const string assignmentSql = """
+            SELECT sr.SampleReceiptID,
+                   tr.TestRequestID,
+                   COALESCE(tr.Type, '') AS RequestType,
+                   COALESCE(tr.Status, '') AS RequestStatus,
+                   COALESCE(tt.TestName, '') AS TestName,
+                   COALESCE(tt.TurnAroundMinutes, 0) AS TurnAroundMinutes
+            FROM dbo.SampleReceipt sr
+            INNER JOIN dbo.TestRequest tr
+                ON tr.TestRequestID = sr.TestRequestID
+            INNER JOIN dbo.TestType tt
+                ON tt.TestTypeID = @TestTypeID
+            WHERE sr.SampleReceiptID = @SampleReceiptID;
+            """;
+
+        var assignmentRow = await connection.QuerySingleOrDefaultAsync<dynamic>(
+            new CommandDefinition(
+                assignmentSql,
+                new { SampleReceiptID = sampleReceiptId, TestTypeID = testTypeId },
+                cancellationToken: cancellationToken));
+
+        if (assignmentRow == null || Rejections.ContainsKey(sampleReceiptId))
+            return null;
+
+        int testRequestId = (int)assignmentRow.TestRequestID;
+        string requestType = (string)assignmentRow.RequestType;
+        string requestStatus = (string)assignmentRow.RequestStatus;
+        string testName = (string)assignmentRow.TestName;
+
+        if (requestStatus.Equals("Cancelled", StringComparison.OrdinalIgnoreCase) ||
+            requestStatus.Equals("Canceled", StringComparison.OrdinalIgnoreCase) ||
+            requestStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        var requestedNames = requestType.Split(
+            new[] { ',', ';', '+', '\n', '\r' },
+            StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
+        if (!requestedNames.Contains(testName, StringComparer.OrdinalIgnoreCase))
+            return null;
+
+        const string latestResultSql = """
+            SELECT TOP (1)
+                   tres.TestResultID,
+                   latest.Decision
+            FROM dbo.TestResult tres
             OUTER APPLY
             (
                 SELECT TOP (1) rv.Decision
                 FROM dbo.ResultVerification rv
-                WHERE rv.TestResultID = newest.TestResultID
+                WHERE rv.TestResultID = tres.TestResultID
                 ORDER BY rv.VerificationDateTime DESC, rv.ResultVerificationID DESC
-            ) latest;
+            ) latest
+            WHERE tres.TestRequestID = @TestRequestID
+              AND tres.TestTypeID = @TestTypeID
+            ORDER BY tres.CompletionDateTime DESC, tres.TestResultID DESC;
             """;
 
-        var latestDecision = await connection.QuerySingleOrDefaultAsync<string>(
+        var latestResult = await connection.QuerySingleOrDefaultAsync<dynamic>(
             new CommandDefinition(
-                latestDecisionSql,
-                new { TestRequestID = assignment.TestRequestID, TestTypeID = testTypeId },
+                latestResultSql,
+                new { TestRequestID = testRequestId, TestTypeID = testTypeId },
                 cancellationToken: cancellationToken));
 
-        if (CompletedTests.ContainsKey(key) &&
-            !string.Equals(latestDecision, "Returned", StringComparison.OrdinalIgnoreCase))
+        bool hasPreviousResult = latestResult != null;
+        string? latestDecision = latestResult == null
+            ? null
+            : (string?)latestResult.Decision;
+
+        bool isReturnedForRecapture =
+            string.Equals(latestDecision, "Returned", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(latestDecision, "Return", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(latestDecision, "Rejected", StringComparison.OrdinalIgnoreCase);
+
+        // Existing results may only be captured again when the latest one was
+        // explicitly returned/rejected. This also blocks duplicate captures after restart.
+        if (hasPreviousResult && !isReturnedForRecapture)
             return null;
 
+        if (!Assignments.TryGetValue(key, out var assignment))
+        {
+            if (!isReturnedForRecapture)
+                return null;
 
-        const string sql = """
+            assignment = new Assignment(
+                sampleReceiptId,
+                testRequestId,
+                testTypeId,
+                testName,
+                DateTime.Now,
+                (int)assignmentRow.TurnAroundMinutes);
+
+            Assignments[key] = assignment;
+        }
+
+        const string captureSql = """
             SELECT sr.SampleReceiptID,
                    tr.TestRequestID,
                    tt.TestTypeID,
@@ -716,11 +782,9 @@ public sealed class LabTechnicianDataService
               AND tr.TestRequestID = @TestRequestID;
             """;
 
-       // await using var connection = new SqlConnection(_connectionString);
-
         var row = await connection.QuerySingleOrDefaultAsync<CaptureTestRow>(
             new CommandDefinition(
-                sql,
+                captureSql,
                 new
                 {
                     SampleReceiptID = sampleReceiptId,
@@ -729,7 +793,7 @@ public sealed class LabTechnicianDataService
                 },
                 cancellationToken: cancellationToken));
 
-        if (row == null || Rejections.ContainsKey(sampleReceiptId))
+        if (row == null)
             return null;
 
         return new CaptureResultsViewModel
@@ -745,7 +809,7 @@ public sealed class LabTechnicianDataService
             Units = row.Units,
             NormalRangeMin = row.NormalRangeMin,
             NormalRangeMax = row.NormalRangeMax,
-            Status = "Awaiting Result",
+            Status = isReturnedForRecapture ? "Returned for Recapture" : "Awaiting Result",
             IsCompleted = false
         };
     }
@@ -769,37 +833,41 @@ public sealed class LabTechnicianDataService
         if (!Assignments.TryGetValue(key, out var assignment))
             return (false, "This test is not currently assigned.", 0);
 
-        if (CompletedTests.ContainsKey(key))
-        {
-            const string latestDecisionSql = """
-                SELECT latest.Decision
-                FROM
-                (
-                    SELECT TOP (1) tres.TestResultID
-                    FROM dbo.TestResult tres
-                    WHERE tres.TestRequestID = @TestRequestID
-                      AND tres.TestTypeID = @TestTypeID
-                    ORDER BY tres.CompletionDateTime DESC, tres.TestResultID DESC
-                ) newest
-                OUTER APPLY
-                (
-                    SELECT TOP (1) rv.Decision
-                    FROM dbo.ResultVerification rv
-                    WHERE rv.TestResultID = newest.TestResultID
-                    ORDER BY rv.VerificationDateTime DESC, rv.ResultVerificationID DESC
-                ) latest;
-                """;
+        const string latestResultSql = """
+            SELECT TOP (1)
+                   tres.TestResultID,
+                   latest.Decision
+            FROM dbo.TestResult tres
+            OUTER APPLY
+            (
+                SELECT TOP (1) rv.Decision
+                FROM dbo.ResultVerification rv
+                WHERE rv.TestResultID = tres.TestResultID
+                ORDER BY rv.VerificationDateTime DESC, rv.ResultVerificationID DESC
+            ) latest
+            WHERE tres.TestRequestID = @TestRequestID
+              AND tres.TestTypeID = @TestTypeID
+            ORDER BY tres.CompletionDateTime DESC, tres.TestResultID DESC;
+            """;
 
-            await using var checkConnection = new SqlConnection(_connectionString);
-            var latestDecision = await checkConnection.QuerySingleOrDefaultAsync<string>(
-                new CommandDefinition(
-                    latestDecisionSql,
-                    new { TestRequestID = assignment.TestRequestID, TestTypeID = testTypeId },
-                    cancellationToken: cancellationToken));
+        await using var checkConnection = new SqlConnection(_connectionString);
+        var latestResult = await checkConnection.QuerySingleOrDefaultAsync<dynamic>(
+            new CommandDefinition(
+                latestResultSql,
+                new { TestRequestID = assignment.TestRequestID, TestTypeID = testTypeId },
+                cancellationToken: cancellationToken));
 
-            if (!string.Equals(latestDecision, "Returned", StringComparison.OrdinalIgnoreCase))
-                return (false, "This test has already been completed. Only a returned result can be recaptured.", 0);
-        }
+        string? latestDecision = latestResult == null
+            ? null
+            : (string?)latestResult.Decision;
+
+        bool wasRecapture =
+            string.Equals(latestDecision, "Returned", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(latestDecision, "Return", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(latestDecision, "Rejected", StringComparison.OrdinalIgnoreCase);
+
+        if (latestResult != null && !wasRecapture)
+            return (false, "This test already has a saved result. Only a returned result can be recaptured.", 0);
 
         if (Rejections.ContainsKey(sampleReceiptId))
             return (false, "This sample has been rejected.", 0);
@@ -887,7 +955,6 @@ public sealed class LabTechnicianDataService
                 },
                 cancellationToken: cancellationToken));
 
-        bool wasRecapture = CompletedTests.ContainsKey(key);
         CompletedTests[key] = new CompletedTest(
             testResultId,
             sampleReceiptId,
@@ -1005,55 +1072,51 @@ public sealed class LabTechnicianDataService
             COALESCE(rv.Reason, '') AS Reason,
             rv.VerificationDateTime,
             COALESCE(
-                NULLIF(
-                    LTRIM(RTRIM(CONCAT(usr.Surname, ', ', usr.Name))),
-                    ','
-                ),
+                NULLIF(LTRIM(RTRIM(CONCAT(usr.Surname, ', ', usr.Name))), ','),
                 'Unknown'
             ) AS TechnicianName,
-            rv.TestResultID
+            rv.TestResultID,
+            related.TestRequestID,
+            related.TestTypeID,
+            COALESCE(related.Result, '') AS RelatedResultValue,
+            related.CompletionDateTime AS RelatedCompletionDateTime
         FROM dbo.ResultVerification rv
-        INNER JOIN dbo.LabTechnician lt
+        INNER JOIN dbo.TestResult related
+            ON related.TestResultID = rv.TestResultID
+        LEFT JOIN dbo.LabTechnician lt
             ON lt.LabTechnicianID = rv.LabTechnicianID
         LEFT JOIN dbo.[User] usr
             ON usr.UserID = lt.UserID
-        ORDER BY rv.VerificationDateTime,
-                 rv.ResultVerificationID;
+        ORDER BY rv.VerificationDateTime, rv.ResultVerificationID;
         """;
 
-        var historyRows = await connection.QueryAsync<
-            VerificationHistoryItemViewModelWithResultId>(
-            new CommandDefinition(
-                historySql,
-                cancellationToken: cancellationToken));
+        var historyRows = await connection.QueryAsync<VerificationHistoryItemViewModelWithResultId>(
+            new CommandDefinition(historySql, cancellationToken: cancellationToken));
 
-        var historiesByResult = historyRows
-            .GroupBy(x => x.TestResultID)
+        var historiesByTest = historyRows
+            .GroupBy(x => (x.TestRequestID, x.TestTypeID))
             .ToDictionary(
                 group => group.Key,
-                group => group.Select(x =>
-                    new VerificationHistoryItemViewModel
-                    {
-                        ResultVerificationID = x.ResultVerificationID,
-                        Decision = x.Decision ?? string.Empty,
-                        Reason = x.Reason ?? string.Empty,
-                        TechnicianName = x.TechnicianName ?? "Unknown",
-                        VerificationDateTime = x.VerificationDateTime
-                    }).ToList());
+                group => group.Select(x => new VerificationHistoryItemViewModel
+                {
+                    ResultVerificationID = x.ResultVerificationID,
+                    RelatedTestResultID = x.TestResultID,
+                    RelatedResultValue = x.RelatedResultValue ?? string.Empty,
+                    Decision = x.Decision ?? string.Empty,
+                    Reason = x.Reason ?? string.Empty,
+                    TechnicianName = x.TechnicianName ?? "Unknown",
+                    VerificationDateTime = x.VerificationDateTime,
+                    RelatedCompletionDateTime = x.RelatedCompletionDateTime
+                }).ToList());
 
         foreach (var item in items)
         {
-            if (historiesByResult.TryGetValue(
-                item.TestResultID, out var history))
+            if (historiesByTest.TryGetValue((item.TestRequestID, item.TestTypeID), out var history))
             {
                 item.VerificationHistory = history;
                 item.HasBeenReturnedForRecapture = history.Any(x =>
-                    string.Equals(
-                        x.Decision, "Returned",
-                        StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(
-                        x.Decision, "Rejected",
-                        StringComparison.OrdinalIgnoreCase));
+                    string.Equals(x.Decision, "Returned", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(x.Decision, "Rejected", StringComparison.OrdinalIgnoreCase));
             }
         }
 
@@ -1063,11 +1126,15 @@ public sealed class LabTechnicianDataService
     private sealed class VerificationHistoryItemViewModelWithResultId
     {
         public int TestResultID { get; set; }
+        public int TestRequestID { get; set; }
+        public int TestTypeID { get; set; }
         public int ResultVerificationID { get; set; }
+        public string? RelatedResultValue { get; set; }
         public string? Decision { get; set; }
         public string? Reason { get; set; }
         public string? TechnicianName { get; set; }
         public DateTime? VerificationDateTime { get; set; }
+        public DateTime? RelatedCompletionDateTime { get; set; }
     }
 
 
@@ -1137,45 +1204,46 @@ public sealed class LabTechnicianDataService
             return null;
 
         const string historySql = """
-    SELECT
-        rv.ResultVerificationID,
-        rv.TestResultID,
-        rv.Decision,
-        COALESCE(rv.Reason, '') AS Reason,
-        rv.VerificationDateTime,
-        COALESCE(
-            NULLIF(
-                LTRIM(RTRIM(CONCAT(usr.Surname, ', ', usr.Name))),
-                ','
-            ),
-            'Unknown'
-        ) AS TechnicianName
-    FROM dbo.ResultVerification rv
-    INNER JOIN dbo.LabTechnician lt
-        ON lt.LabTechnicianID = rv.LabTechnicianID
-    LEFT JOIN dbo.[User] usr
-        ON usr.UserID = lt.UserID
-    WHERE rv.TestResultID = @TestResultID
-    ORDER BY rv.VerificationDateTime,
-             rv.ResultVerificationID;
-    """;
+        SELECT
+            rv.ResultVerificationID,
+            rv.TestResultID,
+            rv.Decision,
+            COALESCE(rv.Reason, '') AS Reason,
+            rv.VerificationDateTime,
+            COALESCE(NULLIF(LTRIM(RTRIM(CONCAT(usr.Surname, ', ', usr.Name))), ','), 'Unknown') AS TechnicianName,
+            related.TestRequestID,
+            related.TestTypeID,
+            COALESCE(related.Result, '') AS RelatedResultValue,
+            related.CompletionDateTime AS RelatedCompletionDateTime
+        FROM dbo.ResultVerification rv
+        INNER JOIN dbo.TestResult related
+            ON related.TestResultID = rv.TestResultID
+        LEFT JOIN dbo.LabTechnician lt
+            ON lt.LabTechnicianID = rv.LabTechnicianID
+        LEFT JOIN dbo.[User] usr
+            ON usr.UserID = lt.UserID
+        WHERE related.TestRequestID = @TestRequestID
+          AND related.TestTypeID = @TestTypeID
+        ORDER BY rv.VerificationDateTime, rv.ResultVerificationID;
+        """;
 
-        var history = await connection.QueryAsync<
-            VerificationHistoryItemViewModelWithResultId>(
+        var history = await connection.QueryAsync<VerificationHistoryItemViewModelWithResultId>(
             new CommandDefinition(
                 historySql,
-                new { TestResultID = testResultId },
+                new { TestRequestID = result.TestRequestID, TestTypeID = result.TestTypeID },
                 cancellationToken: cancellationToken));
 
-        result.VerificationHistory = history.Select(x =>
-            new VerificationHistoryItemViewModel
-            {
-                ResultVerificationID = x.ResultVerificationID,
-                Decision = x.Decision ?? string.Empty,
-                Reason = x.Reason ?? string.Empty,
-                TechnicianName = x.TechnicianName ?? "Unknown",
-                VerificationDateTime = x.VerificationDateTime
-            }).ToList();
+        result.VerificationHistory = history.Select(x => new VerificationHistoryItemViewModel
+        {
+            ResultVerificationID = x.ResultVerificationID,
+            RelatedTestResultID = x.TestResultID,
+            RelatedResultValue = x.RelatedResultValue ?? string.Empty,
+            Decision = x.Decision ?? string.Empty,
+            Reason = x.Reason ?? string.Empty,
+            TechnicianName = x.TechnicianName ?? "Unknown",
+            VerificationDateTime = x.VerificationDateTime,
+            RelatedCompletionDateTime = x.RelatedCompletionDateTime
+        }).ToList();
 
         result.HasBeenReturnedForRecapture = result.VerificationHistory.Any(x =>
             string.Equals(x.Decision, "Returned",
@@ -1183,7 +1251,9 @@ public sealed class LabTechnicianDataService
             || string.Equals(x.Decision, "Rejected",
                 StringComparison.OrdinalIgnoreCase));
 
-        var latest = result.VerificationHistory.LastOrDefault();
+        var latest = result.VerificationHistory
+            .Where(x => x.RelatedTestResultID == result.TestResultID)
+            .LastOrDefault();
 
         if (latest != null)
         {

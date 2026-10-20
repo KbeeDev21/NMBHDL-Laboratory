@@ -1,15 +1,17 @@
-﻿
-@model IEnumerable<WebApplication2.Models.VerificationQueueItemViewModel>
+﻿@model IEnumerable<WebApplication2.Models.VerificationQueueItemViewModel>
 
     @{
     Layout = "~/Views/Shared/_LabTechLayout.cshtml";
     ViewData["Title"] = "Review Queue";
 
-    var returnedTests = (Model ?? Enumerable.Empty<WebApplication2.Models.VerificationQueueItemViewModel>())
+    var allItems = (Model ?? Enumerable.Empty<WebApplication2.Models.VerificationQueueItemViewModel>())
+        .GroupBy(x => new { x.TestRequestID, x.TestTypeID })
+        .Select(g => g.OrderByDescending(x => x.TestResultID).First())
         .Where(x =>
             string.Equals(x.LatestVerificationDecision, "Returned", StringComparison.OrdinalIgnoreCase)
             || string.Equals(x.LatestVerificationDecision, "Return", StringComparison.OrdinalIgnoreCase)
             || string.Equals(x.LatestVerificationDecision, "Rejected", StringComparison.OrdinalIgnoreCase))
+        .OrderByDescending(x => x.LatestVerificationDateTime ?? x.CompletionDateTime)
         .ToList();
     }
 
@@ -64,6 +66,15 @@
             margin-top: 16px;
         }
 
+        .legacy-warning {
+            border: 1px solid #fca5a5;
+            background: #fef2f2;
+            color: #991b1b;
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-top: 16px;
+        }
+
         .empty-state {
             text-align: center;
             padding: 55px 20px;
@@ -71,12 +82,6 @@
             border-radius: 14px;
             background: #f8fafc;
         }
-
-            .empty-state i {
-                font-size: 2.3rem;
-                color: #64748b;
-                margin-bottom: 15px;
-            }
 
         .btn-review {
             display: inline-block;
@@ -105,216 +110,111 @@
     <div class="main-content">
         <div class="container-fluid py-4">
             <div class="review-container">
-
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                     <div>
                         <h1 class="mb-2">Review Queue</h1>
-                        <p class="text-muted mb-0">
-                            Tests returned for correction or recapture.
-                            Each entry represents an individual test.
-                        </p>
+                        <p class="text-muted mb-0">Tests returned for correction or recapture. A test disappears here after a newer result is captured; its history remains available in Verification Queue.</p>
                     </div>
-
-                    <a asp-controller="LabTechnician"
-                       asp-action="Dashboard"
-                       class="btn-back">
-                        ← Dashboard
-                    </a>
+                    <a asp-controller="LabTechnician" asp-action="Dashboard" class="btn-back">← Dashboard</a>
                 </div>
 
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                     <div>
-                        <span class="text-muted">Tests requiring review</span>
-                        <h4 class="mb-0">@returnedTests.Count</h4>
+                        <span class="text-muted">Tests requiring recapture</span>
+                        <h4 class="mb-0">@allItems.Count</h4>
                     </div>
-
-                    <input id="reviewSearch"
-                           type="search"
-                           class="form-control"
-                           style="max-width: 340px;"
-                           placeholder="Search patient, request, barcode or test..." />
+                    <input id="reviewSearch" type="search" class="form-control" style="max-width:340px;" placeholder="Search patient, request, barcode or test..." aria-label="Search review queue" />
                 </div>
 
-                @if (returnedTests.Count == 0)
+                @if (allItems.Count == 0)
             {
                 <div class="empty-state">
-                    <i class="fa-solid fa-clipboard-check"></i>
-                    <h4>No tests awaiting review</h4>
-                    <p class="text-muted mb-0">
-                        Returned tests will appear here when a return decision
-                        has been saved and is available to the application.
-                    </p>
+                    <h4>No tests awaiting recapture</h4>
+                    <p class="text-muted mb-0">Returned or rejected tests will appear here until a new result has been captured.</p>
                 </div>
             }
             else
             {
                 <div id="reviewList">
-                    @foreach (var item in returnedTests)
+                    @foreach (var item in allItems)
                     {
-                        var searchText = string.Join(" ", new[]
-                        {
-                            item.RequestNumber ?? "",
-                            item.Barcode ?? "",
-                            item.PatientName ?? "",
-                            item.PatientNumber ?? "",
-                            item.TestName ?? ""
-                        });
-
-                    <article class="review-card"
-                             data-search="@searchText.ToLowerInvariant()">
-
+                        var searchText = string.Join(" ", new[] { item.RequestNumber ?? "", item.Barcode ?? "", item.PatientName ?? "", item.PatientNumber ?? "", item.TestName ?? "" });
+                    <article class="review-card" data-search="@searchText.ToLowerInvariant()">
                         <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
                             <div>
-                                <span class="review-badge">Returned for correction</span>
-
-                                <h4 class="mt-3 mb-3">
-                                    @(string.IsNullOrWhiteSpace(item.TestName)
-                                            ? "Unnamed test"
-                                            : item.TestName)
-                                </h4>
+                                <span class="review-badge">@item.LatestVerificationDecision</span>
+                                <h4 class="mt-3 mb-3">@(string.IsNullOrWhiteSpace(item.TestName) ? "Unnamed test" : item.TestName)</h4>
                             </div>
-
                             <div class="text-md-end">
                                 <span class="detail-label">Request</span>
-                                <span class="detail-value">
-                                    @(string.IsNullOrWhiteSpace(item.RequestNumber)
-                                            ? $"Request #{item.TestRequestID}"
-                                            : item.RequestNumber)
-                                </span>
+                                <span class="detail-value">@(string.IsNullOrWhiteSpace(item.RequestNumber) ? $"Request #{item.TestRequestID}" : item.RequestNumber)</span>
                             </div>
                         </div>
 
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <span class="detail-label">Patient</span>
-                                <div class="detail-value">
-                                    @(string.IsNullOrWhiteSpace(item.PatientName)
-                                            ? "Not available"
-                                            : item.PatientName)
-                                </div>
-                                <small class="text-muted">
-                                    Patient number:
-                                    @(string.IsNullOrWhiteSpace(item.PatientNumber)
-                                            ? "Not available"
-                                            : item.PatientNumber)
-                                </small>
+                                <div class="detail-value">@(string.IsNullOrWhiteSpace(item.PatientName) ? "Not available" : item.PatientName)</div>
+                                <small class="text-muted">Patient number: @(string.IsNullOrWhiteSpace(item.PatientNumber) ? "Not available" : item.PatientNumber)</small>
                             </div>
-
                             <div class="col-md-4">
                                 <span class="detail-label">Barcode</span>
-                                <div class="detail-value">
-                                    @(string.IsNullOrWhiteSpace(item.Barcode)
-                                            ? "Not available"
-                                            : item.Barcode)
-                                </div>
+                                <div class="detail-value">@(string.IsNullOrWhiteSpace(item.Barcode) ? "Not available" : item.Barcode)</div>
                             </div>
-
                             <div class="col-md-4">
-                                <span class="detail-label">Latest decision</span>
-                                <div class="detail-value">
-                                    @item.LatestVerificationDecision
-                                </div>
-                                <small class="text-muted">
-                                    @(item.LatestVerificationDateTime?.ToString("dd MMM yyyy HH:mm")
-                                            ?? "Not available")
-                                </small>
+                                <span class="detail-label">Decision recorded</span>
+                                <div class="detail-value">@(item.LatestVerificationDateTime?.ToString("dd MMM yyyy HH:mm") ?? "Not available")</div>
                             </div>
-
                             <div class="col-md-4">
                                 <span class="detail-label">Current result</span>
                                 <div class="detail-value">
-                                    @(string.IsNullOrWhiteSpace(item.Result)
-                                            ? "No result available"
-                                            : item.Result)
-                                    @if (!string.IsNullOrWhiteSpace(item.Units))
-                                        {
-                                    <span> @item.Units</span>
-                                        }
+                                    @(string.IsNullOrWhiteSpace(item.Result) ? "No result available" : item.Result)
+                                    @if (!string.IsNullOrWhiteSpace(item.Units)) { <span> @item.Units</span> }
                                 </div>
                             </div>
-
                             <div class="col-md-4">
                                 <span class="detail-label">Reference range</span>
                                 <div class="detail-value">
                                     @if (item.NormalRangeMin.HasValue || item.NormalRangeMax.HasValue)
                                         {
-                                    <span>
-                                        @(item.NormalRangeMin?.ToString() ?? "—")
-                                        –
-                                        @(item.NormalRangeMax?.ToString() ?? "—")
-                                    </span>
-
-                                            if (!string.IsNullOrWhiteSpace(item.Units))
-                                            {
-                                    <span> @item.Units</span>
-                                            }
+                                    <span>@(item.NormalRangeMin?.ToString() ?? "—") – @(item.NormalRangeMax?.ToString() ?? "—") @item.Units</span>
                                         }
-                                        else
-                                        {
-                                    <span>Not available</span>
-                                        }
+                                        else { <span>Not available</span> }
                                 </div>
                             </div>
-
                             <div class="col-md-4">
                                 <span class="detail-label">Result status</span>
-                                <div class="detail-value">
-                                    @(string.IsNullOrWhiteSpace(item.ResultStatus)
-                                            ? "Not available"
-                                            : item.ResultStatus)
-
-                                    @if (item.IsAbnormal)
-                                        {
-                                    <span class="text-danger">(Abnormal)</span>
-                                        }
-                                </div>
+                                <div class="detail-value">@(string.IsNullOrWhiteSpace(item.ResultStatus) ? "Not available" : item.ResultStatus) @if (item.IsAbnormal) { <span class="text-danger">(Abnormal)</span> }</div>
                             </div>
                         </div>
 
                         @if (!string.IsNullOrWhiteSpace(item.LatestVerificationReason))
                             {
                         <div class="return-reason">
-                            <strong>Reason for return</strong>
-                            <p class="mb-0 mt-1">
-                                @item.LatestVerificationReason
-                            </p>
+                            <strong>Reason for @((item.LatestVerificationDecision ?? "").Equals("Rejected", StringComparison.OrdinalIgnoreCase) ? "rejection" : "return")</strong>
+                            <p class="mb-0 mt-1">@item.LatestVerificationReason</p>
                         </div>
                             }
                             else
                             {
-                        <div class="return-reason">
-                            <strong>Reason for return</strong>
-                            <p class="mb-0 mt-1">
-                                No return reason is available in the current record.
-                            </p>
+                        <div class="legacy-warning">
+                            <strong>Missing reason on an older decision</strong>
+                            <p class="mb-0 mt-1">This historical decision has no reason saved. New return decisions require a reason before they can be saved.</p>
                         </div>
                             }
 
                         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
-                            <small class="text-muted">
-                                Completed:
-                                @(item.CompletionDateTime?.ToString("dd MMM yyyy HH:mm")
-                                        ?? "Not available")
-                            </small>
-
-                            <a asp-controller="LabTechnician"
-                               asp-action="CaptureResults"
-                               asp-route-sampleReceiptId="@item.SampleReceiptID"
-                               asp-route-testTypeId="@item.TestTypeID"
-                               class="btn-review">
-                                <i class="fa-solid fa-rotate me-1"></i>
-                                Recapture this test
+                            <small class="text-muted">Result completed: @(item.CompletionDateTime?.ToString("dd MMM yyyy HH:mm") ?? "Not available")</small>
+                            <a asp-controller="LabTechnician" asp-action="CaptureResults" asp-route-sampleReceiptId="@item.SampleReceiptID" asp-route-testTypeId="@item.TestTypeID" class="btn-review">
+                                <i class="fa-solid fa-rotate me-1"></i> Recapture this test
                             </a>
                         </div>
                     </article>
                     }
                 </div>
-
                 <div id="noSearchResults" class="empty-state" style="display:none;">
                     <h5>No matching tests</h5>
-                    <p class="text-muted mb-0">
-                        Try a different patient, request number, barcode or test name.
-                    </p>
+                    <p class="text-muted mb-0">Try a different patient, request number, barcode or test name.</p>
                 </div>
             }
             </div>
@@ -323,32 +223,21 @@
 
     @section Scripts {
         <script>
-            const reviewSearch = document.getElementById("reviewSearch");
-
-            if (reviewSearch) {
-                reviewSearch.addEventListener("input", function () {
-                    const query = this.value.trim().toLowerCase();
-                    const cards = document.querySelectorAll(".review-card");
-                    let visibleCount = 0;
-
-                    cards.forEach(function (card) {
-                        const text = card.dataset.search || "";
-                        const matches = text.includes(query);
-
-                        card.style.display = matches ? "" : "none";
-
-                        if (matches) {
-                            visibleCount++;
-                        }
+            (() => {
+                const search = document.getElementById("reviewSearch");
+                if (!search) return;
+                search.addEventListener("input", () => {
+                    const query = search.value.trim().toLowerCase();
+                    const cards = Array.from(document.querySelectorAll(".review-card"));
+                    let visible = 0;
+                    cards.forEach(card => {
+                        const match = (card.dataset.search || "").includes(query);
+                        card.style.display = match ? "" : "none";
+                        if (match) visible++;
                     });
-
                     const noResults = document.getElementById("noSearchResults");
-
-                    if (noResults) {
-                        noResults.style.display =
-                            cards.length > 0 && visibleCount === 0 ? "block" : "none";
-                    }
+                    if (noResults) noResults.style.display = cards.length > 0 && visible === 0 ? "block" : "none";
                 });
-            }
+            })();
         </script>
     }
