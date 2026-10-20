@@ -11,7 +11,6 @@ public sealed class LabTechnicianDataService
 {
     private readonly string _connectionString;
 
-    private static readonly ConcurrentDictionary<int, string> Rejections = new();
     private static readonly ConcurrentDictionary<string, Assignment> Assignments = new();
     private static readonly ConcurrentDictionary<string, CompletedTest> CompletedTests = new();
 
@@ -170,12 +169,18 @@ public sealed class LabTechnicianDataService
             INNER JOIN dbo.Patient p ON p.PatientID = tr.PatientID
             INNER JOIN dbo.[User] u ON u.UserID = p.UserID
             WHERE COALESCE(tr.Status, '') NOT IN
-                ('Cancelled', 'Canceled', 'Completed', 'Awaiting Selection')
+                ('Cancelled', 'Canceled', 'Completed')
               AND NOT EXISTS
                 (
                     SELECT 1
                     FROM dbo.SampleReceipt sr
                     WHERE sr.TestRequestID = tr.TestRequestID
+                      AND NOT EXISTS
+                      (
+                          SELECT 1
+                          FROM dbo.SampleReceiptRejection rejection
+                          WHERE rejection.SampleReceiptID = sr.SampleReceiptID
+                      )
                 )
             ORDER BY
                 CASE
@@ -213,32 +218,26 @@ public sealed class LabTechnicianDataService
                    p.PatientID,
                    LTRIM(RTRIM(CONCAT(u.Surname, ', ', u.Name))) AS PatientName,
                    COALESCE(u.IDNumber, '') AS PatientNumber,
-                   sr.DateTimeReceived
+                   sr.DateTimeReceived,
+                   CAST(CASE WHEN rejection.SampleReceiptID IS NULL THEN 0 ELSE 1 END AS bit) AS IsRejected,
+                   COALESCE(rejection.Reason, '') AS RejectionReason
             FROM dbo.SampleReceipt sr
             INNER JOIN dbo.TestRequest tr ON tr.TestRequestID = sr.TestRequestID
             INNER JOIN dbo.Patient p ON p.PatientID = tr.PatientID
             INNER JOIN dbo.[User] u ON u.UserID = p.UserID
+            LEFT JOIN dbo.SampleReceiptRejection rejection
+                ON rejection.SampleReceiptID = sr.SampleReceiptID
             ORDER BY sr.DateTimeReceived DESC;
             """;
 
         await using var connection = new SqlConnection(_connectionString);
 
-        var rows = (await connection.QueryAsync<LabTechnicianQueueItem>(
+        var rows = await connection.QueryAsync<LabTechnicianQueueItem>(
             new CommandDefinition(
                 sql,
-                cancellationToken: cancellationToken)))
-            .AsList();
+                cancellationToken: cancellationToken));
 
-        foreach (var sample in rows)
-        {
-            if (Rejections.TryGetValue(sample.SampleReceiptID, out var reason))
-            {
-                sample.IsRejected = true;
-                sample.RejectionReason = reason;
-            }
-        }
-
-        return rows;
+        return rows.AsList();
     }
 
     public async Task<bool> ReceiveSampleAsync(
@@ -261,7 +260,7 @@ public sealed class LabTechnicianDataService
                     FROM dbo.TestRequest WITH (UPDLOCK, HOLDLOCK)
                     WHERE TestRequestID = @TestRequestID
                       AND COALESCE(Status, '') NOT IN
-                          ('Cancelled', 'Canceled', 'Completed', 'Awaiting Selection')
+                          ('Cancelled', 'Canceled', 'Completed')
                 )
                 BEGIN
                     ROLLBACK TRANSACTION;
@@ -277,12 +276,32 @@ public sealed class LabTechnicianDataService
                     ROLLBACK TRANSACTION;
                     SELECT CAST(0 AS bit);
                 END
+                ELSE IF EXISTS
+                (
+                    SELECT 1
+                    FROM dbo.SampleReceipt sr WITH (UPDLOCK, HOLDLOCK)
+                    WHERE sr.TestRequestID = @TestRequestID
+                      AND NOT EXISTS
+                      (
+                          SELECT 1
+                          FROM dbo.SampleReceiptRejection rejection
+                          WHERE rejection.SampleReceiptID = sr.SampleReceiptID
+                      )
+                )
+                BEGIN
+                    ROLLBACK TRANSACTION;
+                    SELECT CAST(0 AS bit);
+                END
                 ELSE
                 BEGIN
                     INSERT INTO dbo.SampleReceipt
                         (Barcode, DateTimeReceived, TestRequestID)
                     VALUES
                         (@Barcode, SYSDATETIME(), @TestRequestID);
+
+                    UPDATE dbo.TestRequest
+                    SET Status = 'Samples Received'
+                    WHERE TestRequestID = @TestRequestID;
 
                     COMMIT TRANSACTION;
                     SELECT CAST(1 AS bit);
@@ -318,24 +337,56 @@ public sealed class LabTechnicianDataService
             return false;
 
         const string sql = """
-            SELECT COUNT(1)
-            FROM dbo.SampleReceipt
-            WHERE SampleReceiptID = @SampleReceiptID;
+            IF NOT EXISTS
+            (
+                SELECT 1
+                FROM dbo.SampleReceipt
+                WHERE SampleReceiptID = @SampleReceiptID
+            )
+            BEGIN
+                SELECT CAST(0 AS bit);
+                RETURN;
+            END;
+
+            IF EXISTS
+            (
+                SELECT 1
+                FROM dbo.SampleReceiptRejection
+                WHERE SampleReceiptID = @SampleReceiptID
+            )
+            BEGIN
+                SELECT CAST(0 AS bit);
+                RETURN;
+            END;
+
+            INSERT INTO dbo.SampleReceiptRejection
+                (SampleReceiptID, Reason, RejectedAt)
+            VALUES
+                (@SampleReceiptID, @Reason, SYSDATETIME());
+
+            SELECT CAST(1 AS bit);
             """;
 
         await using var connection = new SqlConnection(_connectionString);
 
-        var exists = await connection.ExecuteScalarAsync<int>(
+        bool rejected = await connection.ExecuteScalarAsync<bool>(
             new CommandDefinition(
                 sql,
-                new { SampleReceiptID = sampleReceiptId },
+                new
+                {
+                    SampleReceiptID = sampleReceiptId,
+                    Reason = reason.Trim()
+                },
                 cancellationToken: cancellationToken));
 
-        if (exists == 0)
-            return false;
+        if (rejected)
+        {
+            string keyPrefix = $"{sampleReceiptId}:";
+            foreach (var key in Assignments.Keys.Where(x => x.StartsWith(keyPrefix, StringComparison.Ordinal)))
+                Assignments.TryRemove(key, out _);
+        }
 
-        Rejections[sampleReceiptId] = reason.Trim();
-        return true;
+        return rejected;
     }
 
     public async Task<IReadOnlyList<LabTechnicianQueueItem>>
@@ -430,11 +481,14 @@ public sealed class LabTechnicianDataService
                    COALESCE(tr.Type, '') AS RequestType,
                    COALESCE(tr.Status, '') AS RequestStatus,
                    COALESCE(tt.TestName, '') AS TestName,
-                   COALESCE(tt.TurnAroundMinutes, 0) AS TurnAroundMinutes
+                   COALESCE(tt.TurnAroundMinutes, 0) AS TurnAroundMinutes,
+                   CAST(CASE WHEN rejection.SampleReceiptID IS NULL THEN 0 ELSE 1 END AS bit) AS IsRejected
             FROM dbo.SampleReceipt sr
             INNER JOIN dbo.TestRequest tr
                 ON tr.TestRequestID = sr.TestRequestID
             CROSS JOIN dbo.TestType tt
+            LEFT JOIN dbo.SampleReceiptRejection rejection
+                ON rejection.SampleReceiptID = sr.SampleReceiptID
             WHERE sr.SampleReceiptID = @SampleReceiptID
               AND tt.TestTypeID = @TestTypeID;
             """;
@@ -458,8 +512,8 @@ public sealed class LabTechnicianDataService
         string testName = (string)row.TestName;
         string requestStatus = (string)row.RequestStatus;
 
-        if (Rejections.ContainsKey(sampleReceiptId))
-            return (false, "This sample has been rejected.");
+        if ((bool)row.IsRejected)
+            return (false, "This sample has been rejected. Receive a replacement sample for this request.");
 
         if (requestStatus.Equals("Cancelled", StringComparison.OrdinalIgnoreCase) ||
             requestStatus.Equals("Canceled", StringComparison.OrdinalIgnoreCase) ||
@@ -546,7 +600,7 @@ public sealed class LabTechnicianDataService
             var sample = samples.FirstOrDefault(
                 x => x.SampleReceiptID == assignment.SampleReceiptID);
 
-            if (sample == null)
+            if (sample == null || sample.IsRejected)
                 continue;
 
             sample.TestTypeID = assignment.TestTypeID;
@@ -580,11 +634,15 @@ public sealed class LabTechnicianDataService
                    p.PatientID,
                    LTRIM(RTRIM(CONCAT(u.Surname, ', ', u.Name))) AS PatientName,
                    COALESCE(u.IDNumber, '') AS PatientNumber,
-                   sr.DateTimeReceived
+                   sr.DateTimeReceived,
+                   CAST(CASE WHEN rejection.SampleReceiptID IS NULL THEN 0 ELSE 1 END AS bit) AS IsRejected,
+                   COALESCE(rejection.Reason, '') AS RejectionReason
             FROM dbo.[User] u
             INNER JOIN dbo.Patient p ON p.UserID = u.UserID
             INNER JOIN dbo.TestRequest tr ON tr.PatientID = p.PatientID
             INNER JOIN dbo.SampleReceipt sr ON sr.TestRequestID = tr.TestRequestID
+            LEFT JOIN dbo.SampleReceiptRejection rejection
+                ON rejection.SampleReceiptID = sr.SampleReceiptID
             WHERE LTRIM(RTRIM(COALESCE(u.IDNumber, ''))) = @RegistrationNumber
               AND COALESCE(tr.Status, '') NOT IN
                   ('Cancelled', 'Canceled', 'Completed')
@@ -603,12 +661,6 @@ public sealed class LabTechnicianDataService
 
         foreach (var sample in samples)
         {
-            if (Rejections.TryGetValue(sample.SampleReceiptID, out var reason))
-            {
-                sample.IsRejected = true;
-                sample.RejectionReason = reason;
-            }
-
             var assignments = Assignments.Values
                 .Where(a => a.SampleReceiptID == sample.SampleReceiptID)
                 .OrderBy(a => a.TestName)
@@ -663,12 +715,15 @@ public sealed class LabTechnicianDataService
                    COALESCE(tr.Type, '') AS RequestType,
                    COALESCE(tr.Status, '') AS RequestStatus,
                    COALESCE(tt.TestName, '') AS TestName,
-                   COALESCE(tt.TurnAroundMinutes, 0) AS TurnAroundMinutes
+                   COALESCE(tt.TurnAroundMinutes, 0) AS TurnAroundMinutes,
+                   CAST(CASE WHEN rejection.SampleReceiptID IS NULL THEN 0 ELSE 1 END AS bit) AS IsRejected
             FROM dbo.SampleReceipt sr
             INNER JOIN dbo.TestRequest tr
                 ON tr.TestRequestID = sr.TestRequestID
             INNER JOIN dbo.TestType tt
                 ON tt.TestTypeID = @TestTypeID
+            LEFT JOIN dbo.SampleReceiptRejection rejection
+                ON rejection.SampleReceiptID = sr.SampleReceiptID
             WHERE sr.SampleReceiptID = @SampleReceiptID;
             """;
 
@@ -678,7 +733,7 @@ public sealed class LabTechnicianDataService
                 new { SampleReceiptID = sampleReceiptId, TestTypeID = testTypeId },
                 cancellationToken: cancellationToken));
 
-        if (assignmentRow == null || Rejections.ContainsKey(sampleReceiptId))
+        if (assignmentRow == null || (bool)assignmentRow.IsRejected)
             return null;
 
         int testRequestId = (int)assignmentRow.TestRequestID;
@@ -840,9 +895,6 @@ public sealed class LabTechnicianDataService
         if (!Assignments.TryGetValue(key, out var assignment))
             return (false, "This test is not currently assigned. Please select the test again.", 0);
 
-        if (Rejections.ContainsKey(sampleReceiptId))
-            return (false, "This sample has been rejected.", 0);
-
         await using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync(cancellationToken);
         await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync(
@@ -871,6 +923,25 @@ public sealed class LabTechnicianDataService
 
             if (lockResult < 0)
                 throw new InvalidOperationException("Could not obtain the test workflow lock. Please retry.");
+
+            const string rejectedSampleSql = """
+                SELECT COUNT(1)
+                FROM dbo.SampleReceiptRejection WITH (UPDLOCK, HOLDLOCK)
+                WHERE SampleReceiptID = @SampleReceiptID;
+                """;
+
+            int rejectedSample = await connection.ExecuteScalarAsync<int>(
+                new CommandDefinition(
+                    rejectedSampleSql,
+                    new { SampleReceiptID = sampleReceiptId },
+                    transaction,
+                    cancellationToken: cancellationToken));
+
+            if (rejectedSample > 0)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return (false, "This sample has been rejected. Receive a replacement sample for this request.", 0);
+            }
 
             // Re-check the current state AFTER obtaining the lock.
             const string latestResultSql = """
