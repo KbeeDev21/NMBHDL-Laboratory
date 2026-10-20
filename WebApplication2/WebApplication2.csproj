@@ -12,7 +12,9 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.13" />
   </ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\NMBDHL.LabManager\NMBDHL.LabManager.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NMBDHL.DataAccess\NMBDHL.DataAccess.csproj" />
+    <ProjectReference Include="..\NMBDHL.Doctor\NMBDHL.Doctor.csproj" />
+    <ProjectReference Include="..\NMBDHL.LabManager\NMBDHL.LabManager.csproj" />
+  </ItemGroup>
 </Project>
