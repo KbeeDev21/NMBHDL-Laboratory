@@ -1,37 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace NMBDHL.Auth.Model
 {
     public class Login
     {
-        [Required]
+        [Required(ErrorMessage = "Please enter your email address.")]
+        [EmailAddress(ErrorMessage = "Enter a valid email address.")]
         [Display(Name = "Email")]
-        public string Email
-        {
-            get;
-            set;
-        }
-        [Required]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Please enter your password.")]
         [DataType(DataType.Password)]
-        public string Password
-        {
-            get;
-            set;
-        }
-        public bool RememberLogin
-        {
-            get;
-            set;
-        } = true;
-        public string ReturnUrl
-        {
-            get;
-            set;
-        }
+        public string Password { get; set; } = string.Empty;
+
+        public bool RememberLogin { get; set; } = true;
+
+        public string? ReturnUrl { get; set; }
+
+        public string? Role { get; set; }
     }
 }

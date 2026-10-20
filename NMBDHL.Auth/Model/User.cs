@@ -12,33 +12,39 @@ namespace NMBDHL.Auth.Model
     {
         [Key]
         public int UserID { get; set; }
-        [Required]
-        public string FirstName { get; set; }
-        [Required]
-        public string Lastname { get; set; }
 
         [Required]
-        public string Role { get; set; }
-        [Required]
-        public string IDNumber { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [Required]
-        public string CellPhoneNumber { get; set; }
+        public string Surname { get; set; } = string.Empty;
+
         [Required]
-        [RegularExpression("^[a-z0-9]+@[a-zA-Z0-9]+\\.[a-zA-Z]{2,}$", ErrorMessage = "Example. johndoe06@gmail.com. Must " +
-        "contain @ sign after local name and end with . followed by top-level domain ")]
-        public string Email { get; set; }
+        public string Role { get; set; } = string.Empty;
+
+        public string? IDNumber { get; set; }
+
+        public string? ContactNumber { get; set; }
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        // Stores the password hash returned by usp_Login.
         [Required]
         [DataType(DataType.Password)]
-        [RegularExpression(@"^(?=.[A-Za-z])(?=.\d)[A-Za-z\d]{8,}$", ErrorMessage = "Password must contain atleast 8 letters and/or numbers")]
-        public string Password { get; set; }
-        [Required]
-        [System.ComponentModel.DataAnnotations.Compare("Password", ErrorMessage = "Passwords do not match.")]
-        [DataType(DataType.Password)]
-        public string ConfirmPassword { get; set; }
+        public string Password { get; set; } = string.Empty;
+
+        // Only needed when creating or changing a password.
         [NotMapped]
-        
+        [DataType(DataType.Password)]
+        public string? ConfirmPassword { get; set; }
 
-        public string Allergies { get; set; }
+        public bool IsFirstLogin { get; set; } = true;
+
+        public bool IsActive { get; set; } = true;
+
+        [NotMapped]
+        public string? Allergies { get; set; }
     }
 }

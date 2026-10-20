@@ -13,6 +13,7 @@
   </ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\NMBDHL.Auth\NMBDHL.Auth.csproj" />
 		<ProjectReference Include="..\NMBDHL.LabManager\NMBDHL.LabManager.csproj" />
 	</ItemGroup>
 </Project>
