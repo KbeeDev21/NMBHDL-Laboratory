@@ -1,16 +1,30 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
+using Dapper;
+using Microsoft.Data.SqlClient;
 using WebApplication2.Models;
+using WebApplication2.Services;
 
 namespace WebApplication2.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly LabTechnicianDataService _labTechnicianData;
+        private readonly IConfiguration _configuration;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(
+            ILogger<HomeController> logger,
+            LabTechnicianDataService labTechnicianData,
+            IConfiguration configuration)
         {
             _logger = logger;
+            _labTechnicianData = labTechnicianData;
+            _configuration = configuration;
         }
 
         public IActionResult Index()
@@ -29,7 +43,7 @@ namespace WebApplication2.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-       
+
 
         public IActionResult LoginPage()
         {
@@ -44,7 +58,7 @@ namespace WebApplication2.Controllers
                 return RedirectToAction("AdminDashboard");
 
             if (user == "laboratory manager")
-                return RedirectToAction("Dashboard","LabManager");
+                return RedirectToAction("Dashboard", "LabManager");
 
             if (user == "doctor")
                 return RedirectToAction("DoctorDashboard");
@@ -70,9 +84,194 @@ namespace WebApplication2.Controllers
         {
             return View();
         }
-        public IActionResult LabTechnicianDashboard()
+        public async Task<IActionResult> LabTechnicianDashboard(
+            CancellationToken cancellationToken)
         {
-            return View();
+            try
+            {
+                var connectionString =
+                    _configuration.GetConnectionString("DefaultConnection");
+
+                if (string.IsNullOrWhiteSpace(connectionString))
+                {
+                    throw new InvalidOperationException(
+                        "The DefaultConnection connection string is missing.");
+                }
+
+                // Dashboard-only query: leaves the other subsystem actions untouched.
+                const string statsSql = """
+                    SELECT
+                        (
+                            SELECT COUNT(*)
+                            FROM dbo.SampleReceipt sr
+                            WHERE NOT EXISTS
+                            (
+                                SELECT 1
+                                FROM dbo.TestResult tres
+                                WHERE tres.TestRequestID = sr.TestRequestID
+                            )
+                        ) AS AwaitingSelection,
+                        (
+                            SELECT COUNT(*)
+                            FROM dbo.TestResult tres
+                            OUTER APPLY
+                            (
+                                SELECT TOP (1) rv.Decision
+                                FROM dbo.ResultVerification rv
+                                WHERE rv.TestResultID = tres.TestResultID
+                                ORDER BY rv.VerificationDateTime DESC,
+                                         rv.ResultVerificationID DESC
+                            ) latest
+                            WHERE latest.Decision IS NULL
+                               OR UPPER(LTRIM(RTRIM(latest.Decision))) NOT IN
+                                  ('APPROVED', 'RETURNED', 'RETURN', 'REJECTED')
+                        ) AS AwaitingVerification,
+                        (
+                            SELECT COUNT(*)
+                            FROM dbo.TestResult
+                            WHERE CompletionDateTime >= CONVERT(date, GETDATE())
+                              AND CompletionDateTime < DATEADD(day, 1, CONVERT(date, GETDATE()))
+                        ) AS CompletedToday,
+                        (
+                            SELECT COUNT(*)
+                            FROM dbo.TestRequest tr
+                            WHERE UPPER(LTRIM(RTRIM(COALESCE(tr.Urgency, ''))))
+                                  IN ('STAT', 'URGENT')
+                              AND COALESCE(tr.Status, '') NOT IN
+                                  ('Cancelled', 'Canceled', 'Completed', 'Rejected')
+                        ) AS UrgentCount,
+                        (
+                            SELECT COUNT(*)
+                            FROM dbo.TestResult tres
+                            INNER JOIN dbo.TestType tt ON tt.TestTypeID = tres.TestTypeID
+                            INNER JOIN dbo.SampleReceipt sr ON sr.TestRequestID = tres.TestRequestID
+                            WHERE sr.DateTimeReceived IS NOT NULL
+                              AND COALESCE(tt.TurnAroundMinutes, 0) > 0
+                              AND DATEADD(MINUTE, tt.TurnAroundMinutes, sr.DateTimeReceived) < GETDATE()
+                              AND NOT EXISTS
+                              (
+                                  SELECT 1
+                                  FROM dbo.ResultVerification rv
+                                  WHERE rv.TestResultID = tres.TestResultID
+                                    AND UPPER(LTRIM(RTRIM(COALESCE(rv.Decision, '')))) = 'APPROVED'
+                              )
+                        ) AS OverdueCount;
+                    """;
+
+                await using var connection = new SqlConnection(connectionString);
+
+                var stats = await connection.QuerySingleAsync<LabTechnicianDashboardStats>(
+                    new CommandDefinition(
+                        statsSql,
+                        cancellationToken: cancellationToken));
+
+                var receivedSamples = await _labTechnicianData
+                    .GetReceivedSamplesAsync(cancellationToken);
+
+                var assignedTests = await _labTechnicianData
+                    .GetAssignedTestsAsync(cancellationToken);
+
+                var incompleteAssignedTests = assignedTests
+                    .Where(test => !_labTechnicianData.IsTestCompleted(
+                        test.SampleReceiptID, test.TestTypeID))
+                    .ToList();
+
+                var assignedSampleIds = new HashSet<int>(
+                    assignedTests.Select(test => test.SampleReceiptID));
+
+                // A received sample is awaiting selection when no test has yet
+                // been assigned to that sample in the current service session.
+                stats.AwaitingSelection = receivedSamples.Count(sample =>
+                    !sample.IsRejected && !assignedSampleIds.Contains(sample.SampleReceiptID));
+
+                var selectedCount = assignedTests.Count;
+                var verifiedCount = await connection.ExecuteScalarAsync<int>(
+                    new CommandDefinition(
+                        """
+                        SELECT COUNT(*)
+                        FROM dbo.TestResult tres
+                        OUTER APPLY
+                        (
+                            SELECT TOP (1) rv.Decision
+                            FROM dbo.ResultVerification rv
+                            WHERE rv.TestResultID = tres.TestResultID
+                            ORDER BY rv.VerificationDateTime DESC,
+                                     rv.ResultVerificationID DESC
+                        ) latest
+                        WHERE UPPER(LTRIM(RTRIM(COALESCE(latest.Decision, '')))) = 'APPROVED';
+                        """,
+                        cancellationToken: cancellationToken));
+
+                var priorityRequests = receivedSamples
+                    .Where(sample => !sample.IsRejected &&
+                        (string.Equals(sample.Urgency, "STAT", StringComparison.OrdinalIgnoreCase)
+                         || string.Equals(sample.Urgency, "URGENT", StringComparison.OrdinalIgnoreCase)))
+                    .OrderBy(sample => string.Equals(sample.Urgency, "STAT", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                    .ToList();
+
+                var now = DateTime.Now;
+                var turnaroundWarnings = incompleteAssignedTests
+                    .Where(test =>
+                        test.SelectedAt.HasValue &&
+                        test.TurnAroundMinutes > 0 &&
+                        test.SelectedAt.Value.AddMinutes(test.TurnAroundMinutes) <= now.AddMinutes(30))
+                    .OrderBy(test =>
+                        test.SelectedAt!.Value.AddMinutes(test.TurnAroundMinutes))
+                    .ToList();
+
+                stats.AssignedTests = incompleteAssignedTests.Count;
+                stats.NearingTatCount = turnaroundWarnings.Count;
+                stats.SelectedCount = selectedCount;
+                stats.VerifiedCount = verifiedCount;
+
+                ViewBag.AssignedTests = stats.AssignedTests;
+                ViewBag.AwaitingSelection = stats.AwaitingSelection;
+                ViewBag.AwaitingVerification = stats.AwaitingVerification;
+                ViewBag.CompletedToday = stats.CompletedToday;
+                ViewBag.UrgentCount = stats.UrgentCount;
+                ViewBag.OverdueCount = stats.OverdueCount;
+                ViewBag.NearingTatCount = stats.NearingTatCount;
+                ViewBag.PriorityRequests = priorityRequests;
+                ViewBag.TurnaroundWarnings = turnaroundWarnings;
+                ViewBag.SelectedCount = stats.SelectedCount;
+                ViewBag.VerifiedCount = stats.VerifiedCount;
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lab Technician dashboard failed to load.");
+
+                ViewBag.DashboardError =
+                    "Some dashboard statistics could not be loaded. Check the application logs.";
+
+                ViewBag.AssignedTests = 0;
+                ViewBag.AwaitingSelection = 0;
+                ViewBag.AwaitingVerification = 0;
+                ViewBag.CompletedToday = 0;
+                ViewBag.UrgentCount = 0;
+                ViewBag.OverdueCount = 0;
+                ViewBag.NearingTatCount = 0;
+                ViewBag.PriorityRequests = new List<LabTechnicianQueueItem>();
+                ViewBag.TurnaroundWarnings = new List<LabTechnicianQueueItem>();
+                ViewBag.SelectedCount = 0;
+                ViewBag.VerifiedCount = 0;
+
+                return View();
+            }
+        }
+
+        private sealed class LabTechnicianDashboardStats
+        {
+            public int AssignedTests { get; set; }
+            public int AwaitingSelection { get; set; }
+            public int AwaitingVerification { get; set; }
+            public int CompletedToday { get; set; }
+            public int UrgentCount { get; set; }
+            public int OverdueCount { get; set; }
+            public int NearingTatCount { get; set; }
+            public int SelectedCount { get; set; }
+            public int VerifiedCount { get; set; }
         }
         public IActionResult DoctorDashboard()
         {

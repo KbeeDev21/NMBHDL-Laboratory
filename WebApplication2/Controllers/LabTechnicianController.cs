@@ -16,13 +16,16 @@ namespace WebApplication2.Controllers
     {
         private readonly LabTechnicianDataService _labTechnicianData;
         private readonly IConfiguration _configuration;
+        private readonly IWebHostEnvironment _environment;
 
         public LabTechnicianController(
             LabTechnicianDataService labTechnicianData,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IWebHostEnvironment environment)
         {
             _labTechnicianData = labTechnicianData;
             _configuration = configuration;
+            _environment = environment;
         }
 
         // Dashboard
@@ -523,12 +526,25 @@ namespace WebApplication2.Controllers
         public async Task<IActionResult> VerificationQueue(
             CancellationToken cancellationToken)
         {
+
             try
             {
                 var results = await _labTechnicianData
                     .GetVerificationQueueAsync(cancellationToken);
 
-                return View(results);
+                var pendingResults = results
+                    .Where(x =>
+                        !string.Equals(x.LatestVerificationDecision, "Approved",
+                            StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(x.LatestVerificationDecision, "Returned",
+                            StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(x.LatestVerificationDecision, "Return",
+                            StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(x.LatestVerificationDecision, "Rejected",
+                            StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                return View(pendingResults);
             }
             catch (Exception ex)
             {
@@ -633,12 +649,28 @@ namespace WebApplication2.Controllers
                 var userId = User.FindFirst(
                     System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
+
                 if (!int.TryParse(userId, out var loggedInUserId))
                 {
-                    TempData["ErrorMessage"] =
-                        "Your login could not be matched to a lab technician.";
-                    return RedirectToAction(nameof(VerifyResults), new { testResultId });
+                    var developmentUserId =
+                        _configuration.GetValue<int?>(
+                            "LabTechnician:DevelopmentUserId");
+
+                    if (!_environment.IsDevelopment()
+                        || developmentUserId is null
+                        || developmentUserId.Value <= 0)
+                    {
+                        TempData["ErrorMessage"] =
+                            "Your login could not be matched to a lab technician.";
+
+                        return RedirectToAction(
+                            nameof(VerifyResults),
+                            new { testResultId });
+                    }
+
+                    loggedInUserId = developmentUserId.Value;
                 }
+
 
                 var technicianId = await _labTechnicianData
                     .GetLabTechnicianIdForUserAsync(loggedInUserId, cancellationToken);
@@ -654,6 +686,7 @@ namespace WebApplication2.Controllers
                     testResultId,
                     technicianId.Value,
                     normalizedDecision!,
+                    returnReason,
                     cancellationToken);
 
                 if (!saveResult.Success)
@@ -670,10 +703,10 @@ namespace WebApplication2.Controllers
 
                 TempData["SuccessMessage"] = saveResult.Message;
 
-                TempData["SuccessMessage"] = saveResult.Message;
-
                 return RedirectToAction(
-                    normalizedDecision.Equals("Returned",
+                    string.Equals(
+                        normalizedDecision,
+                        "Returned",
                         StringComparison.OrdinalIgnoreCase)
                         ? nameof(ReviewQueue)
                         : nameof(VerificationQueue));
