@@ -20,13 +20,14 @@ public interface ILabManagerPasswordService
 }
 
 /// <summary>
-/// Passwords are hashed with ASP.NET Core's built-in PasswordHasher (PBKDF2 with a random salt),
-/// so no extra NuGet package is needed.
+/// Passwords are hashed THE SAME WAY AS THE GROUP'S LOGIN (NMBDHL.Auth AuthRepository.HashPassword):
+/// SHA-256 of the UTF-8 password, written as 64 lowercase hex characters, stored in [User].PasswaordHash.
+/// That way the doctors and technicians this subsystem creates can log in on the group's login page,
+/// and a manager's Change Password checks the current password correctly.
 ///
-/// IMPORTANT FOR THE GROUP: the doctors and technicians this subsystem creates log in through
-/// the group's login page, so that login must check passwords the same way. Either the login
-/// calls ILabManagerLoginService.CheckCredentialsAsync (easiest), or, if the group already uses
-/// another hasher (e.g. BCrypt), change ONLY HashPassword and VerifyPassword in this class.
+/// VerifyPassword also still accepts the older PBKDF2 hashes (ASP.NET PasswordHasher) that earlier
+/// versions of this backend and its test scripts wrote, so nothing already in a database stops working.
+/// If the group changes its hashing, change HashPassword and VerifyPassword here to match.
 /// </summary>
 public class LabManagerPasswordService : ILabManagerPasswordService
 {
@@ -41,14 +42,26 @@ public class LabManagerPasswordService : ILabManagerPasswordService
     private const string Digits = "23456789";                  // no 0 or 1
     private const string Special = "@#$!%&*?";
 
-    public string HashPassword(string password) => Hasher.HashPassword(User, password);
+    // Same as the group's login: SHA-256, lowercase hex
+    public string HashPassword(string password) => Sha256Hex(password);
 
     public bool VerifyPassword(string password, string storedHash)
     {
-        if (string.IsNullOrEmpty(storedHash)) return false;
+        if (string.IsNullOrWhiteSpace(storedHash) || password is null) return false;
+        string stored = storedHash.Trim();
+
+        // The group's format: 64 hex characters (compared in constant time, ignoring case)
+        if (stored.Length == 64 && IsHex(stored))
+        {
+            byte[] expected = Convert.FromHexString(stored);
+            byte[] actual = SHA256.HashData(Encoding.UTF8.GetBytes(password));
+            return CryptographicOperations.FixedTimeEquals(expected, actual);
+        }
+
+        // Older PBKDF2 hashes from earlier versions of this backend
         try
         {
-            var result = Hasher.VerifyHashedPassword(User, storedHash, password);
+            var result = Hasher.VerifyHashedPassword(User, stored, password);
             return result != PasswordVerificationResult.Failed;
         }
         catch (FormatException)
@@ -56,6 +69,16 @@ public class LabManagerPasswordService : ILabManagerPasswordService
             // A hash in another format (or garbage) means "wrong password", not a crash.
             return false;
         }
+    }
+
+    private static string Sha256Hex(string password) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(password))).ToLowerInvariant();
+
+    private static bool IsHex(string s)
+    {
+        foreach (char c in s)
+            if (!Uri.IsHexDigit(c)) return false;
+        return true;
     }
 
     public string GenerateTemporaryPassword(int length = 12)

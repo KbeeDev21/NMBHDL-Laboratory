@@ -1,111 +1,43 @@
 #nullable enable
-using System;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Options;
 
 namespace NMBHLabSys.LabManagerSubsystem.Services;
 
 /// <summary>
-/// Answers "who is logged in?" for the Lab Manager pages.
-/// The login page belongs to the group, so this reads what that login leaves behind:
-///   1. the session (keys from LabManager:Auth:SessionUserIdKey / SessionRoleKey), or
-///   2. the signed-in user's claims, if the group uses cookie authentication.
+/// Answers "who is logged in?" for the Lab Manager pages, using ONLY what the group's login
+/// (HomeController.Login) puts in its sign-in cookie:
+///   ClaimTypes.NameIdentifier = [User].UserID,  ClaimTypes.Email,  ClaimTypes.Role ("Lab Manager", ...).
+/// The Lab Manager subsystem has no login of its own.
 /// </summary>
 public interface ILabManagerCurrentUser
 {
+    /// <summary>[User].UserID of the signed-in user, or null when nobody is signed in.</summary>
     int? UserId { get; }
+
+    /// <summary>The role the group's login gave the user, e.g. "Lab Manager".</summary>
     string? Role { get; }
 
-    /// <summary>Stores the user in the session (used by DevSignIn and by the group's login if it wants to).</summary>
-    void SignIn(int userId, string role);
-    void SignOut();
+    /// <summary>The email the group's login put in the cookie.</summary>
+    string? Email { get; }
 }
 
 public class LabManagerCurrentUser : ILabManagerCurrentUser
 {
     private readonly IHttpContextAccessor _http;
-    private readonly LabManagerAuthOptions _auth;
 
-    public LabManagerCurrentUser(IHttpContextAccessor http, IOptions<LabManagerOptions> options)
-    {
-        _http = http;
-        _auth = options.Value.Auth;
-    }
+    public LabManagerCurrentUser(IHttpContextAccessor http) => _http = http;
 
-    private HttpContext? Context => _http.HttpContext;
+    /// <summary>The signed-in user, or null.</summary>
+    private ClaimsPrincipal? SignedIn =>
+        _http.HttpContext?.User is { Identity.IsAuthenticated: true } user ? user : null;
 
-    /// <summary>The session, or null when the app hasn't called AddSession/UseSession.</summary>
-    private ISession? Session
-    {
-        get
-        {
-            var context = Context;
-            if (context is null) return null;
-            try
-            {
-                var session = context.Features.Get<Microsoft.AspNetCore.Http.Features.ISessionFeature>()?.Session;
-                return session is { IsAvailable: true } ? session : null;
-            }
-            catch (InvalidOperationException)
-            {
-                return null;
-            }
-        }
-    }
+    public int? UserId =>
+        int.TryParse(SignedIn?.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
 
-    public int? UserId
-    {
-        get
-        {
-            var session = Session;
-            if (session is not null)
-            {
-                // Works whether the login stored it with SetString("UserID", "5") or SetInt32("UserID", 5)
-                string? text = session.GetString(_auth.SessionUserIdKey);
-                if (int.TryParse(text, out int fromString)) return fromString;
+    public string? Role => Clean(SignedIn?.FindFirstValue(ClaimTypes.Role));
 
-                int? fromInt = session.GetInt32(_auth.SessionUserIdKey);
-                if (fromInt.HasValue) return fromInt;
-            }
+    public string? Email => Clean(SignedIn?.FindFirstValue(ClaimTypes.Email));
 
-            var user = Context?.User;
-            if (user?.Identity?.IsAuthenticated == true)
-            {
-                string? claim = user.FindFirstValue(ClaimTypes.NameIdentifier)
-                                ?? user.FindFirstValue(_auth.SessionUserIdKey)
-                                ?? user.FindFirstValue("sub");
-                if (int.TryParse(claim, out int fromClaim)) return fromClaim;
-            }
-
-            return null;
-        }
-    }
-
-    public string? Role
-    {
-        get
-        {
-            string? role = Session?.GetString(_auth.SessionRoleKey);
-            if (!string.IsNullOrWhiteSpace(role)) return role;
-
-            var user = Context?.User;
-            if (user?.Identity?.IsAuthenticated == true)
-                return user.FindFirstValue(ClaimTypes.Role) ?? user.FindFirstValue(_auth.SessionRoleKey);
-
-            return null;
-        }
-    }
-
-    public void SignIn(int userId, string role)
-    {
-        var session = Session ?? throw new InvalidOperationException(
-            "Session is not enabled. Add builder.Services.AddSession() and app.UseSession() to Program.cs.");
-        session.SetString(_auth.SessionUserIdKey, userId.ToString());
-        session.SetString(_auth.SessionRoleKey, role);
-    }
-
-    public void SignOut() => Session?.Clear();
+    private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

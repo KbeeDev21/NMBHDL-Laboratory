@@ -36,6 +36,9 @@ public interface IAccountRepository
 {
     Task<UserAccount?> GetUserByEmailAsync(string email);
     Task<UserAccount?> GetUserByIdAsync(int userId);
+
+    /// <summary>Adds the dbo.LabManager row for this user if it isn't there yet; returns its LabManagerID.</summary>
+    Task<int> EnsureLabManagerRecordAsync(int userId);
     Task<bool> EmailInUseAsync(string email, int excludeUserId = 0);
     Task SetPasswordAsync(int userId, string passwordHash, bool mustChangePassword);
     Task<ProfileModel?> GetManagerProfileAsync(int userId);
@@ -85,6 +88,16 @@ public class AccountRepository : IAccountRepository
         using var conn = _db.CreateConnection();
         return await conn.QueryFirstOrDefaultAsync<UserAccount>(SelectUser + " WHERE u.UserID = @userId;",
             new { userId, managerRole = _auth.ManagerRole, doctorRole = _auth.DoctorRole, technicianRole = _auth.TechnicianRole });
+    }
+
+    public async Task<int> EnsureLabManagerRecordAsync(int userId)
+    {
+        using var conn = _db.CreateConnection();
+        // UQ_LabManager_UserID stops a duplicate if two requests arrive at once
+        return await conn.ExecuteScalarAsync<int>(@"
+            IF NOT EXISTS (SELECT 1 FROM dbo.LabManager WHERE UserID = @userId)
+                INSERT INTO dbo.LabManager (UserID) VALUES (@userId);
+            SELECT LabManagerID FROM dbo.LabManager WHERE UserID = @userId;", new { userId });
     }
 
     // AC-06-05: checked against EVERY user (patients, doctors, technicians, managers); UQ_User_Email backs it up
