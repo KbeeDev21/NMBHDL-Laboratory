@@ -581,6 +581,15 @@ public sealed class LabTechnicianDataService
         return (true, $"'{testName}' assigned. Its turnaround timer has started.");
     }
 
+    // Returns stable sample:test keys for the current in-memory assignment session.
+    // The Awaiting Selection view uses these keys to avoid offering duplicate assignments.
+    public IReadOnlyCollection<string> GetAssignedTestKeys()
+    {
+        return Assignments.Keys
+            .OrderBy(key => key, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
     public async Task<IReadOnlyList<LabTechnicianQueueItem>>
         GetAssignedTestsAsync(
             CancellationToken cancellationToken = default)

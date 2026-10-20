@@ -1,5 +1,4 @@
-﻿
-@model IEnumerable<WebApplication2.Models.LabTechnicianQueueItem>
+﻿@model IEnumerable<WebApplication2.Models.LabTechnicianQueueItem>
     @using WebApplication2.Models
 
     @{
@@ -14,6 +13,10 @@
 
     var consumables = (ViewBag.Consumables as IEnumerable<ConsumableStockItem>)?.ToList()
                       ?? new List<ConsumableStockItem>();
+
+    var assignedTestKeys = new HashSet<string>(
+        (ViewBag.AssignedTestKeys as IEnumerable<string>) ?? Enumerable.Empty<string>(),
+        StringComparer.OrdinalIgnoreCase);
     }
 
     <link href="~/css/dashboardstyles.css" rel="stylesheet" />
@@ -152,6 +155,94 @@
 
         .assign-button {
             white-space: nowrap;
+        }
+
+        .assignment-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, .58);
+            backdrop-filter: blur(3px);
+        }
+
+            .assignment-modal-backdrop.is-open {
+                display: flex;
+            }
+
+        .assignment-modal {
+            width: 100%;
+            max-width: 460px;
+            padding: 26px;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 24px 70px rgba(15, 23, 42, .25);
+            animation: assignmentModalIn .16s ease-out;
+        }
+
+        .assignment-modal-icon {
+            display: flex;
+            width: 48px;
+            height: 48px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            border-radius: 14px;
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-size: 1.25rem;
+        }
+
+        .assignment-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .assignment-modal-cancel, .assignment-modal-confirm {
+            padding: 9px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .assignment-modal-cancel {
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #334155;
+        }
+
+        .assignment-modal-confirm {
+            border: 1px solid #1d4ed8;
+            background: #2563eb;
+            color: #fff;
+        }
+
+            .assignment-modal-confirm:hover {
+                background: #1d4ed8;
+            }
+
+        @@keyframes assignmentModalIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px) scale(.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @@media (prefers-reduced-motion: reduce) {
+            .assignment-modal {
+                animation: none;
+            }
         }
 
         @@media(max-width: 768px) {
@@ -502,6 +593,9 @@
 
                                 foreach (var test in matchingTests)
                                         {
+                                            var assignmentKey = $"{sample.SampleReceiptID}:{test.TestTypeID}";
+                                            var isAssigned = assignedTestKeys.Contains(assignmentKey);
+
                                 <div class="test-row">
                                     <div>
                                         <strong>@test.TestName</strong>
@@ -509,12 +603,28 @@
                                             Test type ID: @test.TestTypeID
                                             · TAT: @test.TurnAroundMinutes min
                                         </div>
+                                        @if (isAssigned)
+                                        {
+                                        <span class="pill pill-good">Already assigned</span>
+                                        }
                                     </div>
 
+                                    @if (isAssigned)
+                                    {
+                                    <button type="button"
+                                            class="btn btn-secondary btn-sm assign-button"
+                                            disabled>
+                                        <i class="fa-solid fa-check-double"></i> Assigned
+                                    </button>
+                                    }
+                                    else
+                                    {
                                     <form asp-controller="LabTechnician"
                                           asp-action="SelectTest"
                                           method="post"
-                                          class="m-0">
+                                          class="m-0 assignment-form"
+                                          data-test-name="@test.TestName"
+                                          data-request-id="@sample.TestRequestID">
                                         @Html.AntiForgeryToken()
 
                                         <input type="hidden"
@@ -530,6 +640,7 @@
                                             <i class="fa-solid fa-check"></i> Select Test
                                         </button>
                                     </form>
+                                    }
                                 </div>
                                         }
                                     }
@@ -554,7 +665,118 @@
         </div>
     </div>
 
+    <div id="assignmentModalBackdrop"
+         class="assignment-modal-backdrop"
+         aria-hidden="true">
+        <section class="assignment-modal"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="assignmentModalTitle"
+                 aria-describedby="assignmentModalDescription">
+            <div class="assignment-modal-icon">
+                <i class="fa-solid fa-flask"></i>
+            </div>
+            <h2 id="assignmentModalTitle" class="h4 mb-2">Confirm test assignment</h2>
+            <p class="text-muted mb-3">
+                Please confirm that you want to assign this test to the request.
+            </p>
+            <div class="info-box mb-3">
+                <div class="info-label">Request number</div>
+                <div id="assignmentModalRequest" class="info-value"></div>
+                <div class="info-label mt-3">Test to assign</div>
+                <div id="assignmentModalTest" class="info-value"></div>
+            </div>
+            <p id="assignmentModalDescription" class="small text-muted mb-0">
+                The turnaround timer will start when this test is assigned.
+            </p>
+            <div class="assignment-modal-actions">
+                <button type="button" id="cancelAssignmentButton" class="assignment-modal-cancel">
+                    Cancel
+                </button>
+                <button type="button" id="confirmAssignmentButton" class="assignment-modal-confirm">
+                    <i class="fa-solid fa-check"></i> Confirm Assignment
+                </button>
+            </div>
+        </section>
+    </div>
+
     <script>
+        (() => {
+            const backdrop = document.getElementById("assignmentModalBackdrop");
+            const requestLabel = document.getElementById("assignmentModalRequest");
+            const testLabel = document.getElementById("assignmentModalTest");
+            const cancelButton = document.getElementById("cancelAssignmentButton");
+            const confirmButton = document.getElementById("confirmAssignmentButton");
+
+            let pendingForm = null;
+            let lastFocusedElement = null;
+
+            function closeAssignmentModal() {
+                backdrop.classList.remove("is-open");
+                backdrop.setAttribute("aria-hidden", "true");
+                document.body.style.overflow = "";
+                pendingForm = null;
+
+                if (lastFocusedElement && typeof lastFocusedElement.focus === "function") {
+                    lastFocusedElement.focus();
+                }
+            }
+
+            function openAssignmentModal(form) {
+                pendingForm = form;
+                lastFocusedElement = document.activeElement;
+                requestLabel.textContent = form.dataset.requestId || "Not available";
+                testLabel.textContent = form.dataset.testName || "Selected test";
+                backdrop.classList.add("is-open");
+                backdrop.setAttribute("aria-hidden", "false");
+                document.body.style.overflow = "hidden";
+                cancelButton.focus();
+            }
+
+            document.querySelectorAll(".assignment-form").forEach(form => {
+                form.addEventListener("submit", event => {
+                    if (form.dataset.confirmed === "true") return;
+                    event.preventDefault();
+                    openAssignmentModal(form);
+                });
+            });
+
+            cancelButton.addEventListener("click", closeAssignmentModal);
+
+            backdrop.addEventListener("click", event => {
+                if (event.target === backdrop) closeAssignmentModal();
+            });
+
+            document.addEventListener("keydown", event => {
+                if (event.key === "Escape" && backdrop.classList.contains("is-open")) {
+                    closeAssignmentModal();
+                }
+            });
+
+            confirmButton.addEventListener("click", () => {
+                if (!pendingForm) {
+                    closeAssignmentModal();
+                    return;
+                }
+
+                const form = pendingForm;
+                const submitButton = form.querySelector('button[type="submit"]');
+
+                form.dataset.confirmed = "true";
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Assigning...';
+                }
+
+                confirmButton.disabled = true;
+                confirmButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Assigning...';
+
+                // Submit the existing form, including its anti-forgery token.
+                HTMLFormElement.prototype.submit.call(form);
+            });
+        })();
+
         function toggleDetails(button) {
             const card = button.closest(".sample-card");
             const panel = card?.querySelector(".details-panel");

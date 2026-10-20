@@ -1,5 +1,4 @@
-﻿
-@model IReadOnlyList<WebApplication2.Models.LabTechnicianQueueItem>
+﻿@model IReadOnlyList<WebApplication2.Models.LabTechnicianQueueItem>
 
     @{
     Layout = "~/Views/Shared/_LabTechLayout.cshtml";
@@ -9,8 +8,15 @@
         .Where(x => x.SampleReceiptID <= 0)
         .ToList();
 
+    // Keep rejected samples out of the active received queue.
+    // Rejected records remain visible below as history.
     var receivedSamples = Model
-        .Where(x => x.SampleReceiptID > 0)
+        .Where(x => x.SampleReceiptID > 0 && !x.IsRejected)
+        .ToList();
+
+    var rejectedSamples = Model
+        .Where(x => x.SampleReceiptID > 0 && x.IsRejected)
+        .OrderByDescending(x => x.DateTimeReceived)
         .ToList();
     }
 
@@ -33,12 +39,12 @@
         }
 
         .table-container {
-            background: #f8fafc;
-            border-radius: 16px;
-            padding: 20px;
-            border: 1px solid #e2e8f0;
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            padding: 0;
             overflow-x: auto;
-            margin-bottom: 30px;
+            margin: 12px 0 30px;
         }
 
         .sample-table {
@@ -173,10 +179,33 @@
 
         .action-form {
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: column;
+            align-items: flex-start;
             gap: 8px;
-            align-items: center;
         }
+
+        .barcode-input,
+        .reason-input {
+            width: 100%;
+            min-width: 0;
+            max-width: none;
+            box-sizing: border-box;
+        }
+
+        .barcode-cell,
+        .decision-cell {
+            min-width: 150px;
+        }
+
+            .barcode-cell .btn-select,
+            .decision-cell .btn-reject {
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .decision-cell .reject-form {
+                width: 100%;
+            }
 
         .section-heading {
             margin-top: 25px;
@@ -197,7 +226,7 @@
                     <div>
                         <h1>Receive Samples</h1>
                         <p class="text-muted mb-0">
-                            Receive individual samples and reject unsuitable samples without rejecting the entire request.
+                            Record the barcode, inspect the sample, then accept it for testing or reject it with a reason.
                         </p>
                     </div>
 
@@ -251,7 +280,8 @@
                                 <th>Test Type</th>
                                 <th>Priority</th>
                                 <th>Request Date</th>
-                                <th>Barcode / Action</th>
+                                <th>Barcode</th>
+                                <th>Decision</th>
                             </tr>
                         </thead>
 
@@ -288,27 +318,57 @@
                                     @sample.RequestDate.ToString("yyyy-MM-dd HH:mm")
                                 </td>
 
-                                <td>
-                                    <form asp-controller="LabTechnician"
-                                          asp-action="ReceiveSample"
-                                          method="post"
-                                          class="action-form">
-                                        @Html.AntiForgeryToken()
-
-                                        <input type="hidden"
-                                               name="testRequestId"
-                                               value="@sample.TestRequestID" />
-
-                                        <input class="form-control barcode-input"
+                                <td class="barcode-cell">
+                                    <div class="action-form">
+                                        <input form="accept-@sample.TestRequestID"
+                                               class="form-control barcode-input"
                                                name="barcode"
-                                               value=""
                                                placeholder="Scan barcode"
                                                aria-label="Barcode for request @sample.TestRequestID"
                                                required />
 
-                                        <button type="submit" class="btn-select">
-                                            <i class="fa-solid fa-check me-1"></i>
-                                            Receive
+                                        <form id="accept-@sample.TestRequestID"
+                                              asp-controller="LabTechnician"
+                                              asp-action="ReceiveSample"
+                                              method="post"
+                                              class="w-100">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden"
+                                                   name="testRequestId"
+                                                   value="@sample.TestRequestID" />
+                                            <button type="submit" class="btn-select">
+                                                <i class="fa-solid fa-check me-1"></i>
+                                                Accept
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+
+                                <td class="decision-cell">
+                                    <form asp-controller="LabTechnician"
+                                          asp-action="RejectPendingSample"
+                                          method="post"
+                                          class="action-form reject-form"
+                                          onsubmit="return confirm('Record this sample as received and reject it? The reason will be saved in rejection history.');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden"
+                                               name="testRequestId"
+                                               value="@sample.TestRequestID" />
+                                        <input type="hidden"
+                                               name="barcode"
+                                               value=""
+                                               id="reject-barcode-@sample.TestRequestID" />
+                                        <input class="form-control reason-input"
+                                               name="reason"
+                                               placeholder="Rejection reason"
+                                               aria-label="Rejection reason for request @sample.TestRequestID"
+                                               maxlength="250"
+                                               required />
+                                        <button type="submit"
+                                                class="btn-reject"
+                                                onclick="document.getElementById('reject-barcode-@sample.TestRequestID').value = document.querySelector('[form=&quot;accept-@sample.TestRequestID&quot;][name=&quot;barcode&quot;]').value;">
+                                            <i class="fa-solid fa-ban me-1"></i>
+                                            Reject
                                         </button>
                                     </form>
                                 </td>
@@ -345,7 +405,7 @@
                                 <th>Test Type</th>
                                 <th>Received At</th>
                                 <th>Status</th>
-                                <th>Reject Sample</th>
+                                <th>Decision</th>
                             </tr>
                         </thead>
 
@@ -392,44 +452,73 @@
                                 </td>
 
                                 <td>
-                                    @if (!sample.IsRejected)
-                                        {
-                                    <form asp-controller="LabTechnician"
-                                          asp-action="RejectSample"
-                                          method="post"
-                                          class="action-form"
-                                          onsubmit="return confirm('Reject this sample only? Other samples on the request will remain unaffected.');">
-                                        @Html.AntiForgeryToken()
-
-                                        <input type="hidden"
-                                               name="sampleReceiptId"
-                                               value="@sample.SampleReceiptID" />
-
-                                        <input class="form-control reason-input"
-                                               name="reason"
-                                               placeholder="Rejection reason"
-                                               aria-label="Rejection reason for barcode @sample.Barcode"
-                                               maxlength="250"
-                                               required />
-
-                                        <button type="submit" class="btn-reject">
-                                            <i class="fa-solid fa-ban me-1"></i>
-                                            Reject
-                                        </button>
-                                    </form>
-                                        }
-                                        else
-                                        {
-                                    <span class="text-muted">
-                                        Already rejected
+                                    <span class="status-badge status-received">
+                                        <i class="fa-solid fa-check me-1"></i>
+                                        Accepted for testing
                                     </span>
-                                        }
                                 </td>
                             </tr>
                             }
                         </tbody>
                     </table>
                 }
+                </div>
+
+                <h4 class="section-heading mb-2">Rejected Sample History</h4>
+
+                <span class="sample-count">
+                    <i class="fa-solid fa-clock-rotate-left me-1"></i>
+                    @rejectedSamples.Count rejected sample(s)
+                </span>
+
+                <div class="table-container">
+                    @if (rejectedSamples.Count == 0)
+                    {
+                    <div class="empty-message">
+                        <i class="fa-solid fa-circle-check fa-2x mb-3"></i>
+                        <p>No samples have been rejected.</p>
+                    </div>
+                    }
+                    else
+                    {
+                    <table class="sample-table">
+                        <thead>
+                            <tr>
+                                <th>Request ID</th>
+                                <th>Barcode</th>
+                                <th>Patient</th>
+                                <th>Test Type</th>
+                                <th>Received At</th>
+                                <th>Status</th>
+                                <th>Rejection Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var sample in rejectedSamples)
+                                {
+                            <tr>
+                                <td><strong>@sample.TestRequestID</strong></td>
+                                <td>@sample.Barcode</td>
+                                <td>@sample.PatientName</td>
+                                <td>@sample.Type</td>
+                                <td>
+                                    @(sample.DateTimeReceived.HasValue
+                                                ? sample.DateTimeReceived.Value.ToString("yyyy-MM-dd HH:mm")
+                                                : "—")
+                                </td>
+                                <td>
+                                    <span class="status-badge status-rejected">Rejected</span>
+                                </td>
+                                <td>
+                                    @(string.IsNullOrWhiteSpace(sample.RejectionReason)
+                                                ? "No reason recorded"
+                                                : sample.RejectionReason)
+                                </td>
+                            </tr>
+                                }
+                        </tbody>
+                    </table>
+                    }
                 </div>
 
             </div>
