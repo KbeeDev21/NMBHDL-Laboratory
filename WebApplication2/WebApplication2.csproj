@@ -17,4 +17,10 @@
 		<ProjectReference Include="..\NMBDHL.LabManager\NMBDHL.LabManager.csproj" />
 		<ProjectReference Include="..\NMBDHL.LabTechnician\NMBDHL.LabTechnician.csproj" />
 	</ItemGroup>
+  <ItemGroup>
+	  
+    <ProjectReference Include="..\NMBDHL.DataAccess\NMBDHL.DataAccess.csproj" />
+    <ProjectReference Include="..\NMBDHL.Doctor\NMBDHL.Doctor.csproj" />
+   
+  </ItemGroup>
 </Project>
