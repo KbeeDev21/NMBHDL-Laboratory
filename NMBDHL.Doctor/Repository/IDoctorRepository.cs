@@ -12,5 +12,8 @@ namespace NMBDHL.Doctor.Repository
         Task<IEnumerable<PatientDropdownModel>> GetPatientsDropdownAsync();
         Task<IEnumerable<string>> GetTestPanelsAsync();
         Task<IEnumerable<TrackProgressModel>> GetTrackProgressAsync(int doctorId);
+
+
+        Task<bool> CreateTestRequestAsync(int patientId, int doctorId, string panels, string urgency, string notes);
     }
 }

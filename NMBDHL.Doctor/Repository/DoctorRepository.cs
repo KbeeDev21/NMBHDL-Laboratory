@@ -1,6 +1,10 @@
-﻿using NMBDHL.DataAccess.SQLDataBaseAccess;
+﻿using Dapper;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
+using NMBDHL.DataAccess.SQLDataBaseAccess;
 using NMBDHL.Doctor.Model;
 using System.Collections.Generic;
+using System.Data;
 using System.Threading.Tasks;
 
 namespace NMBDHL.Doctor.Repository
@@ -8,10 +12,13 @@ namespace NMBDHL.Doctor.Repository
     public class DoctorRepository : IDoctorRepository
     {
         private readonly ISQLDataBaseAccess _db;
+        private readonly string _connectionString;
 
-        public DoctorRepository(ISQLDataBaseAccess db)
+        // IConfiguration is added here to read from appsettings.json
+        public DoctorRepository(ISQLDataBaseAccess db, IConfiguration config)
         {
             _db = db;
+            _connectionString = config.GetConnectionString("DefaultConnection");
         }
 
         public async Task<IEnumerable<AbnormalAlertModel>> GetAbnormalAlertsAsync(int doctorId)
@@ -54,6 +61,28 @@ namespace NMBDHL.Doctor.Repository
             return await _db.GetData<TrackProgressModel, dynamic>(
                 "sp_Doctor_GetTrackProgress",
                 new { DoctorID = doctorId });
+        }
+
+        public async Task<bool> CreateTestRequestAsync(int patientId, int doctorId, string panels, string urgency, string notes)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var parameters = new
+                {
+                    PatientID = patientId,
+                    DoctorID = doctorId,
+                    Type = panels,
+                    Urgency = urgency,
+                    ClinicalNotes = notes
+                };
+
+                int rowsAffected = await connection.ExecuteAsync(
+                    "dbo.sp_Doctor_CreateTestRequest",
+                    parameters,
+                    commandType: CommandType.StoredProcedure);
+
+                return rowsAffected > 0;
+            }
         }
     }
 }

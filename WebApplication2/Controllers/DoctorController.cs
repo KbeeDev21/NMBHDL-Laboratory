@@ -25,6 +25,36 @@ namespace WebApplication2.Controllers
             return View("~/Views/Home/DoctorDashboard.cshtml");
         }
 
+
+        [HttpPost]
+        public async Task<IActionResult> SubmitTestRequest(int patientId, string testPanels, string urgency, string clinicalNotes)
+        {
+            try
+            {
+                // Defaulting to DoctorID 1 for the session
+                int doctorId = 1;
+
+                bool success = await _doctorRepo.CreateTestRequestAsync(patientId, doctorId, testPanels, urgency, clinicalNotes);
+
+                if (success)
+                {
+                    TempData["SuccessMessage"] = "Test request submitted successfully.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Failed to submit test request.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "An error occurred: " + ex.Message;
+            }
+
+            // Redirect back to the dashboard after submission
+            return RedirectToAction("DoctorDashboard");
+        }
+
+
         [HttpGet]
         public async Task<IActionResult> LoadDashboardSection(string section)
         {
