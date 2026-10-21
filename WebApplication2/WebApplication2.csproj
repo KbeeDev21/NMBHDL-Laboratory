@@ -15,5 +15,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\NMBDHL.Auth\NMBDHL.Auth.csproj" />
 		<ProjectReference Include="..\NMBDHL.LabManager\NMBDHL.LabManager.csproj" />
+		<ProjectReference Include="..\NMBDHL.LabTechnician\NMBDHL.LabTechnician.csproj" />
 	</ItemGroup>
 </Project>

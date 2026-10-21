@@ -2,11 +2,14 @@ using NMBHLabSys.LabManagerSubsystem;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using NMBDHL.Auth.Repository;
 using NMBDHL.DataAccess.SQLDataBaseAccess;
+using NMBHDL.LabTechnician;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // MVC
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<WebApplication2.Services.LabTechnicianDataService>();
+builder.Services.AddLabTechnicianSubsystem(builder.Configuration);
 
 // Lab Manager subsystem
 builder.Services.AddLabManagerSubsystem(builder.Configuration);

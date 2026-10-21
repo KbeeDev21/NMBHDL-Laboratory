@@ -1,11 +1,25 @@
-﻿@{
+﻿@using WebApplication2.Controllers
+@model TestDetailViewModel
+
+@{
     Layout = "~/Views/Shared/_LabTechLayout.cshtml";
-    ViewData["Title"] = "Sample Information";
+    ViewData["Title"] = "Test Details";
+
+    var priority = string.IsNullOrWhiteSpace(Model.Urgency)
+        ? "Routine"
+        : Model.Urgency.Trim();
+
+    var isStat = priority.Equals("STAT", StringComparison.OrdinalIgnoreCase)
+        || priority.Equals("Urgent", StringComparison.OrdinalIgnoreCase);
+
+    var requestedReturnUrl = Context.Request.Query["returnUrl"].ToString();
+    var returnUrl = Url.IsLocalUrl(requestedReturnUrl)
+        ? requestedReturnUrl
+        : Url.Action("AssignedTests", "LabTechnician");
 }
 
 <link rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
 <link href="~/css/dashboardstyles.css" rel="stylesheet" />
 
 <style>
@@ -15,17 +29,18 @@
     }
 
     .card-main {
-        background: #ffffff;
+        background: #fff;
         border-radius: 20px;
         padding: 30px;
         border: 1px solid #dbe3ec;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 8px rgba(0,0,0,.05);
     }
 
     .page-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
+        gap: 16px;
         margin-bottom: 25px;
     }
 
@@ -68,36 +83,31 @@
         min-height: 44px;
     }
 
-        .form-control:focus {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.12);
-        }
-
     .readonly-field {
         background: #e9eef5 !important;
         color: #374151;
-        cursor: not-allowed;
     }
 
     .field-note {
-        font-size: 0.8rem;
+        font-size: .8rem;
         color: #6b7280;
         margin-top: 6px;
     }
 
     .info-box {
-        background: #ffffff;
+        background: #fff;
         border: 1px solid #e2e8f0;
         border-radius: 12px;
         padding: 16px;
         height: 100%;
+        overflow-wrap: anywhere;
     }
 
     .info-label {
         color: #6b7280;
-        font-size: 0.78rem;
+        font-size: .78rem;
         text-transform: uppercase;
-        letter-spacing: 0.4px;
+        letter-spacing: .4px;
         margin-bottom: 5px;
     }
 
@@ -110,11 +120,16 @@
         display: inline-block;
         padding: 5px 12px;
         border-radius: 20px;
-        font-size: 0.8rem;
+        font-size: .8rem;
         font-weight: 600;
-        background: #fee2e2;
-        color: #b91c1c;
+        background: #e0f2fe;
+        color: #075985;
     }
+
+        .priority-badge.urgent {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
 
     .test-list {
         margin: 0;
@@ -123,7 +138,7 @@
     }
 
         .test-list li {
-            background: #ffffff;
+            background: #fff;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
             padding: 12px 15px;
@@ -153,22 +168,40 @@
             margin-right: 8px;
         }
 
+        .workflow-note.warning {
+            background: #fff7ed;
+            border-color: #fed7aa;
+            color: #9a3412;
+        }
+
+        .workflow-note.success {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+            color: #166534;
+        }
+
     .action-row {
         display: flex;
         justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
         gap: 10px;
         margin-top: 25px;
+    }
+
+    .btn-primary-custom, .btn-secondary-custom {
+        display: inline-block;
+        border-radius: 10px;
+        padding: 11px 20px;
+        text-decoration: none;
+        font-weight: 600;
+        cursor: pointer;
     }
 
     .btn-primary-custom {
         background: #0d6efd;
         border: 1px solid #0d6efd;
-        color: white !important;
-        border-radius: 10px;
-        padding: 11px 20px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: 0.2s ease;
+        color: #fff !important;
     }
 
         .btn-primary-custom:hover {
@@ -177,319 +210,262 @@
         }
 
     .btn-secondary-custom {
-        background: #ffffff;
+        background: #fff;
         border: 1px solid #cbd5e1;
         color: #374151 !important;
-        border-radius: 10px;
-        padding: 11px 20px;
-        text-decoration: none;
-        font-weight: 600;
     }
 
         .btn-secondary-custom:hover {
             background: #f1f5f9;
         }
+
+    @@media (max-width: 700px) {
+        .card-main {
+            padding: 18px;
+        }
+
+        .section-card {
+            padding: 18px;
+        }
+
+        .page-header {
+            flex-direction: column;
+        }
+    }
 </style>
 
 <div class="page-container">
-
     <div class="card-main">
-
-        <!-- HEADER -->
         <div class="page-header">
-
             <div>
-                <h1>Sample Information</h1>
-
-                <p>
-                    Review the sample information before accepting the sample.
-                </p>
+                <h1>Test Details</h1>
+                <p>Review the request and sample status before continuing the laboratory workflow.</p>
             </div>
-
-            <a asp-controller="LabTechnician"
-               asp-action="ReceiveSamples"
-               class="btn-secondary-custom">
-                <i class="fa-solid fa-arrow-left"></i>
-                Back to Samples
+            <a href="@returnUrl" class="btn-secondary-custom">
+                <i class="fa-solid fa-arrow-left"></i> Back
             </a>
-
         </div>
 
+        @if (TempData["ErrorMessage"] is string errorMessage && !string.IsNullOrWhiteSpace(errorMessage))
+        {
+        <div class="alert alert-danger" role="alert">@errorMessage</div>
+        }
+        @if (TempData["SuccessMessage"] is string successMessage && !string.IsNullOrWhiteSpace(successMessage))
+        {
+        <div class="alert alert-success" role="alert">@successMessage</div>
+        }
 
-        <!-- SAMPLE IDENTIFICATION -->
         <div class="section-card">
-
-            <div class="section-title">
-                <i class="fa-solid fa-vial"></i>
-                Sample Reception Information
-            </div>
-
+            <div class="section-title"><i class="fa-solid fa-vial"></i> Sample Reception Information</div>
             <div class="row g-3">
-
                 <div class="col-md-6">
-
-                    <label class="form-label">
-                        Request Number
-                    </label>
-
-                    <input type="text"
-                           class="form-control readonly-field"
-                           value="REQ-2026-00124"
-                           readonly />
-
-                    <div class="field-note">
-                        Request number cannot be edited.
+                    <div class="info-box">
+                        <div class="info-label">Request Number</div>
+                        <div class="info-value">@Model.RequestNumber</div>
+                        <div class="field-note">Database request ID: @Model.TestRequestID</div>
                     </div>
-
                 </div>
-
-
                 <div class="col-md-6">
-
-                    <label class="form-label">
-                        Sample Barcode
-                    </label>
-
-                    <input type="text"
-                           class="form-control"
-                           value="BC-889213" />
-
-                    <div class="field-note">
-                        Only the sample barcode may be edited.
+                    <div class="info-box">
+                        <div class="info-label">Sample Barcode</div>
+                        <div class="info-value">@(string.IsNullOrWhiteSpace(Model.Barcode) ? "Not recorded" : Model.Barcode)</div>
                     </div>
-
                 </div>
-
-
                 <div class="col-md-6">
-
-                    <label class="form-label">
-                        Sample Type
-                    </label>
-
-                    <input type="text"
-                           class="form-control readonly-field"
-                           value="Whole Blood"
-                           readonly />
-
+                    <div class="info-box">
+                        <div class="info-label">Sample Type</div>
+                        <div class="info-value">@(string.IsNullOrWhiteSpace(Model.SampleType) ? "Not specified in the available request data" : Model.SampleType)</div>
+                    </div>
                 </div>
-
-
                 <div class="col-md-6">
-
-                    <label class="form-label">
-                        Technician Receiving Sample
-                    </label>
-
-                    <input type="text"
-                           class="form-control readonly-field"
-                           value="Keenan James"
-                           readonly />
-
+                    <div class="info-box">
+                        <div class="info-label">Sample Receipt Status</div>
+                        <div class="info-value">
+                            @if (Model.IsRejectedSample)
+                            {
+                            <span class="text-danger">Rejected — replacement required</span>
+                            }
+                            else if (Model.HasActiveSample)
+                            {
+                            <span class="text-success">Sample received</span>
+                            }
+                            else
+                            {
+                            <span class="text-warning">Awaiting sample receipt</span>
+                            }
+                        </div>
+                    </div>
                 </div>
-
-
                 <div class="col-md-6">
-
-                    <label class="form-label">
-                        Date Received
-                    </label>
-
-                    <input type="date"
-                           class="form-control"
-                           value="2026-08-20"
-                           readonly/>
-
+                    <div class="info-box">
+                        <div class="info-label">Request Date</div>
+                        <div class="info-value">@(Model.RequestDate.HasValue ? Model.RequestDate.Value.ToString("dd MMM yyyy, HH:mm") : "Not recorded")</div>
+                    </div>
                 </div>
-
-
                 <div class="col-md-6">
-
-                    <label class="form-label">
-                        Time Received
-                    </label>
-
-                    <input type="time"
-                           class="form-control"
-                           value="10:10" 
-                           readonly/>
-
+                    <div class="info-box">
+                        <div class="info-label">Date and Time Received</div>
+                        <div class="info-value">@(Model.DateTimeReceived.HasValue ? Model.DateTimeReceived.Value.ToString("dd MMM yyyy, HH:mm") : "Not received")</div>
+                    </div>
                 </div>
-
             </div>
-
         </div>
 
-
-        <!-- PATIENT INFORMATION -->
         <div class="section-card">
-
-            <div class="section-title">
-                <i class="fa-solid fa-user"></i>
-                Patient Information
-            </div>
-
+            <div class="section-title"><i class="fa-solid fa-user"></i> Patient and Request Information</div>
             <div class="row g-3">
-
                 <div class="col-md-4">
-
                     <div class="info-box">
-
-                        <div class="info-label">
-                            Patient
-                        </div>
-
-                        <div class="info-value">
-                            Baloyi, Thabo
-                        </div>
-
+                        <div class="info-label">Patient</div>
+                        <div class="info-value">@(string.IsNullOrWhiteSpace(Model.PatientName) ? "Not available" : Model.PatientName)</div>
                     </div>
-
                 </div>
-
-
                 <div class="col-md-4">
-
                     <div class="info-box">
-
-                        <div class="info-label">
-                            Doctor
-                        </div>
-
-                        <div class="info-value">
-                            Dr. F. Abrahams
-                        </div>
-
+                        <div class="info-label">Patient Number</div>
+                        <div class="info-value">@(string.IsNullOrWhiteSpace(Model.PatientNumber) ? "Not available" : Model.PatientNumber)</div>
                     </div>
-
                 </div>
-
-
                 <div class="col-md-4">
-
                     <div class="info-box">
-
-                        <div class="info-label">
-                            Priority
-                        </div>
-
-                        <div class="info-value">
-                            <span class="priority-badge">
-                                STAT
-                            </span>
-                        </div>
-
+                        <div class="info-label">Requesting Doctor</div>
+                        <div class="info-value">@(string.IsNullOrWhiteSpace(Model.DoctorName) ? "Not available" : Model.DoctorName)</div>
                     </div>
-
                 </div>
-
+                <div class="col-md-6">
+                    <div class="info-box">
+                        <div class="info-label">Priority</div>
+                        <div class="info-value">
+                            <span class="priority-badge @(isStat ? "urgent" : "")">@priority</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-box">
+                        <div class="info-label">Request Status</div>
+                        <div class="info-value">@(string.IsNullOrWhiteSpace(Model.RequestStatus) ? "Not recorded" : Model.RequestStatus)</div>
+                    </div>
+                </div>
             </div>
-
         </div>
 
-
-        <!-- REQUEST SUMMARY -->
         <div class="section-card">
-
-            <div class="section-title">
-                <i class="fa-solid fa-clipboard-list"></i>
-                Request Summary
+            <div class="section-title"><i class="fa-solid fa-clipboard-list"></i> Requested Tests</div>
+            @if (Model.RequestedTests != null && Model.RequestedTests.Count > 0)
+            {
+            <ul class="test-list">
+                @foreach (var test in Model.RequestedTests)
+                    {
+                <li><i class="fa-solid fa-check"></i>@test</li>
+                    }
+            </ul>
+            }
+            else
+            {
+            <div class="workflow-note warning">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                No individual requested test names could be read from this request.
             </div>
-
-            <div class="row g-3">
-
-                <div class="col-md-6">
-
-                    <div class="info-box">
-
-                        <div class="info-label">
-                            Request Number
-                        </div>
-
-                        <div class="info-value">
-                            REQ-2026-00124
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <div class="col-md-6">
-
-                    <div class="info-box">
-
-                        <div class="info-label">
-                            Patient
-                        </div>
-
-                        <div class="info-value">
-                            Baloyi, Thabo
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="mt-4">
-
-                <div class="info-label mb-2">
-                    Requested Tests
-                </div>
-
-                <ul class="test-list">
-
-                    <li>
-                        <i class="fa-solid fa-check"></i>
-                        FBC + Differential
-                    </li>
-
-                    <li>
-                        <i class="fa-solid fa-check"></i>
-                        ESR
-                    </li>
-
-                </ul>
-
-            </div>
-
+            <p class="mt-3 mb-0">
+                @(string.IsNullOrWhiteSpace(Model.RequestedTypeText)
+                        ? string.Empty
+                        : "Request test information: " + Model.RequestedTypeText)
+            </p>
+            }
         </div>
 
-
-        <!-- WORKFLOW INFORMATION -->
+        @if (!string.IsNullOrWhiteSpace(Model.StageMessage))
+        {
+        <div class="workflow-note @(Model.IsComplete ? "success" : "")">
+            <i class="fa-solid fa-circle-info"></i>@Model.StageMessage
+        </div>
+        }
+        else if (Model.IsRejectedSample)
+        {
+        <div class="workflow-note warning">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            This sample has been rejected. Do not capture results against the rejected sample; a replacement sample must be received first.
+        </div>
+        }
+        else if (!Model.HasActiveSample)
+        {
         <div class="workflow-note">
-
             <i class="fa-solid fa-circle-info"></i>
-
-            After the sample is accepted, it will move to
-            <strong>Awaiting Selection</strong>, where the laboratory
-            technician can view the required consumables, sample barcode,
-            patient information and clinical information before starting
-            the assigned test.
-
+            This request has no active received sample. Confirm the barcode below and use <strong>Accept Sample</strong> to record receipt.
         </div>
+        }
+        else if (!Model.IsSelectedTest)
+        {
+        <div class="workflow-note">
+            <i class="fa-solid fa-circle-info"></i>
+            The sample has been received. Continue to <strong>Awaiting Selection</strong> to select an individual test before capturing results.
+        </div>
+        }
 
-
-        <!-- ACTIONS -->
         <div class="action-row">
-
-            <a asp-controller="LabTechnician"
-               asp-action="ReceiveSamples"
-               class="btn-secondary-custom">
-                Cancel
+            @* Once a result exists, Test Details only offers Back. *@
+            @if (Model.HasResult)
+            {
+            <a href="@returnUrl" class="btn-secondary-custom">
+                <i class="fa-solid fa-arrow-left"></i> Back
             </a>
-
+            }
+            else if (Model.IsRejectedSample)
+            {
+            <a href="@returnUrl" class="btn-secondary-custom">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+            }
+            else if (Model.HasActiveSample && Model.IsSelectedTest && Model.TestTypeID > 0)
+            {
+            <a href="@returnUrl" class="btn-secondary-custom">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+            <a asp-controller="LabTechnician"
+               asp-action="CaptureResults"
+               asp-route-sampleReceiptId="@Model.SampleReceiptID"
+               asp-route-testTypeId="@Model.TestTypeID"
+               class="btn-primary-custom">
+                <i class="fa-solid fa-pen-to-square"></i> Capture Result
+            </a>
+            }
+            else if (!Model.HasActiveSample)
+            {
+            <a href="@returnUrl" class="btn-secondary-custom">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+            <form asp-controller="LabTechnician"
+                  asp-action="ReceiveSample"
+                  method="post"
+                  class="d-flex flex-wrap align-items-end gap-2">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="testRequestId" value="@Model.TestRequestID" />
+                <div>
+                    <label for="barcode" class="form-label">Sample Barcode</label>
+                    <input id="barcode"
+                           name="barcode"
+                           class="form-control"
+                           value="@Model.Barcode"
+                           maxlength="100"
+                           required
+                           autocomplete="off" />
+                </div>
+                <button type="submit" class="btn-primary-custom">
+                    <i class="fa-solid fa-check"></i> Accept Sample
+                </button>
+            </form>
+            }
+            else
+            {
+            <a href="@returnUrl" class="btn-secondary-custom">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
             <a asp-controller="LabTechnician"
                asp-action="AwaitingSelection"
                class="btn-primary-custom">
-                <i class="fa-solid fa-check"></i>
-                Accept Sample
+                <i class="fa-solid fa-list-check"></i> Continue to Awaiting Selection
             </a>
-
+            }
         </div>
-
     </div>
-
 </div>

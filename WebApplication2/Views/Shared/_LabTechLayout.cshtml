@@ -1,68 +1,43 @@
-﻿<!DOCTYPE html>
+﻿
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8" />
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>@ViewData["Title"] - NMB-HLabSys</title>
 
-    <!-- Bootstrap -->
     <link rel="stylesheet"
           href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 
-    <!-- LabTech CSS -->
     <link rel="stylesheet"
-          href="~/css/labtech.css"
+          href="~/css/LabtechDashboard.css"
           asp-append-version="true" />
 
-    <!-- Font Awesome -->
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
 </head>
 
 <body>
-
-    <!-- SIDEBAR -->
     <div class="sidebar">
-
-        <!-- TOP -->
         <div class="sidebar-top">
-
             <div class="sidebar-profile">
-
                 <i class="fa-solid fa-user"></i>
 
                 <div class="profile-info">
-
-                    <div class="profile-text">
-                        Mr
-                    </div>
-
-                    <div class="profile-text">
-                        Keenen James
-                    </div>
-
+                    <div class="profile-text">Mr</div>
+                    <div class="profile-text">Keenen James</div>
                 </div>
-
             </div>
 
-            <div class="profile-role">
-                Lab Technician
-            </div>
-
+            <div class="profile-role">Lab Technician</div>
         </div>
 
-        <!-- BOTTOM -->
-        <div class="sidebar-bottom" style="overflow-y:auto; flex:1; min-height:0;">
+        <div class="sidebar-bottom"
+             style="overflow-y:auto; flex:1; min-height:0;">
 
-            <div class="sidebar-section">
-                WORKFLOW
-            </div>
+            <div class="sidebar-section">WORKFLOW</div>
 
             <a asp-controller="Home"
                asp-action="LabTechnicianDashboard"
@@ -113,9 +88,7 @@
                 Review Queue
             </a>
 
-            <div class="sidebar-section">
-                MONITORING
-            </div>
+            <div class="sidebar-section">MONITORING</div>
 
             <a asp-controller="LabTechnician"
                asp-action="StatUrgent"
@@ -138,69 +111,32 @@
                 Reports
             </a>
 
-            <!-- <div class="sidebar-section">
-         ACCOUNT
-     </div>
-
-     <a asp-controller="LabTechnician"
-        asp-action="Profile"
-        class="sidebar-link">
-         <i class="fa-solid fa-user me-2"></i>
-         Profile
-     </a>
-
-     <a asp-controller="LabTechnician"
-        asp-action="EditProfile"
-        class="sidebar-link">
-         <i class="fa-solid fa-user-pen me-2"></i>
-         Edit Profile
-     </a>
-
-     <a asp-controller="LabTechnician"
-        asp-action="ChangePassword"
-        class="sidebar-link">
-         <i class="fa-solid fa-lock me-2"></i>
-         Change Password
-     </a> -->
-
             <div class="sidebar-actions">
-
                 <a asp-controller="LabTechnician"
                    asp-action="Profile"
                    class="sidebar-alert-btn">
-
                     <i class="fa-solid fa-user-gear"></i>
                     Profile Settings
-
                 </a>
 
                 <a asp-controller="Home"
                    asp-action="Index"
                    class="sidebar-primary-btn">
-
                     <i class="fa-solid fa-right-from-bracket"></i>
                     Logout
-
                 </a>
-
             </div>
-
         </div>
-
     </div>
 
-    <!-- CONTENT -->
     <div class="main-content">
-
         @RenderBody()
-
     </div>
 
-    <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 
 </html>

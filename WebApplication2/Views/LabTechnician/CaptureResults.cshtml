@@ -1,33 +1,28 @@
-﻿@{
+﻿@model WebApplication2.Models.CaptureResultsViewModel
+
+@{
     Layout = "~/Views/Shared/_LabTechLayout.cshtml";
     ViewData["Title"] = "Capture Results";
-}
 
-@model WebApplication2.Models.CaptureResultsViewModel
+    var minRange = Model.NormalRangeMin;
+    var maxRange = Model.NormalRangeMax;
+}
 
 <link rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
 <link href="~/css/dashboardstyles.css" rel="stylesheet" />
 
 <style>
-
     .page-container {
         padding: 0;
     }
 
     .card-dark {
-        background: #ffffff;
+        background: #fff;
         border-radius: 20px;
         padding: 30px;
         border: 1px solid #dbe3ec;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-
-    .section-title {
-        margin-bottom: 20px;
-        font-weight: 700;
-        color: #1f2937;
+        box-shadow: 0 2px 8px rgba(0,0,0,.05);
     }
 
     .info-box {
@@ -38,35 +33,88 @@
         border: 1px solid #e2e8f0;
     }
 
-    .form-control,
-    .form-select {
-        background: #ffffff;
+    .patient-info {
+        background: #fff;
+        border: 1px solid #dbe3ec;
+        border-radius: 12px;
+        padding: 14px 16px;
+        height: 100%;
+    }
+
+    .info-label {
+        font-size: .75rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 5px;
+    }
+
+    .info-value {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+        overflow-wrap: anywhere;
+    }
+
+    h1, h4, p, strong, label {
+        color: #1f2937;
+    }
+
+    label {
+        margin-bottom: 6px;
+    }
+
+    .form-control {
+        background: #fff;
         color: #1f2937;
         border: 1px solid #d1d5db;
         box-shadow: none;
     }
 
-        .form-control:focus,
-        .form-select:focus {
-            background: #ffffff;
+        .form-control:focus {
+            background: #fff;
             color: #1f2937;
             border-color: #3b82f6;
-            box-shadow: 0 0 0 0.15rem rgba(59,130,246,0.15);
+            box-shadow: 0 0 0 .15rem rgba(59,130,246,.15);
         }
 
-    textarea.form-control {
-        resize: vertical;
+    .normal-range {
+        background: #f1f5f9;
+        border-radius: 8px;
+        padding: 12px;
+        margin: 12px 0;
+        color: #475569;
+    }
+
+    .status-neutral {
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    .normal {
+        color: #198754;
+        font-weight: 700;
+    }
+
+    .abnormal {
+        color: #dc3545;
+        font-weight: 700;
+    }
+
+    .btn-dark-custom,
+    .btn-outline-custom {
+        border-radius: 12px;
+        padding: 10px 18px;
+        text-decoration: none;
+        display: inline-block;
+        transition: .2s ease;
+        cursor: pointer;
     }
 
     .btn-dark-custom {
         background: #0d6efd;
         border: 1px solid #0d6efd;
-        color: white !important;
-        border-radius: 12px;
-        padding: 10px 18px;
-        text-decoration: none;
-        transition: 0.2s ease;
-        display: inline-block;
+        color: #fff !important;
     }
 
         .btn-dark-custom:hover {
@@ -75,732 +123,281 @@
         }
 
     .btn-outline-custom {
-        background: white;
+        background: #fff;
         border: 1px solid #0d6efd;
         color: #0d6efd !important;
-        border-radius: 12px;
-        padding: 10px 18px;
-        text-decoration: none;
-        transition: 0.2s ease;
-        display: inline-block;
     }
 
         .btn-outline-custom:hover {
             background: #eef5ff;
         }
 
-    .abnormal {
+    .validation-summary-errors {
         color: #dc3545;
-        font-weight: bold;
     }
 
-    .status-badge {
-        display: inline-block;
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        margin-right: 6px;
-        margin-top: 5px;
-        font-weight: 600;
-    }
-
-    .badge-stat {
-        background: #f4a261;
-        color: black;
-    }
-
-    .badge-processing {
-        background: #dbeafe;
-        color: #1d4ed8;
-    }
-
-    .text-muted {
-        color: #6b7280 !important;
-    }
-
-    h1,
-    h4,
-    p,
-    strong,
-    label {
-        color: #1f2937;
-    }
-
-    label {
-        margin-bottom: 6px;
-    }
-
-    .patient-age-box {
-        background: #ffffff;
-        border: 1px solid #dbe3ec;
-        border-radius: 12px;
-        padding: 14px 16px;
-    }
-
-    .patient-age-label {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        font-weight: 700;
-        color: #64748b;
-        margin-bottom: 4px;
-    }
-
-    .patient-age-value {
-        font-size: 1rem;
-        font-weight: 600;
-        color: #1f2937;
-    }
-
-    .result-card {
-        background: #ffffff;
-        border: 1px solid #dbe3ec;
-        border-radius: 14px;
-        padding: 20px;
-        height: 100%;
-    }
-
-    .result-card-title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #1f2937;
-        margin-bottom: 15px;
-    }
-
-    .normal-range {
-        background: #f1f5f9;
-        border-radius: 8px;
-        padding: 9px 12px;
-        margin-top: 8px;
-        font-size: 0.82rem;
-        color: #475569;
-    }
-
-        .normal-range strong {
-            color: #334155;
+        .validation-summary-errors ul {
+            margin-bottom: 0;
         }
-
-    .technician-note {
-        margin-top: 15px;
-    }
-
-        .technician-note label {
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-    .assigned-test {
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        color: #1e40af;
-        border-radius: 10px;
-        padding: 12px 15px;
-        margin-top: 15px;
-    }
-
-    .locked-test {
-        background: #f1f5f9;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 12px 15px;
-        color: #64748b;
-        font-size: 0.85rem;
-    }
-
-    .normal {
-        color: #198754;
-        font-weight: bold;
-    }
-
-    .abnormal {
-        color: #dc3545;
-        font-weight: bold;
-    }
-
-    .status-neutral {
-        color: #64748b;
-        font-weight: 600;
-    }
-
 </style>
 
-
-<!-- MAIN CONTENT -->
 <div class="main-content">
-
     <div class="page-container">
-
         <div class="card-dark">
 
-            <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
                 <div>
-
-                    <h1>
-                        Capture Results
-                    </h1>
-
-                    <p class="text-muted">
-                        Record the assigned laboratory test results and technician notes.
+                    <h1>Capture Selected Test Result</h1>
+                    <p class="text-muted mb-0">
+                        Enter and complete the result for the selected test type only.
                     </p>
-
                 </div>
-
-                <a asp-controller="Home"
-                   asp-action="LabTechnicianDashboard"
-                   class="btn-outline-custom">
-
-                    <i class="fa-solid fa-arrow-left"></i>
-                    Dashboard
-
-                </a>
-
-            </div>
-
-
-            <!-- Test Information -->
-            <div class="info-box">
-
-                <h4>
-                    REQ-2026-00124
-                </h4>
-
-                <div class="row g-3 mt-1">
-
-                    <div class="col-md-4">
-
-                        <div class="patient-age-box">
-
-                            <p class="mb-1">
-                                <strong>Patient:</strong>
-                            </p>
-
-                            <p>
-                                Baloyi, Thabo
-                            </p>
-                        </div>
-
-                    </div>
-
-                    <div class="col-md-4">
-
-                        <div class="patient-age-box">
-
-                            <p class="mb-1">
-                                <strong>Test Request:</strong>
-                            </p>
-
-                            <p>
-                                Full Blood Count + Differential
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                    <div class="col-md-4">
-
-                        <div class="patient-age-box">
-
-                            <div class="patient-age-label">
-                                Patient Age
-                            </div>
-
-                            <div class="patient-age-value">
-                                42 years
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <span class="status-badge badge-processing">
-                    In Progress
-                </span>
-
-                <span class="status-badge badge-stat">
-                    STAT
-                </span>
-
-                <div class="assigned-test">
-
-                    <i class="fa-solid fa-flask me-2"></i>
-
-                    <strong>Assigned Test Type:</strong>
-                    Haematology / Full Blood Count
-
-                    <div class="mt-1">
-                        This technician may capture results only for the test type assigned to them.
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- Clinical Information -->
-            <div class="info-box">
-
-                <h4 class="section-title">
-                    Clinical Information
-                </h4>
-
-                <div class="row g-3">
-
-                    <div class="col-md-4">
-
-                        <strong>Medical Conditions</strong>
-
-                        <p class="mt-1">
-                            Hypertension
-                        </p>
-
-                    </div>
-
-                    <div class="col-md-4">
-
-                        <strong>Allergies</strong>
-
-                        <p class="mt-1">
-                            Penicillin
-                        </p>
-
-                    </div>
-
-                    <div class="col-md-4">
-
-                        <strong>Medication</strong>
-
-                        <p class="mt-1">
-                            Amlodipine
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <div class="mt-3">
-
-                    <strong>Clinical Notes from Doctor</strong>
-
-                    <p class="mt-1">
-                        Rule out severe infection.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <!-- Result Entry -->
-            <div class="info-box">
-
-                <h4 class="section-title">
-                    Result Values
-                </h4>
-
-                <p class="text-muted mb-4">
-                    Enter the result for each assigned test. The result status will be evaluated automatically against the normal range.
-                </p>
-
-                <div class="row g-3">
-
-                    <!-- HAEMOGLOBIN -->
-                    <div class="col-md-4">
-
-                        <div class="result-card">
-
-                            <div class="result-card-title">
-                                Haemoglobin
-                            </div>
-
-                            <label class="form-label">
-                                Result
-                            </label>
-
-                            <input type="number"
-                                   step="0.1"
-                                   class="form-control result-input"
-                                   asp-for="Haemoglobin"
-                                   placeholder="Enter result"
-                                   data-test="haemoglobin"
-                                   data-min="12.0"
-                                   data-max="16.0" />
-
-                            <div class="normal-range">
-
-                                <strong>Normal Range:</strong>
-                                12.0 – 16.0 g/dL
-
-                            </div>
-
-                            <small id="haemoglobin-status"
-                                   class="d-block mt-2 status-neutral">
-
-                                Enter a result to evaluate
-
-                            </small>
-
-
-                            <div class="technician-note">
-
-                                <label>
-                                    Technician Notes
-                                </label>
-
-                                <textarea class="form-control"
-                                          asp-for="HaemoglobinNotes"
-                                          rows="4"
-                                          placeholder="Enter notes for Haemoglobin..."></textarea>
-
-                            </div>
-
-                            <div class="mt-2">
-                                <button type="button"
-                                        class="btn-outline-custom note-save-btn"
-                                        onclick="saveNote(this)">
-                                    <i class="fa-solid fa-floppy-disk"></i>
-                                    Save
-                                </button>
-
-                                <button type="button"
-                                        class="btn-outline-custom note-edit-btn"
-                                        onclick="editNote(this)"
-                                        style="display:none;">
-                                    <i class="fa-solid fa-pen"></i>
-                                    Edit
-                                </button>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- WHITE CELL COUNT -->
-                    <div class="col-md-4">
-
-                        <div class="result-card">
-
-                            <div class="result-card-title">
-                                White Cell Count (WCC)
-                            </div>
-
-                            <label class="form-label">
-                                Result
-                            </label>
-
-                            <input type="number"
-                                   step="0.1"
-                                   class="form-control result-input"
-                                   asp-for="Wcc"
-                                   placeholder="Enter result"
-                                   data-test="wcc"
-                                   data-min="4.0"
-                                   data-max="11.0" />
-
-                            <div class="normal-range">
-
-                                <strong>Normal Range:</strong>
-                                4.0 – 11.0 x10⁹/L
-
-                            </div>
-
-                            <small id="wcc-status"
-                                   class="d-block mt-2 status-neutral">
-
-                                Enter a result to evaluate
-
-                            </small>
-
-
-                            <div class="technician-note">
-
-                                <label>
-                                    Technician Notes
-                                </label>
-
-                                <textarea class="form-control"
-                                          asp-for="WccNotes"
-                                          rows="4"
-                                          placeholder="Enter notes for White Cell Count..."></textarea>
-
-                            </div>
-
-                            <div class="mt-2">
-                                <button type="button"
-                                        class="btn-outline-custom note-save-btn"
-                                        onclick="saveNote(this)">
-                                    <i class="fa-solid fa-floppy-disk"></i>
-                                    Save
-                                </button>
-
-                                <button type="button"
-                                        class="btn-outline-custom note-edit-btn"
-                                        onclick="editNote(this)"
-                                        style="display:none;">
-                                    <i class="fa-solid fa-pen"></i>
-                                    Edit
-                                </button>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- PLATELETS -->
-                    <div class="col-md-4">
-
-                        <div class="result-card">
-
-                            <div class="result-card-title">
-                                Platelets
-                            </div>
-
-                            <label class="form-label">
-                                Result
-                            </label>
-
-                            <input type="number"
-                                   step="1"
-                                   class="form-control result-input"
-                                   asp-for="Platelets"
-                                   placeholder="Enter result"
-                                   data-test="platelets"
-                                   data-min="150"
-                                   data-max="450" />
-
-                            <div class="normal-range">
-
-                                <strong>Normal Range:</strong>
-                                150 – 450 x10⁹/L
-
-                            </div>
-
-                            <small id="platelets-status"
-                                   class="d-block mt-2 status-neutral">
-
-                                Enter a result to evaluate
-
-                            </small>
-
-
-                            <div class="technician-note">
-
-                                <label>
-                                    Technician Notes
-                                </label>
-
-                                <textarea class="form-control"
-                                          asp-for="PlateletsNotes"
-                                          rows="4"
-                                          placeholder="Enter notes for Platelets..."></textarea>
-
-                            </div>
-
-                            <div class="mt-2">
-                                <button type="button"
-                                        class="btn-outline-custom note-save-btn"
-                                        onclick="saveNote(this)">
-                                    <i class="fa-solid fa-floppy-disk"></i>
-                                    Save
-                                </button>
-
-                                <button type="button"
-                                        class="btn-outline-custom note-edit-btn"
-                                        onclick="editNote(this)"
-                                        style="display:none;">
-                                    <i class="fa-solid fa-pen"></i>
-                                    Edit
-                                </button>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- Automatic Result Evaluation + Note Actions -->
-            <script>
-
-                document.querySelectorAll(".result-input").forEach(function (input) {
-
-                    input.addEventListener("input", function () {
-
-                        const value = parseFloat(this.value);
-
-                        const min = parseFloat(this.dataset.min);
-                        const max = parseFloat(this.dataset.max);
-
-                        const test = this.dataset.test;
-
-                        const statusElement =
-                            document.getElementById(test + "-status");
-
-
-                        // Empty input
-                        if (this.value === "" || isNaN(value)) {
-
-                            statusElement.textContent =
-                                "Enter a result to evaluate";
-
-                            statusElement.className =
-                                "d-block mt-2 status-neutral";
-
-                            return;
-                        }
-
-
-                        // Below normal range
-                        if (value < min) {
-
-                            statusElement.textContent =
-                                "Abnormally Low";
-
-                            statusElement.className =
-                                "d-block mt-2 abnormal";
-
-                            return;
-                        }
-
-
-                        // Above normal range
-                        if (value > max) {
-
-                            statusElement.textContent =
-                                "Abnormally High";
-
-                            statusElement.className =
-                                "d-block mt-2 abnormal";
-
-                            return;
-                        }
-
-
-                        // Within normal range
-                        statusElement.textContent =
-                            "Within Normal Range";
-
-                        statusElement.className =
-                            "d-block mt-2 normal";
-
-                    });
-
-                });
-
-
-                // Save technician note
-                function saveNote(button) {
-
-                    const container = button.closest(".technician-note");
-                    const textarea = container.querySelector("textarea");
-
-                    if (!textarea.value.trim()) {
-
-                        alert("Please enter a technician note before saving.");
-                        return;
-
-                    }
-
-                    textarea.readOnly = true;
-
-                    button.style.display = "none";
-
-                    container.querySelector(".note-edit-btn").style.display =
-                        "inline-block";
-
-                    alert("Technician note saved.");
-
-                }
-
-
-                // Edit technician note
-                function editNote(button) {
-
-                    const container = button.closest(".technician-note");
-                    const textarea = container.querySelector("textarea");
-
-                    textarea.readOnly = false;
-
-                    textarea.focus();
-
-                    button.style.display = "none";
-
-                    container.querySelector(".note-save-btn").style.display =
-                        "inline-block";
-
-                }
-
-
-                // Flag abnormal result
-                function flagAbnormalResult() {
-
-                    alert("Abnormal results flagged");
-
-                }
-
-            </script>
-
-
-            <!-- Test Assignment Reminder -->
-            <div class="info-box">
-
-                <h4 class="section-title">
-                    Test Assignment
-                </h4>
-
-                <div class="locked-test">
-
-                    <i class="fa-solid fa-lock me-2"></i>
-
-                    This screen represents the assigned test for the current laboratory technician.
-                    Other test types on the same request should remain unavailable for editing.
-
-                </div>
-
-            </div>
-
-
-            <!-- Actions -->
-            <div class="mt-4">
 
                 <a asp-controller="LabTechnician"
-                   asp-action="VerificationQueue"
-                   class="btn-dark-custom me-2">
-
-                    <i class="fa-solid fa-check"></i>
-                    Save & Complete Test
-
-                </a>
-
-                <button type="button"
-                        class="btn-dark-custom me-2"
-                        onclick="flagAbnormalResult()">
-
-                    <i class="fa-solid fa-flag"></i>
-                    Flag Abnormal Result
-
-                </button>
-
-                <a asp-controller="LabTechnician"
-                   asp-action="TestDetail"
+                   asp-action="AssignedTests"
                    class="btn-outline-custom">
-
-                    View Test Detail
-
+                    <i class="fa-solid fa-arrow-left me-1"></i>
+                    Back to Assign Test
                 </a>
-
             </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+            <div class="alert alert-success" role="alert">
+                @TempData["SuccessMessage"]
+            </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+            <div class="alert alert-danger" role="alert">
+                @TempData["ErrorMessage"]
+            </div>
+            }
+
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <div class="info-box">
+                <h4 class="mb-3">Patient and Request Information</h4>
+
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="patient-info">
+                            <div class="info-label">Patient</div>
+                            <div class="info-value">
+                                @(string.IsNullOrWhiteSpace(Model.PatientName)
+                                    ? "Not available"
+                                    : Model.PatientName)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4">
+                        <div class="patient-info">
+                            <div class="info-label">Registration / ID Number</div>
+                            <div class="info-value">
+                                @(string.IsNullOrWhiteSpace(Model.RegistrationNumber)
+                                    ? "Not available"
+                                    : Model.RegistrationNumber)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4">
+                        <div class="patient-info">
+                            <div class="info-label">Request Number</div>
+                            <div class="info-value">
+                                @(string.IsNullOrWhiteSpace(Model.RequestNumber)
+                                    ? Model.TestRequestID.ToString()
+                                    : Model.RequestNumber)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4">
+                        <div class="patient-info">
+                            <div class="info-label">Barcode</div>
+                            <div class="info-value">
+                                @(string.IsNullOrWhiteSpace(Model.Barcode)
+                                    ? "Not available"
+                                    : Model.Barcode)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4">
+                        <div class="patient-info">
+                            <div class="info-label">Test Type</div>
+                            <div class="info-value">@Model.TestName</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4">
+                        <div class="patient-info">
+                            <div class="info-label">Current Status</div>
+                            <div class="info-value">
+                                @(Model.IsCompleted ? "Completed" : Model.Status)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.IsCompleted)
+            {
+            <div class="alert alert-success">
+                <i class="fa-solid fa-circle-check me-2"></i>
+                This test has already been completed.
+            </div>
+            }
+            else
+            {
+            <form asp-controller="LabTechnician"
+                  asp-action="CaptureResults"
+                  method="post"
+                  id="captureResultForm">
+
+                @Html.AntiForgeryToken()
+
+                <input asp-for="SampleReceiptID" type="hidden" />
+                <input asp-for="TestRequestID" type="hidden" />
+                <input asp-for="TestTypeID" type="hidden" />
+
+                <div class="info-box">
+                    <h4 class="mb-3">Result Entry</h4>
+
+                    <div class="normal-range">
+                        <strong>Normal Range:</strong>
+
+                        @if (minRange.HasValue && maxRange.HasValue)
+                            {
+                        <span>
+                            @minRange.Value.ToString("0.##")
+                            – @maxRange.Value.ToString("0.##")
+                            @if (!string.IsNullOrWhiteSpace(Model.Units))
+                                    {
+                            <span>@Model.Units</span>
+                                    }
+                        </span>
+                            }
+                            else
+                            {
+                        <span>Not configured for this test type.</span>
+                            }
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ResultValue" class="form-label">
+                            Result Value <span class="text-danger">*</span>
+                        </label>
+
+                        <input asp-for="ResultValue"
+                               id="resultValue"
+                               class="form-control"
+                               type="text"
+                               inputmode="decimal"
+                               autocomplete="off"
+                               placeholder="Enter the measured result"
+                               required />
+
+                        <span asp-validation-for="ResultValue"
+                              class="text-danger"></span>
+
+                        <small id="resultStatus"
+                               class="d-block mt-2 status-neutral"
+                               aria-live="polite">
+                            Enter a result to evaluate it against the normal range.
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="TechnicianNotes" class="form-label">
+                            Technician Notes
+                        </label>
+
+                        <textarea asp-for="TechnicianNotes"
+                                  class="form-control"
+                                  rows="4"
+                                  placeholder="Enter any relevant observations"></textarea>
+
+                        <span asp-validation-for="TechnicianNotes"
+                              class="text-danger"></span>
+
+                        <small class="text-muted d-block mt-1">
+                            These notes are saved with the result and can be viewed in Verification History.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <button type="submit" class="btn-dark-custom">
+                        <i class="fa-solid fa-check me-1"></i>
+                        Save &amp; Complete Test
+                    </button>
+
+                    <a asp-controller="LabTechnician"
+                       asp-action="AssignedTests"
+                       class="btn-outline-custom">
+                        Back to Assign Test
+                    </a>
+                </div>
+            </form>
+            }
 
         </div>
-
     </div>
-
 </div>
+
+<script>
+    (function () {
+        const resultInput = document.getElementById("resultValue");
+        const statusElement = document.getElementById("resultStatus");
+
+        if (!resultInput || !statusElement) {
+            return;
+        }
+
+        const min = @Html.Raw(minRange.HasValue
+            ? minRange.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            : "null");
+
+        const max = @Html.Raw(maxRange.HasValue
+            ? maxRange.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            : "null");
+
+        function evaluateResult() {
+            const rawValue = resultInput.value.trim();
+            const value = Number(rawValue);
+
+            if (rawValue === "" || !Number.isFinite(value)) {
+                statusElement.textContent = "Enter a valid numeric result.";
+                statusElement.className = "d-block mt-2 status-neutral";
+                return;
+            }
+
+            if (min === null || max === null) {
+                statusElement.textContent =
+                    "Normal range is not configured. The result requires review.";
+                statusElement.className = "d-block mt-2 status-neutral";
+                return;
+            }
+
+            if (value < min) {
+                statusElement.textContent = "Abnormally Low";
+                statusElement.className = "d-block mt-2 abnormal";
+            } else if (value > max) {
+                statusElement.textContent = "Abnormally High";
+                statusElement.className = "d-block mt-2 abnormal";
+            } else {
+                statusElement.textContent = "Within Normal Range";
+                statusElement.className = "d-block mt-2 normal";
+            }
+        }
+
+        resultInput.addEventListener("input", evaluateResult);
+
+        if (resultInput.value.trim() !== "") {
+            evaluateResult();
+        }
+    })();
+</script>

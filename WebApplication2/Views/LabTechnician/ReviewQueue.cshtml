@@ -1,875 +1,243 @@
-﻿@{
+﻿@model IEnumerable<WebApplication2.Models.VerificationQueueItemViewModel>
+
+    @{
     Layout = "~/Views/Shared/_LabTechLayout.cshtml";
     ViewData["Title"] = "Review Queue";
-}
 
-<link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
-<link href="~/css/dashboardstyles.css" rel="stylesheet" />
-
-<style>
-
-    .page-container {
-        padding: 0;
+    var allItems = (Model ?? Enumerable.Empty<WebApplication2.Models.VerificationQueueItemViewModel>())
+        .GroupBy(x => new { x.TestRequestID, x.TestTypeID })
+        .Select(g => g.OrderByDescending(x => x.TestResultID).First())
+        .Where(x =>
+            string.Equals(x.LatestVerificationDecision, "Returned", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(x.LatestVerificationDecision, "Return", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(x.LatestVerificationDecision, "Rejected", StringComparison.OrdinalIgnoreCase))
+        .OrderByDescending(x => x.LatestVerificationDateTime ?? x.CompletionDateTime)
+        .ToList();
     }
 
-    .card-dark {
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 30px;
-        border: 1px solid #dbe3ec;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
+    <link href="~/css/dashboardstyles.css" rel="stylesheet" />
 
-    .review-card {
-        background: #f8fafc;
-        border-radius: 16px;
-        padding: 22px;
-        margin-bottom: 20px;
-        border-left: 4px solid #dc3545;
-        border-top: 1px solid #e2e8f0;
-        border-right: 1px solid #e2e8f0;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    .status-badge {
-        display: inline-block;
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        margin-right: 6px;
-        margin-top: 5px;
-        font-weight: 600;
-    }
-
-    .badge-review {
-        background: #dc3545;
-        color: white;
-    }
-
-    .badge-stat {
-        background: #f4a261;
-        color: black;
-    }
-
-    .badge-returned {
-        background: #e5e7eb;
-        color: #374151;
-    }
-
-    .badge-resubmitted {
-        background: #dbeafe;
-        color: #1d4ed8;
-    }
-
-    .filter-box,
-    .form-control,
-    .form-select {
-        background: #ffffff;
-        color: #1f2937;
-        border: 1px solid #d1d5db;
-    }
-
-    .details-panel {
-        display: none;
-        margin-top: 20px;
-    }
-
-    .details-section {
-        background: #ffffff;
-        border: 1px solid #dbe3ec;
-        border-radius: 12px;
-        padding: 18px;
-        margin-bottom: 15px;
-    }
-
-    .result-row {
-        padding: 12px 0;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-        .result-row:last-child {
-            border-bottom: none;
+    <style>
+        .review-container {
+            background: #fff;
+            border: 1px solid #dbe3ec;
+            border-radius: 18px;
+            padding: 28px;
         }
 
-    .result-name {
-        font-weight: 700;
-        color: #1f2937;
-    }
-
-    .result-value {
-        font-weight: 600;
-        color: #374151;
-    }
-
-    .normal-range {
-        font-size: 0.82rem;
-        color: #64748b;
-    }
-
-    .technician-note {
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        border-radius: 9px;
-        padding: 10px 12px;
-        color: #1e3a8a;
-        font-size: 0.84rem;
-    }
-
-    .history-item {
-        position: relative;
-        padding: 0 0 18px 25px;
-        border-left: 2px solid #cbd5e1;
-        margin-left: 8px;
-    }
-
-        .history-item:last-child {
-            border-left: none;
-            padding-bottom: 0;
+        .review-card {
+            border: 1px solid #dbe3ec;
+            border-left: 4px solid #dc3545;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            background: #f8fafc;
         }
 
-    .history-dot {
-        position: absolute;
-        left: -7px;
-        top: 0;
-        width: 12px;
-        height: 12px;
-        background: #0d6efd;
-        border-radius: 50%;
-    }
-
-    .history-title {
-        font-weight: 700;
-        color: #1f2937;
-    }
-
-    .history-meta {
-        font-size: 0.8rem;
-        color: #64748b;
-        margin-top: 3px;
-    }
-
-    .btn-dark-custom {
-        background: #0d6efd;
-        border: 1px solid #0d6efd;
-        color: white !important;
-        border-radius: 12px;
-        padding: 10px 18px;
-        text-decoration: none;
-        transition: 0.2s ease;
-        display: inline-block;
-    }
-
-        .btn-dark-custom:hover {
-            background: #0b5ed7;
-            border-color: #0b5ed7;
+        .review-badge {
+            display: inline-block;
+            padding: 5px 11px;
+            border-radius: 20px;
+            background: #fee2e2;
+            color: #991b1b;
+            font-size: .8rem;
+            font-weight: 700;
         }
 
-    .btn-outline-custom {
-        background: white;
-        border: 1px solid #0d6efd;
-        color: #0d6efd !important;
-        border-radius: 12px;
-        padding: 10px 18px;
-        text-decoration: none;
-        transition: 0.2s ease;
-        display: inline-block;
-    }
-
-        .btn-outline-custom:hover {
-            background: #eff6ff;
+        .detail-label {
+            display: block;
+            color: #64748b;
+            font-size: .82rem;
+            margin-bottom: 3px;
         }
 
-    h1,
-    h4,
-    h5,
-    p,
-    strong {
-        color: #1f2937;
-    }
+        .detail-value {
+            color: #1f2937;
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
 
-    .text-muted {
-        color: #6b7280 !important;
-    }
-</style>
+        .return-reason {
+            border: 1px solid #fed7aa;
+            background: #fff7ed;
+            color: #9a3412;
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-top: 16px;
+        }
 
+        .legacy-warning {
+            border: 1px solid #fca5a5;
+            background: #fef2f2;
+            color: #991b1b;
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-top: 16px;
+        }
 
-<div class="main-content">
+        .empty-state {
+            text-align: center;
+            padding: 55px 20px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 14px;
+            background: #f8fafc;
+        }
 
-    <div class="page-container">
+        .btn-review {
+            display: inline-block;
+            padding: 9px 15px;
+            background: #0d6efd;
+            color: #fff !important;
+            text-decoration: none;
+            border-radius: 9px;
+            font-weight: 600;
+        }
 
-        <div class="card-dark">
+            .btn-review:hover {
+                background: #0b5ed7;
+            }
 
-            <!-- HEADER -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
+        .btn-back {
+            display: inline-block;
+            padding: 9px 15px;
+            border: 1px solid #cbd5e1;
+            color: #334155 !important;
+            text-decoration: none;
+            border-radius: 9px;
+        }
+    </style>
 
-                <div>
-
-                    <h1>
-                        Review Queue
-                    </h1>
-
-                    <p class="text-muted">
-                        Results returned after verification requiring technician review.
-                    </p>
-
+    <div class="main-content">
+        <div class="container-fluid py-4">
+            <div class="review-container">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                    <div>
+                        <h1 class="mb-2">Review Queue</h1>
+                        <p class="text-muted mb-0">Tests returned for correction or recapture. A test disappears here after a newer result is captured; its history remains available in Verification Queue.</p>
+                    </div>
+                    <a asp-controller="LabTechnician" asp-action="Dashboard" class="btn-back">← Dashboard</a>
                 </div>
 
-                <a asp-controller="Home"
-                   asp-action="LabTechnicianDashboard"
-                   class="btn-dark-custom">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                    <div>
+                        <span class="text-muted">Tests requiring recapture</span>
+                        <h4 class="mb-0">@allItems.Count</h4>
+                    </div>
+                    <input id="reviewSearch" type="search" class="form-control" style="max-width:340px;" placeholder="Search patient, request, barcode or test..." aria-label="Search review queue" />
+                </div>
 
-                    ← Dashboard
+                @if (allItems.Count == 0)
+            {
+                <div class="empty-state">
+                    <h4>No tests awaiting recapture</h4>
+                    <p class="text-muted mb-0">Returned or rejected tests will appear here until a new result has been captured.</p>
+                </div>
+            }
+            else
+            {
+                <div id="reviewList">
+                    @foreach (var item in allItems)
+                    {
+                        var searchText = string.Join(" ", new[] { item.RequestNumber ?? "", item.Barcode ?? "", item.PatientName ?? "", item.PatientNumber ?? "", item.TestName ?? "" });
+                    <article class="review-card" data-search="@searchText.ToLowerInvariant()">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                            <div>
+                                <span class="review-badge">@item.LatestVerificationDecision</span>
+                                <h4 class="mt-3 mb-3">@(string.IsNullOrWhiteSpace(item.TestName) ? "Unnamed test" : item.TestName)</h4>
+                            </div>
+                            <div class="text-md-end">
+                                <span class="detail-label">Request</span>
+                                <span class="detail-value">@(string.IsNullOrWhiteSpace(item.RequestNumber) ? $"Request #{item.TestRequestID}" : item.RequestNumber)</span>
+                            </div>
+                        </div>
 
-                </a>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <span class="detail-label">Patient</span>
+                                <div class="detail-value">@(string.IsNullOrWhiteSpace(item.PatientName) ? "Not available" : item.PatientName)</div>
+                                <small class="text-muted">Patient number: @(string.IsNullOrWhiteSpace(item.PatientNumber) ? "Not available" : item.PatientNumber)</small>
+                            </div>
+                            <div class="col-md-4">
+                                <span class="detail-label">Barcode</span>
+                                <div class="detail-value">@(string.IsNullOrWhiteSpace(item.Barcode) ? "Not available" : item.Barcode)</div>
+                            </div>
+                            <div class="col-md-4">
+                                <span class="detail-label">Decision recorded</span>
+                                <div class="detail-value">@(item.LatestVerificationDateTime?.ToString("dd MMM yyyy HH:mm") ?? "Not available")</div>
+                            </div>
+                            <div class="col-md-4">
+                                <span class="detail-label">Current result</span>
+                                <div class="detail-value">
+                                    @(string.IsNullOrWhiteSpace(item.Result) ? "No result available" : item.Result)
+                                    @if (!string.IsNullOrWhiteSpace(item.Units)) { <span> @item.Units</span> }
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <span class="detail-label">Reference range</span>
+                                <div class="detail-value">
+                                    @if (item.NormalRangeMin.HasValue || item.NormalRangeMax.HasValue)
+                                        {
+                                    <span>@(item.NormalRangeMin?.ToString() ?? "—") – @(item.NormalRangeMax?.ToString() ?? "—") @item.Units</span>
+                                        }
+                                        else { <span>Not available</span> }
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <span class="detail-label">Result status</span>
+                                <div class="detail-value">@(string.IsNullOrWhiteSpace(item.ResultStatus) ? "Not available" : item.ResultStatus) @if (item.IsAbnormal) { <span class="text-danger">(Abnormal)</span> }</div>
+                            </div>
+                        </div>
 
+                        @if (!string.IsNullOrWhiteSpace(item.LatestVerificationReason))
+                            {
+                        <div class="return-reason">
+                            <strong>Reason for @((item.LatestVerificationDecision ?? "").Equals("Rejected", StringComparison.OrdinalIgnoreCase) ? "rejection" : "return")</strong>
+                            <p class="mb-0 mt-1">@item.LatestVerificationReason</p>
+                        </div>
+                            }
+                            else
+                            {
+                        <div class="legacy-warning">
+                            <strong>Missing reason on an older decision</strong>
+                            <p class="mb-0 mt-1">This historical decision has no reason saved. New return decisions require a reason before they can be saved.</p>
+                        </div>
+                            }
+
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
+                            <small class="text-muted">Result completed: @(item.CompletionDateTime?.ToString("dd MMM yyyy HH:mm") ?? "Not available")</small>
+                            <a asp-controller="LabTechnician" asp-action="CaptureResults" asp-route-sampleReceiptId="@item.SampleReceiptID" asp-route-testTypeId="@item.TestTypeID" class="btn-review">
+                                <i class="fa-solid fa-rotate me-1"></i> Recapture this test
+                            </a>
+                        </div>
+                    </article>
+                    }
+                </div>
+                <div id="noSearchResults" class="empty-state" style="display:none;">
+                    <h5>No matching tests</h5>
+                    <p class="text-muted mb-0">Try a different patient, request number, barcode or test name.</p>
+                </div>
+            }
             </div>
-
-
-            <!-- FILTERS -->
-            <div class="row g-3 mb-4">
-
-                <div class="col-md-4">
-
-                    <input class="form-control filter-box"
-                           placeholder="Search request number..." />
-
-                </div>
-
-                <div class="col-md-4">
-
-                    <select class="form-select filter-box">
-
-                        <option>All Priorities</option>
-                        <option>STAT</option>
-                        <option>Routine</option>
-
-                    </select>
-
-                </div>
-
-                <div class="col-md-4">
-
-                    <select class="form-select filter-box">
-
-                        <option>All Review Statuses</option>
-                        <option>To Be Reviewed</option>
-                        <option>Returned For Correction</option>
-                        <option>Resubmitted</option>
-
-                    </select>
-
-                </div>
-
-            </div>
-
-
-            <!-- REVIEW CARD 1 -->
-            <div class="review-card">
-
-                <div class="d-flex justify-content-between align-items-start">
-
-                    <div>
-
-                        <h4>
-                            REQ-2026-00124
-                        </h4>
-
-                        <p class="mb-2">
-
-                            <strong>Patient:</strong>
-                            Baloyi, Thabo
-
-                        </p>
-
-                        <p class="mb-2">
-
-                            <strong>Test:</strong>
-                            Full Blood Count + Differential
-
-                        </p>
-
-                        <p class="mb-2">
-
-                            <strong>Technician:</strong>
-                            Technician A. Smith
-
-                        </p>
-
-                        <span class="status-badge badge-review">
-                            To Be Reviewed
-                        </span>
-
-                        <span class="status-badge badge-stat">
-                            STAT
-                        </span>
-
-                        <span class="status-badge badge-returned">
-                            Returned For Correction
-                        </span>
-
-                    </div>
-
-                    <div>
-
-                        <button type="button"
-                                class="btn-outline-custom"
-                                onclick="toggleReview('review1', this)">
-
-                            <i class="fa-solid fa-chevron-down"></i>
-                            View More
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-
-                <!-- EXPANDED DETAILS -->
-                <div id="review1"
-                     class="details-panel">
-
-                    <!-- ORIGINAL RESULTS -->
-                    <div class="details-section">
-
-                        <h5>
-                            Original Results
-                        </h5>
-
-                        <div class="result-row">
-
-                            <div class="row">
-
-                                <div class="col-md-3">
-
-                                    <div class="result-name">
-                                        Haemoglobin
-                                    </div>
-
-                                    <div class="result-value">
-                                        8.7 g/dL
-                                    </div>
-
-                                </div>
-
-                                <div class="col-md-3">
-
-                                    <div class="normal-range">
-                                        Normal: 12.0 – 16.0 g/dL
-                                    </div>
-
-                                </div>
-
-                                <div class="col-md-6">
-
-                                    <div class="technician-note">
-
-                                        <strong>
-                                            Technician Notes:
-                                        </strong>
-
-                                        Low haemoglobin observed.
-                                        Sample processed without issues.
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="result-row">
-
-                            <div class="row">
-
-                                <div class="col-md-3">
-
-                                    <div class="result-name">
-                                        White Cell Count
-                                    </div>
-
-                                    <div class="result-value">
-                                        14.2 x10⁹/L
-                                    </div>
-
-                                </div>
-
-                                <div class="col-md-3">
-
-                                    <div class="normal-range">
-                                        Normal: 4.0 – 11.0 x10⁹/L
-                                    </div>
-
-                                </div>
-
-                                <div class="col-md-6">
-
-                                    <div class="technician-note">
-
-                                        <strong>
-                                            Technician Notes:
-                                        </strong>
-
-                                        Elevated WCC recorded.
-                                        Result checked against analyser output.
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="result-row">
-
-                            <div class="row">
-
-                                <div class="col-md-3">
-
-                                    <div class="result-name">
-                                        Platelets
-                                    </div>
-
-                                    <div class="result-value">
-                                        455 x10⁹/L
-                                    </div>
-
-                                </div>
-
-                                <div class="col-md-3">
-
-                                    <div class="normal-range">
-                                        Normal: 150 – 450 x10⁹/L
-                                    </div>
-
-                                </div>
-
-                                <div class="col-md-6">
-
-                                    <div class="technician-note">
-
-                                        <strong>
-                                            Technician Notes:
-                                        </strong>
-
-                                        Platelet count slightly above expected range.
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- VERIFIER NOTES -->
-                    <div class="details-section">
-
-                        <h5>
-                            Notes From Verifying Technician
-                        </h5>
-
-                        <p>
-
-                            White Cell Count appears inconsistent with previous
-                            patient history. Please confirm values.
-
-                        </p>
-
-                        <small class="text-muted">
-
-                            Verified by Technician M. Jacobs
-
-                        </small>
-
-                    </div>
-
-
-                    <!-- HISTORY -->
-                    <div class="details-section">
-
-                        <h5>
-                            Verification History
-                        </h5>
-
-                        <div class="history-item">
-
-                            <div class="history-dot"></div>
-
-                            <div class="history-title">
-                                Results Captured
-                            </div>
-
-                            <div class="history-meta">
-                                Technician A. Smith • 20 Aug 2026 • 09:42
-                            </div>
-
-                            <p class="mb-0 mt-2">
-                                Original test results captured and submitted for verification.
-                            </p>
-
-                        </div>
-
-
-                        <div class="history-item">
-
-                            <div class="history-dot"></div>
-
-                            <div class="history-title">
-                                Submitted For Verification
-                            </div>
-
-                            <div class="history-meta">
-                                Technician A. Smith • 20 Aug 2026 • 10:05
-                            </div>
-
-                            <p class="mb-0 mt-2">
-                                Results submitted to the verification queue.
-                            </p>
-
-                        </div>
-
-
-                        <div class="history-item">
-
-                            <div class="history-dot"></div>
-
-                            <div class="history-title">
-                                Verification Rejected
-                            </div>
-
-                            <div class="history-meta">
-                                Technician M. Jacobs • 20 Aug 2026 • 10:18
-                            </div>
-
-                            <p class="mb-0 mt-2">
-                                White Cell Count requires confirmation.
-                            </p>
-
-                        </div>
-
-
-                        <div class="history-item">
-
-                            <div class="history-dot"></div>
-
-                            <div class="history-title">
-                                Returned To Technician
-                            </div>
-
-                            <div class="history-meta">
-                                System • 20 Aug 2026 • 10:19
-                            </div>
-
-                            <p class="mb-0 mt-2">
-                                Results returned for correction and recapture.
-                            </p>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- ACTIONS -->
-                    <div>
-
-                        <a asp-controller="LabTechnician"
-                           asp-action="CaptureResults"
-                           class="btn-dark-custom me-2">
-
-                            <i class="fa-solid fa-rotate"></i>
-                            Recapture Results
-
-                        </a>
-
-                       <!-- <a asp-controller="LabTechnician"
-                           asp-action="TestDetail"
-                           class="btn-outline-custom">
-
-                            View Sample Info
-
-                        </a> -->
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- REVIEW CARD 2 -->
-            <div class="review-card">
-
-                <div class="d-flex justify-content-between align-items-start">
-
-                    <div>
-
-                        <h4>
-                            REQ-2026-00131
-                        </h4>
-
-                        <p class="mb-2">
-
-                            <strong>Patient:</strong>
-                            Hendricks, Ayesha
-
-                        </p>
-
-                        <p class="mb-2">
-
-                            <strong>Test:</strong>
-                            PT / INR
-
-                        </p>
-
-                        <p class="mb-2">
-
-                            <strong>Technician:</strong>
-                            Technician M. Jacobs
-
-                        </p>
-
-                        <span class="status-badge badge-review">
-                            To Be Reviewed
-                        </span>
-
-                        <span class="status-badge badge-resubmitted">
-                            Resubmitted
-                        </span>
-
-                    </div>
-
-                    <div>
-
-                        <button type="button"
-                                class="btn-outline-custom"
-                                onclick="toggleReview('review2', this)">
-
-                            <i class="fa-solid fa-chevron-down"></i>
-                            View More
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-
-                <div id="review2"
-                     class="details-panel">
-
-                    <div class="details-section">
-
-                        <h5>
-                            Original Results
-                        </h5>
-
-                        <div class="result-row">
-
-                            <div class="row">
-
-                                <div class="col-md-3">
-
-                                    <div class="result-name">
-                                        PT
-                                    </div>
-
-                                    <div class="result-value">
-                                        15.8 seconds
-                                    </div>
-
-                                </div>
-
-                                <div class="col-md-3">
-
-                                    <div class="normal-range">
-                                        Normal: 11.0 – 14.5 seconds
-                                    </div>
-
-                                </div>
-
-                                <div class="col-md-6">
-
-                                    <div class="technician-note">
-
-                                        <strong>
-                                            Technician Notes:
-                                        </strong>
-
-                                        PT result slightly elevated.
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div class="result-row">
-
-                            <div class="row">
-
-                                <div class="col-md-3">
-
-                                    <div class="result-name">
-                                        INR
-                                    </div>
-
-                                    <div class="result-value">
-                                        1.4
-                                    </div>
-
-                                </div>
-
-                                <div class="col-md-3">
-
-                                    <div class="normal-range">
-                                        Normal: 0.8 – 1.2
-                                    </div>
-
-                                </div>
-
-                                <div class="col-md-6">
-
-                                    <div class="technician-note">
-
-                                        <strong>
-                                            Technician Notes:
-                                        </strong>
-
-                                        INR above expected range.
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="details-section">
-
-                        <h5>
-                            Notes From Verifying Technician
-                        </h5>
-
-                        <p>
-
-                            Please confirm the INR result before final verification.
-
-                        </p>
-
-                        <small class="text-muted">
-                            Verified by Technician M. Jacobs
-                        </small>
-
-                    </div>
-
-
-                    <div class="details-section">
-
-                        <h5>
-                            Verification History
-                        </h5>
-
-                        <div class="history-item">
-
-                            <div class="history-dot"></div>
-
-                            <div class="history-title">
-                                Results Captured
-                            </div>
-
-                            <div class="history-meta">
-                                Technician M. Jacobs • 21 Aug 2026 • 08:30
-                            </div>
-
-                        </div>
-
-                        <div class="history-item">
-
-                            <div class="history-dot"></div>
-
-                            <div class="history-title">
-                                Resubmitted
-                            </div>
-
-                            <div class="history-meta">
-                                Technician M. Jacobs • 21 Aug 2026 • 09:05
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div>
-
-                        <a asp-controller="LabTechnician"
-                           asp-action="CaptureResults"
-                           class="btn-dark-custom me-2">
-
-                            <i class="fa-solid fa-rotate"></i>
-                            Recapture Results
-
-                        </a>
-
-                        <!-- <a asp-controller="LabTechnician"
-                           asp-action="TestDetail"
-                           class="btn-outline-custom">
-
-                            View Sample Info
-
-                        </a> -->
-
-                    </div>
-
-                </div>
-
-            </div>
-
         </div>
-
     </div>
 
-</div>
-
-
-<script>
-
-    function toggleReview(id, button) {
-
-        const panel = document.getElementById(id);
-
-        if (panel.style.display === "block") {
-
-            panel.style.display = "none";
-
-            button.innerHTML =
-                '<i class="fa-solid fa-chevron-down"></i> View More';
-
-        } else {
-
-            panel.style.display = "block";
-
-            button.innerHTML =
-                '<i class="fa-solid fa-chevron-up"></i> View Less';
-
-        }
-
+    @section Scripts {
+        <script>
+            (() => {
+                const search = document.getElementById("reviewSearch");
+                if (!search) return;
+                search.addEventListener("input", () => {
+                    const query = search.value.trim().toLowerCase();
+                    const cards = Array.from(document.querySelectorAll(".review-card"));
+                    let visible = 0;
+                    cards.forEach(card => {
+                        const match = (card.dataset.search || "").includes(query);
+                        card.style.display = match ? "" : "none";
+                        if (match) visible++;
+                    });
+                    const noResults = document.getElementById("noSearchResults");
+                    if (noResults) noResults.style.display = cards.length > 0 && visible === 0 ? "block" : "none";
+                });
+            })();
+        </script>
     }
-
-</script>
