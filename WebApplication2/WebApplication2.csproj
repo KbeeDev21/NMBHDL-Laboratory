@@ -11,5 +11,9 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.13" />
   </ItemGroup>
-
+	
+	<ItemGroup>
+		<ProjectReference Include="..\NMBDHL.Auth\NMBDHL.Auth.csproj" />
+		<ProjectReference Include="..\NMBDHL.LabTechnician\NMBDHL.LabTechnician.csproj" />
+	</ItemGroup>
 </Project>

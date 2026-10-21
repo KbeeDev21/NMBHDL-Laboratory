@@ -1,12 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Dapper;
+﻿using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using NMBHDL.LabTechnician.Services;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Mail;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using WebApplication2.Models;
 using WebApplication2.Services;
 
@@ -68,16 +74,24 @@ namespace WebApplication2.Controllers
         private readonly LabTechnicianDataService _labTechnicianData;
         private readonly IConfiguration _configuration;
         private readonly IWebHostEnvironment _environment;
+        private readonly ILogger<LabTechnicianController> _logger;
+        private readonly LabTechEmailService _labTechEmailService;
+
 
         public LabTechnicianController(
             LabTechnicianDataService labTechnicianData,
             IConfiguration configuration,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            ILogger<LabTechnicianController> logger,
+            LabTechEmailService labTechEmailService)
         {
             _labTechnicianData = labTechnicianData;
             _configuration = configuration;
             _environment = environment;
+            _logger = logger;
+            _labTechEmailService = labTechEmailService;
         }
+
 
         // Dashboard
 
@@ -673,6 +687,199 @@ namespace WebApplication2.Controllers
                 return View(new List<LabEscalationViewModel>());
             }
         }
+
+
+        // Send an overdue-test notification to the doctor who requested the test.
+        // The browser posts identifiers only; all email content is loaded from the database.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> NotifyDoctor(
+            int testRequestId,
+            int sampleReceiptId,
+            int testTypeId,
+            CancellationToken cancellationToken)
+        {
+            if (testRequestId <= 0 || sampleReceiptId <= 0 || testTypeId <= 0)
+            {
+                TempData["ErrorMessage"] = "The selected request, sample, or test is invalid.";
+                return RedirectToAction(nameof(Escalations));
+            }
+
+            try
+            {
+                var connectionString = _configuration.GetConnectionString("DefaultConnection");
+                if (string.IsNullOrWhiteSpace(connectionString))
+                    throw new InvalidOperationException("The DefaultConnection connection string is missing.");
+
+                const string sql = """
+                    SELECT TOP (1)
+                        tr.TestRequestID,
+                        sr.SampleReceiptID,
+                        tt.TestTypeID,
+                        COALESCE(tt.TestName, '') AS TestName,
+                        COALESCE(tr.Urgency, '') AS Urgency,
+                        COALESCE(sr.Barcode, tr.Barcode, '') AS Barcode,
+                        LTRIM(RTRIM(CONCAT(pu.Surname, ', ', pu.Name))) AS PatientName,
+                        LTRIM(RTRIM(CONCAT(COALESCE(du.Surname, ''), ' ', COALESCE(du.Name, '')))) AS DoctorName,
+                        COALESCE(du.Email, '') AS DoctorEmail,
+                        sr.DateTimeReceived,
+                        COALESCE(tt.TurnAroundMinutes, 0) AS TurnAroundMinutes,
+                        DATEDIFF(MINUTE,
+                            DATEADD(MINUTE, tt.TurnAroundMinutes, sr.DateTimeReceived),
+                            GETDATE()) AS MinutesOverdue
+                    FROM dbo.TestRequest tr
+                    INNER JOIN dbo.SampleReceipt sr ON sr.TestRequestID = tr.TestRequestID
+                    INNER JOIN dbo.Patient p ON p.PatientID = tr.PatientID
+                    INNER JOIN dbo.[User] pu ON pu.UserID = p.UserID
+                    LEFT JOIN dbo.Doctor d ON d.DoctorID = tr.DoctorID
+                    LEFT JOIN dbo.[User] du ON du.UserID = d.UserID
+                    INNER JOIN dbo.TestType tt ON tt.TestTypeID = @TestTypeID
+                    WHERE tr.TestRequestID = @TestRequestID
+                      AND sr.SampleReceiptID = @SampleReceiptID
+                      AND EXISTS (
+                          SELECT 1
+                          FROM STRING_SPLIT(
+                              REPLACE(REPLACE(REPLACE(COALESCE(tr.Type, ''), ';', ','), '+', ','), CHAR(13), ','),
+                              ',') requested
+                          WHERE LTRIM(RTRIM(requested.value)) = LTRIM(RTRIM(tt.TestName))
+                      )
+                      AND sr.DateTimeReceived IS NOT NULL
+                      AND tt.TurnAroundMinutes > 0
+                      AND DATEADD(MINUTE, tt.TurnAroundMinutes, sr.DateTimeReceived) < GETDATE()
+                      AND COALESCE(tr.Status, '') NOT IN ('Cancelled', 'Canceled', 'Completed', 'Rejected');
+                    """;
+
+                await using var connection = new SqlConnection(connectionString);
+                var item = await connection.QuerySingleOrDefaultAsync<OverdueNotificationRow>(
+                    new CommandDefinition(sql, new
+                    {
+                        TestRequestID = testRequestId,
+                        SampleReceiptID = sampleReceiptId,
+                        TestTypeID = testTypeId
+                    }, cancellationToken: cancellationToken));
+
+                if (item == null)
+                {
+                    TempData["ErrorMessage"] = "That test is no longer overdue or could not be matched to this request. Refresh the page.";
+                    return RedirectToAction(nameof(Escalations));
+                }
+
+                if (string.IsNullOrWhiteSpace(item.DoctorEmail))
+                {
+                    TempData["ErrorMessage"] = "The requesting doctor's email address is not available.";
+                    return RedirectToAction(nameof(Escalations));
+                }
+
+                var subject = $"Overdue laboratory test — Request {item.TestRequestID}";
+                var body = $"""
+                    Dear {item.DoctorName},
+
+                    The following laboratory test has exceeded its turnaround time and requires your review.
+
+                    Patient: {item.PatientName}
+                    Test: {item.TestName}
+                    Request ID: {item.TestRequestID}
+                    Sample ID: {item.SampleReceiptID}
+                    Barcode: {item.Barcode}
+                    Urgency: {item.Urgency}
+                    Sample received: {item.DateTimeReceived:yyyy-MM-dd HH:mm}
+                    Turnaround time: {item.TurnAroundMinutes} minute(s)
+                    Minutes overdue: {item.MinutesOverdue}
+
+                    Please advise whether a new sample or repeat test is clinically required.
+                    The turnaround-time breach alone does not determine whether a repeat test is needed.
+
+                    Regards,
+                    Laboratory Team
+                    """;
+
+                var sent = await SendLabTechEmailAsync(item.DoctorEmail, subject, body, cancellationToken);
+                if (sent)
+                    TempData["SuccessMessage"] = $"Overdue-test notification sent to {item.DoctorEmail}.";
+                else
+                    TempData["ErrorMessage"] = "The email was not sent. Check LabTech email settings and application logs.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "NotifyDoctor failed for request {TestRequestId}, sample {SampleReceiptId}, test type {TestTypeId}.",
+                    testRequestId, sampleReceiptId, testTypeId);
+                TempData["ErrorMessage"] = "Could not send the overdue-test notification. Check the application logs.";
+            }
+
+            return RedirectToAction(nameof(Escalations));
+        }
+
+        private sealed class OverdueNotificationRow
+        {
+            public int TestRequestID { get; set; }
+            public int SampleReceiptID { get; set; }
+            public int TestTypeID { get; set; }
+            public string TestName { get; set; } = string.Empty;
+            public string Urgency { get; set; } = string.Empty;
+            public string Barcode { get; set; } = string.Empty;
+            public string PatientName { get; set; } = string.Empty;
+            public string DoctorName { get; set; } = string.Empty;
+            public string DoctorEmail { get; set; } = string.Empty;
+            public DateTime? DateTimeReceived { get; set; }
+            public int TurnAroundMinutes { get; set; }
+            public int MinutesOverdue { get; set; }
+        }
+
+        // Uses the separate LabTech configuration section. Supported modes:
+        // LogOnly, Pickup, and Smtp. Pickup/LogOnly are useful for safe local testing.
+
+        private async Task<bool> SendLabTechEmailAsync(
+            string toEmail,
+            string subject,
+            string body,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var htmlBody = System.Net.WebUtility.HtmlEncode(body)
+                    .Replace("\r\n", "<br />")
+                    .Replace("\n", "<br />");
+
+                var result = await _labTechEmailService.SendAsync(
+                    toEmail,
+                    subject,
+                    htmlBody,
+                    cancellationToken);
+
+                if (!result.Success)
+                {
+                    _logger.LogError(
+                        "Lab Technician email failed. Recipient: {Recipient}; Subject: {Subject}; Reason: {Reason}",
+                        toEmail,
+                        subject,
+                        result.Message);
+                }
+                else
+                {
+                    _logger.LogInformation(
+                        "Lab Technician email processed. Recipient: {Recipient}; Subject: {Subject}; Result: {Result}",
+                        toEmail,
+                        subject,
+                        result.Message);
+                }
+
+                return result.Success;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Unexpected error while processing Lab Technician email to {Recipient}.",
+                    toEmail);
+
+                return false;
+            }
+        }
+
 
         [HttpGet]
         public IActionResult Reports() => View();

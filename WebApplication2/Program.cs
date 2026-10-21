@@ -1,8 +1,11 @@
+using NMBHDL.LabTechnician;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<WebApplication2.Services.LabTechnicianDataService>();
+builder.Services.AddLabTechnicianSubsystem(builder.Configuration);
 
 var app = builder.Build();
 

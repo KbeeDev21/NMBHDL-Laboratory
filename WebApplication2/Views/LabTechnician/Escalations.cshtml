@@ -1,231 +1,222 @@
 ﻿@model IReadOnlyList<WebApplication2.Models.LabEscalationViewModel>
 
-    @{
+@{
     Layout = "~/Views/Shared/_LabTechLayout.cshtml";
     ViewData["Title"] = "Escalations";
+}
+
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<link href="~/css/dashboardstyles.css" rel="stylesheet" />
+
+<style>
+    .page-container {
+        max-width: 1250px;
+        margin: 35px auto;
     }
 
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    <link href="~/css/dashboardstyles.css" rel="stylesheet" />
+    .escalations-panel {
+        background: #fff;
+        border: 1px solid #dbe3ec;
+        border-radius: 18px;
+        padding: 28px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    }
 
-    <style>
-        .page-container {
-            max-width: 1250px;
-            margin: 35px auto;
+    .escalation-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-left: 5px solid #dc3545;
+        border-radius: 14px;
+        padding: 22px;
+        margin-bottom: 18px;
+    }
+
+        .escalation-card:last-child {
+            margin-bottom: 0;
         }
 
-        .escalations-panel {
-            background: #fff;
-            border: 1px solid #dbe3ec;
-            border-radius: 18px;
-            padding: 28px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    .escalation-heading {
+        color: #1f2937;
+        font-size: 1.15rem;
+        font-weight: 650;
+    }
+
+    .muted {
+        color: #64748b;
+    }
+
+    .overdue {
+        color: #dc3545;
+        font-weight: 700;
+    }
+
+    .priority-badge {
+        display: inline-block;
+        border-radius: 20px;
+        padding: 5px 11px;
+        font-size: .78rem;
+        font-weight: 700;
+        margin-right: 7px;
+        background: #e2e8f0;
+        color: #334155;
+    }
+
+    .priority-stat {
+        background: #dc3545;
+        color: #fff;
+    }
+
+    .priority-urgent {
+        background: #fdba74;
+        color: #7c2d12;
+    }
+
+    .btn-action {
+        border: 1px solid #0d6efd;
+        border-radius: 9px;
+        padding: 9px 14px;
+        background: #0d6efd;
+        color: #fff;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        cursor: pointer;
+        font-size: .9rem;
+    }
+
+        .btn-action:hover {
+            background: #0b5ed7;
+            color: #fff;
         }
 
-        .escalation-card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-left: 5px solid #dc3545;
-            border-radius: 14px;
-            padding: 22px;
-            margin-bottom: 18px;
-        }
+    .btn-secondary-action {
+        background: #fff;
+        color: #334155;
+        border-color: #cbd5e1;
+    }
 
-            .escalation-card:last-child {
-                margin-bottom: 0;
-            }
-
-        .escalation-heading {
+        .btn-secondary-action:hover {
+            background: #f1f5f9;
             color: #1f2937;
-            font-size: 1.15rem;
-            font-weight: 650;
         }
 
-        .muted {
-            color: #64748b;
+    .action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 16px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 48px 20px;
+        color: #64748b;
+    }
+
+        .empty-state i {
+            font-size: 2.4rem;
+            color: #16a34a;
+            margin-bottom: 14px;
         }
 
-        .overdue {
-            color: #dc3545;
-            font-weight: 700;
-        }
+    .alert-message {
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 18px;
+    }
 
-        .priority-badge {
-            display: inline-block;
-            border-radius: 20px;
-            padding: 5px 11px;
-            font-size: .78rem;
-            font-weight: 700;
-            margin-right: 7px;
-            background: #e2e8f0;
-            color: #334155;
-        }
+    .confirmation-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15,23,42,.58);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 9999;
+    }
 
-        .priority-stat {
-            background: #dc3545;
-            color: #fff;
-        }
-
-        .priority-urgent {
-            background: #fdba74;
-            color: #7c2d12;
-        }
-
-        .btn-action {
-            border: 1px solid #0d6efd;
-            border-radius: 9px;
-            padding: 9px 14px;
-            background: #0d6efd;
-            color: #fff;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 7px;
-            cursor: pointer;
-            font-size: .9rem;
-        }
-
-            .btn-action:hover {
-                background: #0b5ed7;
-                color: #fff;
-            }
-
-        .btn-secondary-action {
-            background: #fff;
-            color: #334155;
-            border-color: #cbd5e1;
-        }
-
-            .btn-secondary-action:hover {
-                background: #f1f5f9;
-                color: #1f2937;
-            }
-
-        .action-row {
+        .confirmation-overlay.show {
             display: flex;
-            flex-wrap: wrap;
-            gap: 9px;
-            margin-top: 16px;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 48px 20px;
+    .confirmation-box {
+        background: #fff;
+        width: 100%;
+        max-width: 480px;
+        border-radius: 15px;
+        padding: 26px;
+        box-shadow: 0 15px 45px rgba(0,0,0,.2);
+    }
+
+        .confirmation-box h3 {
+            font-size: 1.25rem;
+            margin-bottom: 12px;
+            color: #1f2937;
+        }
+
+        .confirmation-box p {
             color: #64748b;
+            margin-bottom: 22px;
         }
 
-            .empty-state i {
-                font-size: 2.4rem;
-                color: #16a34a;
-                margin-bottom: 14px;
-            }
+    .confirmation-actions {
+        display: flex;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
 
-        .alert-message {
-            border-radius: 10px;
-            padding: 12px 16px;
-            margin-bottom: 18px;
+    .confirmation-cancel {
+        background: #fff;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+    }
+
+        .confirmation-cancel:hover {
+            background: #f1f5f9;
+            color: #1f2937;
         }
+</style>
 
-        .confirmation-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15,23,42,.58);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            z-index: 9999;
-        }
+<div class="main-content">
+    <div class="page-container">
+        <div class="escalations-panel">
 
-            .confirmation-overlay.show {
-                display: flex;
-            }
-
-        .confirmation-box {
-            background: #fff;
-            width: 100%;
-            max-width: 480px;
-            border-radius: 15px;
-            padding: 26px;
-            box-shadow: 0 15px 45px rgba(0,0,0,.2);
-        }
-
-            .confirmation-box h3 {
-                font-size: 1.25rem;
-                margin-bottom: 12px;
-                color: #1f2937;
-            }
-
-            .confirmation-box p {
-                color: #64748b;
-                margin-bottom: 22px;
-            }
-
-        .confirmation-actions {
-            display: flex;
-            justify-content: flex-end;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .confirmation-cancel {
-            background: #fff;
-            color: #334155;
-            border: 1px solid #cbd5e1;
-        }
-
-            .confirmation-cancel:hover {
-                background: #f1f5f9;
-                color: #1f2937;
-            }
-    </style>
-
-    <div class="main-content">
-        <div class="page-container">
-            <div class="escalations-panel">
-
-                <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
-                    <div>
-                        <h1 class="mb-2">Active Escalations</h1>
-                        <p class="muted mb-0">
-                            Requests whose assigned test turnaround time has expired.
-                        </p>
-                    </div>
-
-                    <a asp-controller="LabTechnician"
-                       asp-action="Dashboard"
-                       class="btn-action">
-                        <i class="fa-solid fa-arrow-left"></i>
-                        Dashboard
-                    </a>
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+                <div>
+                    <h1 class="mb-2">Active Escalations</h1>
+                    <p class="muted mb-0">
+                        Requests whose assigned test turnaround time has expired.
+                    </p>
                 </div>
 
-                @if (TempData["SuccessMessage"] is string successMessage)
+                <a asp-controller="LabTechnician"
+                   asp-action="Dashboard"
+                   class="btn-action">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Dashboard
+                </a>
+            </div>
+
+            @if (TempData["SuccessMessage"] is string successMessage)
             {
                 <div class="alert alert-success alert-message" role="status">
                     @successMessage
                 </div>
             }
 
-                @if (TempData["ErrorMessage"] is string errorMessage)
+            @if (TempData["ErrorMessage"] is string errorMessage)
             {
                 <div class="alert alert-danger alert-message" role="alert">
                     @errorMessage
                 </div>
             }
 
-                <div id="fakeSentNotification"
-                     class="alert alert-success alert-message"
-                     role="status"
-                     aria-live="polite"
-                     style="display:none;">
-                    <i class="fa-solid fa-circle-check me-2"></i>
-                    <span id="fakeSentMessage"></span>
-                </div>
-
-                @if (Model == null || Model.Count == 0)
+            @if (Model == null || Model.Count == 0)
             {
                 <div class="empty-state">
                     <i class="fa-solid fa-circle-check d-block"></i>
@@ -247,285 +238,258 @@
                 {
                     var priority = (item.Urgency ?? "").Trim();
 
-                <section class="escalation-card">
-                    <div class="escalation-heading mb-2">
-                        @item.PatientName — @item.TestName
-                    </div>
+                    <section class="escalation-card">
+                        <div class="escalation-heading mb-2">
+                            @item.PatientName — @item.TestName
+                        </div>
 
-                    <div class="mb-3">
-                        @if (priority.Equals("STAT", StringComparison.OrdinalIgnoreCase))
+                        <div class="mb-3">
+                            @if (priority.Equals("STAT", StringComparison.OrdinalIgnoreCase))
                             {
-                        <span class="priority-badge priority-stat">STAT</span>
+                                <span class="priority-badge priority-stat">STAT</span>
                             }
                             else if (priority.Equals("URGENT", StringComparison.OrdinalIgnoreCase))
                             {
-                        <span class="priority-badge priority-urgent">Urgent</span>
+                                <span class="priority-badge priority-urgent">Urgent</span>
                             }
                             else
                             {
-                        <span class="priority-badge">
-                            @(string.IsNullOrWhiteSpace(priority) ? "Routine" : priority)
-                        </span>
+                                <span class="priority-badge">
+                                    @(string.IsNullOrWhiteSpace(priority) ? "Routine" : priority)
+                                </span>
                             }
 
-                        <span class="overdue">
-                            @item.MinutesOverdue minute(s) overdue
-                        </span>
-                    </div>
+                    <span class="overdue">
+                        @item.MinutesOverdue minute(s) overdue
+                    </span>
+                </div>
 
-                    <div class="muted mb-1">
-                        Request: @item.TestRequestID
-                        · Barcode:
-                        @(string.IsNullOrWhiteSpace(item.Barcode)
-                                ? "Not recorded"
-                                : item.Barcode)
-                    </div>
+                <div class="muted mb-1">
+                    Request: @item.TestRequestID
+                    · Barcode:
+                    @(string.IsNullOrWhiteSpace(item.Barcode)
+                                        ? "Not recorded"
+                                        : item.Barcode)
+                                                   </div>
 
-                    <div class="muted mb-1">
-                        Requested by:
-                        @(string.IsNullOrWhiteSpace(item.DoctorName)
-                                ? "Not recorded"
-                                : item.DoctorName)
-                    </div>
+                <div class="muted mb-1">
+                    Requested by:
+                    @(string.IsNullOrWhiteSpace(item.DoctorName)
+                                        ? "Not recorded"
+                                        : item.DoctorName)
+                                                      </div>
 
-                    <div class="muted">
-                        Received:
-                        @(item.DateTimeReceived?.ToString("dd MMM yyyy HH:mm")
-                                ?? "Not recorded")
-                        · Turnaround: @item.TurnAroundMinutes minute(s)
-                    </div>
+                <div class="muted">
+                    Received:
+                    @(item.DateTimeReceived?.ToString("dd MMM yyyy HH:mm")
+                                        ?? "Not recorded")
+                    · Turnaround: @item.TurnAroundMinutes minute(s)
+                </div>
 
-                    <div class="action-row">
-                        <button type="button"
-                                class="btn-action btn-secondary-action"
-                                onclick="showEscalationDetails(this)"
-                                data-patient="@item.PatientName"
-                                data-test="@item.TestName"
-                                data-request="@item.TestRequestID"
-                                data-barcode="@item.Barcode"
-                                data-doctor="@item.DoctorName"
-                                data-urgency="@item.Urgency"
-                                data-overdue="@item.MinutesOverdue"
-                                data-received="@(item.DateTimeReceived?.ToString("dd MMM yyyy HH:mm") ?? "Not recorded")"
-                                data-turnaround="@item.TurnAroundMinutes">
-                            <i class="fa-solid fa-eye"></i>
-                            View Details
-                        </button>
+                        <div class="action-row">
+                            <button type="button"
+                                    class="btn-action btn-secondary-action"
+                                    onclick="showEscalationDetails(this)"
+                                    data-patient="@item.PatientName"
+                                    data-test="@item.TestName"
+                                    data-request="@item.TestRequestID"
+                                    data-barcode="@item.Barcode"
+                                    data-doctor="@item.DoctorName"
+                                    data-urgency="@item.Urgency"
+                                    data-overdue="@item.MinutesOverdue"
+                                    data-received="@(item.DateTimeReceived?.ToString("dd MMM yyyy HH:mm") ?? "Not recorded")"
+                                    data-turnaround="@item.TurnAroundMinutes">
+                                <i class="fa-solid fa-eye"></i>
+                                View Details
+                            </button>
 
-                        <button type="button"
-                                class="btn-action"
-                                onclick="confirmEscalationAction('doctor', this)"
-                                data-patient="@item.PatientName"
-                                data-test="@item.TestName"
-                                data-request="@item.TestRequestID"
-                                data-barcode="@item.Barcode"
-                                data-doctor="@item.DoctorName"
-                                data-urgency="@item.Urgency"
-                                data-overdue="@item.MinutesOverdue"
-                                data-received="@(item.DateTimeReceived?.ToString("dd MMM yyyy HH:mm") ?? "Not recorded")"
-                                data-turnaround="@item.TurnAroundMinutes">
-                            <i class="fa-solid fa-envelope"></i>
-                            Notify Doctor
-                        </button>
-
-                        <button type="button"
-                                class="btn-action"
-                                onclick="confirmEscalationAction('manager', this)"
-                                data-patient="@item.PatientName"
-                                data-test="@item.TestName"
-                                data-request="@item.TestRequestID"
-                                data-barcode="@item.Barcode"
-                                data-doctor="@item.DoctorName"
-                                data-urgency="@item.Urgency"
-                                data-overdue="@item.MinutesOverdue"
-                                data-received="@(item.DateTimeReceived?.ToString("dd MMM yyyy HH:mm") ?? "Not recorded")"
-                                data-turnaround="@item.TurnAroundMinutes">
-                            <i class="fa-solid fa-arrow-up"></i>
-                            Escalate to Manager
-                        </button>
-                    </div>
-                </section>
-                }
+                            <button type="button"
+                                    class="btn-action"
+                                    onclick="confirmDoctorNotification(this)"
+                                    data-patient="@item.PatientName"
+                                    data-test="@item.TestName"
+                                    data-request="@item.TestRequestID"
+                                    data-sample="@item.SampleReceiptID"
+                                    data-test-type="@item.TestTypeID"
+                                    data-barcode="@item.Barcode"
+                                    data-doctor="@item.DoctorName"
+                                    data-urgency="@item.Urgency"
+                                    data-overdue="@item.MinutesOverdue"
+                                    data-received="@(item.DateTimeReceived?.ToString("dd MMM yyyy HH:mm") ?? "Not recorded")"
+                                    data-turnaround="@item.TurnAroundMinutes">
+                                <i class="fa-solid fa-envelope"></i>
+                                Notify Doctor
+                            </button>
+                        </div>
+                    </section>
+                        }
             }
-            </div>
         </div>
     </div>
+</div>
 
-    <!-- Confirmation popup -->
-    <div id="escalationConfirmOverlay"
-         class="confirmation-overlay"
-         role="dialog"
-         aria-modal="true"
-         aria-labelledby="escalationConfirmTitle"
-         aria-describedby="escalationConfirmMessage">
+<!-- Confirmation popup -->
+<div id="escalationConfirmOverlay"
+     class="confirmation-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="escalationConfirmTitle"
+     aria-describedby="escalationConfirmMessage">
 
-        <div class="confirmation-box">
-            <h3 id="escalationConfirmTitle">Confirm action</h3>
-            <p id="escalationConfirmMessage"></p>
+    <div class="confirmation-box">
+        <h3 id="escalationConfirmTitle">Confirm action</h3>
+        <p id="escalationConfirmMessage"></p>
 
-            <div class="confirmation-actions">
-                <button type="button"
-                        class="btn-action confirmation-cancel"
-                        onclick="closeEscalationConfirmation()">
-                    Cancel
-                </button>
+        <div class="confirmation-actions">
+            <button type="button"
+                    class="btn-action confirmation-cancel"
+                    onclick="closeEscalationConfirmation()">
+                Cancel
+            </button>
 
-                <button type="button"
-                        id="escalationConfirmButton"
-                        class="btn-action"
-                        onclick="submitEscalationConfirmation()">
-                    Confirm
-                </button>
-            </div>
+            <button type="button"
+                    id="escalationConfirmButton"
+                    class="btn-action"
+                    onclick="submitEscalationConfirmation()">
+                Confirm
+            </button>
         </div>
     </div>
+</div>
 
-    <!-- Details popup -->
-    <div id="escalationDetailsOverlay"
-         class="confirmation-overlay"
-         role="dialog"
-         aria-modal="true"
-         aria-labelledby="escalationDetailsTitle">
+<form id="notifyDoctorForm" asp-controller="LabTechnician" asp-action="NotifyDoctor" method="post" class="d-none">
+    @Html.AntiForgeryToken()
+    <input type="hidden" id="notifyTestRequestId" name="testRequestId" />
+    <input type="hidden" id="notifySampleReceiptId" name="sampleReceiptId" />
+    <input type="hidden" id="notifyTestTypeId" name="testTypeId" />
+</form>
 
-        <div class="confirmation-box">
-            <h3 id="escalationDetailsTitle">Escalation details</h3>
-            <div id="escalationDetailsContent" class="mb-4"></div>
+<!-- Details popup -->
+<div id="escalationDetailsOverlay"
+     class="confirmation-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="escalationDetailsTitle">
 
-            <div class="confirmation-actions">
-                <button type="button"
-                        class="btn-action confirmation-cancel"
-                        onclick="closeEscalationDetails()">
-                    Close
-                </button>
-            </div>
+    <div class="confirmation-box">
+        <h3 id="escalationDetailsTitle">Escalation details</h3>
+        <div id="escalationDetailsContent" class="mb-4"></div>
+
+        <div class="confirmation-actions">
+            <button type="button"
+                    class="btn-action confirmation-cancel"
+                    onclick="closeEscalationDetails()">
+                Close
+            </button>
         </div>
     </div>
+</div>
 
-    <script>
-        let pendingEscalationAction = null;
-        let pendingEscalationDetails = null;
+<script>
+    let pendingDoctorNotification = null;
 
-        function confirmEscalationAction(action, button) {
-            pendingEscalationAction = action;
-            pendingEscalationDetails = { ...button.dataset };
+    function confirmDoctorNotification(button) {
+        pendingDoctorNotification = { ...button.dataset };
 
-            const title = document.getElementById("escalationConfirmTitle");
-            const message = document.getElementById("escalationConfirmMessage");
-            const confirmButton = document.getElementById("escalationConfirmButton");
+        const title = document.getElementById("escalationConfirmTitle");
+        const message = document.getElementById("escalationConfirmMessage");
+        const confirmButton = document.getElementById("escalationConfirmButton");
 
-            confirmButton.disabled = false;
-            confirmButton.textContent = "Confirm";
+        title.textContent = "Notify Doctor";
+        message.textContent =
+            "Send an email to the requesting doctor about this overdue test and ask whether a new or repeat test is needed?";
+        confirmButton.disabled = false;
+        confirmButton.textContent = "Send Email";
 
-            if (action === "doctor") {
-                title.textContent = "Notify Doctor";
-                message.textContent =
-                    "Are you sure you want to mark this overdue-test notification as sent to the requesting doctor?";
-            } else {
-                title.textContent = "Escalate to Manager";
-                message.textContent =
-                    "Are you sure you want to mark this overdue test as escalated to the laboratory manager?";
-            }
+        document.getElementById("escalationConfirmOverlay").classList.add("show");
+        confirmButton.focus();
+    }
 
-            document.getElementById("escalationConfirmOverlay").classList.add("show");
-            confirmButton.focus();
+    function closeEscalationConfirmation() {
+        document.getElementById("escalationConfirmOverlay").classList.remove("show");
+        pendingDoctorNotification = null;
+    }
+
+    function submitEscalationConfirmation() {
+        if (!pendingDoctorNotification) return;
+
+        const details = pendingDoctorNotification;
+        const requestId = Number(details.request);
+        const sampleId = Number(details.sample);
+        const testTypeId = Number(details.testType);
+
+        if (!Number.isInteger(requestId) || requestId <= 0 ||
+            !Number.isInteger(sampleId) || sampleId <= 0 ||
+            !Number.isInteger(testTypeId) || testTypeId <= 0) {
+            window.alert("The test identifiers are missing. Refresh the page and try again.");
+            return;
         }
 
-        function closeEscalationConfirmation() {
-            document.getElementById("escalationConfirmOverlay").classList.remove("show");
-            pendingEscalationAction = null;
-            pendingEscalationDetails = null;
-        }
+        const confirmButton = document.getElementById("escalationConfirmButton");
+        confirmButton.disabled = true;
+        confirmButton.textContent = "Sending...";
 
-        function submitEscalationConfirmation() {
-            if (!pendingEscalationAction || !pendingEscalationDetails) {
-                return;
-            }
+        document.getElementById("notifyTestRequestId").value = requestId;
+        document.getElementById("notifySampleReceiptId").value = sampleId;
+        document.getElementById("notifyTestTypeId").value = testTypeId;
+        document.getElementById("notifyDoctorForm").submit();
+    }
 
-            const action = pendingEscalationAction;
-            const details = pendingEscalationDetails;
-            const notification = document.getElementById("fakeSentNotification");
-            const message = document.getElementById("fakeSentMessage");
+    function showEscalationDetails(button) {
+        const fields = [
+            ["Patient", button.dataset.patient],
+            ["Test", button.dataset.test],
+            ["Urgency", button.dataset.urgency],
+            ["Minutes overdue", button.dataset.overdue],
+            ["Request ID", button.dataset.request],
+            ["Barcode", button.dataset.barcode],
+            ["Requesting doctor", button.dataset.doctor],
+            ["Sample received", button.dataset.received],
+            ["Turnaround time", (button.dataset.turnaround || "0") + " minute(s)"]
+        ];
 
-            if (action === "doctor") {
-                message.textContent =
-                    "Escalation sent: the notification for " +
-                    (details.patient || "the patient") +
-                    " — " + (details.test || "the test") +
-                    " (Request #" + (details.request || "unknown") +
-                    ") is marked as sent.";
-            } else {
-                message.textContent =
-                    "Escalation sent: the escalation for " +
-                    (details.patient || "the patient") +
-                    " — " + (details.test || "the test") +
-                    " (Request #" + (details.request || "unknown") +
-                    ") is marked as sent to the laboratory manager";
-            }
+        const container = document.getElementById("escalationDetailsContent");
+        container.replaceChildren();
 
-            closeEscalationConfirmation();
+        fields.forEach(([label, value]) => {
+            const row = document.createElement("p");
+            row.className = "mb-2";
 
-            notification.style.display = "block";
-            notification.scrollIntoView({
-                behavior: "smooth",
-                block: "center"
-            });
-        }
+            const strong = document.createElement("strong");
+            strong.textContent = label + ": ";
 
-        function showEscalationDetails(button) {
-            const fields = [
-                ["Patient", button.dataset.patient],
-                ["Test", button.dataset.test],
-                ["Urgency", button.dataset.urgency],
-                ["Minutes overdue", button.dataset.overdue],
-                ["Request ID", button.dataset.request],
-                ["Barcode", button.dataset.barcode],
-                ["Requesting doctor", button.dataset.doctor],
-                ["Sample received", button.dataset.received],
-                ["Turnaround time", (button.dataset.turnaround || "0") + " minute(s)"]
-            ];
+            const span = document.createElement("span");
+            span.textContent = value || "Not recorded";
 
-            const container = document.getElementById("escalationDetailsContent");
-            container.replaceChildren();
+            row.append(strong, span);
+            container.appendChild(row);
+        });
 
-            fields.forEach(([label, value]) => {
-                const row = document.createElement("p");
-                row.className = "mb-2";
+        document.getElementById("escalationDetailsOverlay").classList.add("show");
+    }
 
-                const strong = document.createElement("strong");
-                strong.textContent = label + ": ";
+    function closeEscalationDetails() {
+        document.getElementById("escalationDetailsOverlay").classList.remove("show");
+    }
 
-                const span = document.createElement("span");
-                span.textContent = value || "Not recorded";
-
-                row.append(strong, span);
-                container.appendChild(row);
-            });
-
-            document.getElementById("escalationDetailsOverlay").classList.add("show");
-        }
-
-        function closeEscalationDetails() {
-            document.getElementById("escalationDetailsOverlay").classList.remove("show");
-        }
-
-        document.getElementById("escalationConfirmOverlay")
-            .addEventListener("click", function (event) {
-                if (event.target === this) {
-                    closeEscalationConfirmation();
-                }
-            });
-
-        document.getElementById("escalationDetailsOverlay")
-            .addEventListener("click", function (event) {
-                if (event.target === this) {
-                    closeEscalationDetails();
-                }
-            });
-
-        document.addEventListener("keydown", function (event) {
-            if (event.key === "Escape") {
+    document.getElementById("escalationConfirmOverlay")
+        .addEventListener("click", function (event) {
+            if (event.target === this) {
                 closeEscalationConfirmation();
+            }
+        });
+
+    document.getElementById("escalationDetailsOverlay")
+        .addEventListener("click", function (event) {
+            if (event.target === this) {
                 closeEscalationDetails();
             }
         });
-    </script>
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeEscalationConfirmation();
+            closeEscalationDetails();
+        }
+    });
+</script>
