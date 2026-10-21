@@ -17,7 +17,7 @@ namespace WebApplication2.Controllers
         public DoctorController(IConfiguration config)
         {
             var db = new SQLDataBaseAccess(config);
-            _doctorRepo = new DoctorRepository(db);
+            _doctorRepo = new DoctorRepository(db, config);
         }
 
         public IActionResult DoctorDashboard()
@@ -139,10 +139,10 @@ namespace WebApplication2.Controllers
 
                     ViewBag.PatientsList = new List<dynamic>
                     {
-                        new { IdNumber = "8706125432089", FullName = "Dlamini, Sipho" },
-                        new { IdNumber = "7901044321008", FullName = "Petersen, Riaan" },
-                        new { IdNumber = "9203156789012", FullName = "Nkosi, Thandiwe" },
-                        new { IdNumber = "9507254012345", FullName = "Hendricks, Ayesha" }
+                        new { PatientID = 1, IdNumber = "8706125432089", FullName = "Dlamini, Sipho" },
+                        new { PatientID = 2, IdNumber = "7901044321008", FullName = "Petersen, Riaan" },
+                        new { PatientID = 3, IdNumber = "9203156789012", FullName = "Nkosi, Thandiwe" },
+                        new { PatientID = 4, IdNumber = "9507254012345", FullName = "Hendricks, Ayesha" }
                     };
 
                     ViewBag.TestPanels = new List<string>

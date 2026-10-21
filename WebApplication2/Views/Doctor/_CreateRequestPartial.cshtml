@@ -6,38 +6,58 @@
         <p class="text-muted m-0 small">Deploy pathology diagnostic orders into the laboratory workstream registry</p>
     </div>
 
+    <!-- 1. Display TempData messages from the Controller -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>Success!</strong> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error:</strong> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     <div class="row justify-content-center">
         <div class="col-xl-9">
             <div class="card border border-light-subtle shadow-sm" style="border-radius: 14px;">
                 <div class="card-body p-4">
-                    <form id="requestForm" onsubmit="event.preventDefault(); showToast('Order Confirmed', 'Test suite request has been published into the lab queue successfully. Patient notified via email.', 'success');">
+                    <!-- 2. Fixed Form Tag to POST to the Controller -->
+                    <form id="requestForm" method="post" action="/Doctor/SubmitTestRequest">
 
                         <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-user-injured text-primary me-2"></i>1. Selected Patient Target</h5>
                         <div class="row g-3 mb-4">
                             <div class="col-md-8">
                                 <label class="form-label text-secondary small fw-semibold">Search Registered Master Patient File</label>
-                                <select class="form-select" required style="border-radius: 8px; padding: 11px;">
+                                <!-- Added name="patientId" -->
+                                <select name="patientId" class="form-select" required style="border-radius: 8px; padding: 11px;">
                                     <option value="" disabled selected>Select patient matching record parameters...</option>
                                     @foreach (var p in ViewBag.PatientsList)
                                     {
+                                        <!-- Changed value to p.PatientID to match database INT -->
                                         <option value="@p.IdNumber">@p.FullName (@p.IdNumber)</option>
                                     }
                                 </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label text-secondary small fw-semibold">Request Creation Date</label>
-                                <input type="date" class="form-control text-muted" value="@DateTime.Now.ToString("yyyy-MM-dd")" required style="border-radius: 8px; padding: 11px;" />
+                                <input type="date" class="form-control text-muted" value="@DateTime.Now.ToString("yyyy-MM-dd")" readonly style="border-radius: 8px; padding: 11px; background-color: #f8f9fa;" />
                             </div>
                         </div>
 
                         <h5 class="fw-bold text-dark mb-2"><i class="fa-solid fa-microscope text-primary me-2"></i>2. Requested Diagnostic Panels</h5>
                         <p class="text-muted small mb-3">Check all requested metrics that match clinical analysis directives</p>
 
+                        <!-- 3. Added name="testPanels" and actual values to checkboxes -->
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <div class="p-3 border border-light-subtle rounded-3 bg-light-subtle d-flex align-items-center">
                                     <div class="form-check m-0">
-                                        <input class="form-check-input sample-trigger" type="checkbox" data-sample="Whole Blood (Purple EDTA Tube)" id="fbc" style="cursor: pointer; width: 18px; height: 18px;">
+                                        <input class="form-check-input sample-trigger" type="checkbox" name="testPanels" value="FBC" data-sample="Whole Blood (Purple EDTA Tube)" id="fbc" style="cursor: pointer; width: 18px; height: 18px;">
                                         <label class="form-check-label text-dark fw-medium ms-2" for="fbc" style="cursor: pointer;">Full Blood Count (FBC)</label>
                                     </div>
                                 </div>
@@ -45,7 +65,7 @@
                             <div class="col-md-6">
                                 <div class="p-3 border border-light-subtle rounded-3 bg-light-subtle d-flex align-items-center">
                                     <div class="form-check m-0">
-                                        <input class="form-check-input sample-trigger" type="checkbox" data-sample="Whole Blood (Purple EDTA Tube)" id="hb" style="cursor: pointer; width: 18px; height: 18px;">
+                                        <input class="form-check-input sample-trigger" type="checkbox" name="testPanels" value="Hemoglobin" data-sample="Whole Blood (Purple EDTA Tube)" id="hb" style="cursor: pointer; width: 18px; height: 18px;">
                                         <label class="form-check-label text-dark fw-medium ms-2" for="hb" style="cursor: pointer;">Hemoglobin (Hb) Isolation</label>
                                     </div>
                                 </div>
@@ -53,7 +73,7 @@
                             <div class="col-md-6">
                                 <div class="p-3 border border-light-subtle rounded-3 bg-light-subtle d-flex align-items-center">
                                     <div class="form-check m-0">
-                                        <input class="form-check-input sample-trigger" type="checkbox" data-sample="Blood Smear Slide" id="diff" style="cursor: pointer; width: 18px; height: 18px;">
+                                        <input class="form-check-input sample-trigger" type="checkbox" name="testPanels" value="Diff Counts" data-sample="Blood Smear Slide" id="diff" style="cursor: pointer; width: 18px; height: 18px;">
                                         <label class="form-check-label text-dark fw-medium ms-2" for="diff" style="cursor: pointer;">Differential Counts (Diff Counts)</label>
                                     </div>
                                 </div>
@@ -61,7 +81,7 @@
                             <div class="col-md-6">
                                 <div class="p-3 border border-light-subtle rounded-3 bg-light-subtle d-flex align-items-center">
                                     <div class="form-check m-0">
-                                        <input class="form-check-input sample-trigger" type="checkbox" data-sample="Whole Blood (Purple EDTA Tube)" id="platelets" style="cursor: pointer; width: 18px; height: 18px;">
+                                        <input class="form-check-input sample-trigger" type="checkbox" name="testPanels" value="PLT" data-sample="Whole Blood (Purple EDTA Tube)" id="platelets" style="cursor: pointer; width: 18px; height: 18px;">
                                         <label class="form-check-label text-dark fw-medium ms-2" for="platelets" style="cursor: pointer;">Platelet Count (PLT)</label>
                                     </div>
                                 </div>
@@ -69,7 +89,7 @@
                             <div class="col-md-6">
                                 <div class="p-3 border border-light-subtle rounded-3 bg-light-subtle d-flex align-items-center">
                                     <div class="form-check m-0">
-                                        <input class="form-check-input sample-trigger" type="checkbox" data-sample="Citrated Plasma (Light Blue Tube)" id="inr" style="cursor: pointer; width: 18px; height: 18px;">
+                                        <input class="form-check-input sample-trigger" type="checkbox" name="testPanels" value="INR" data-sample="Citrated Plasma (Light Blue Tube)" id="inr" style="cursor: pointer; width: 18px; height: 18px;">
                                         <label class="form-check-label text-dark fw-medium ms-2" for="inr" style="cursor: pointer;">Prothrombin Time & INR</label>
                                     </div>
                                 </div>
@@ -90,7 +110,8 @@
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label class="form-label text-secondary small fw-semibold">Urgency Tier Level</label>
-                                <select class="form-select" required style="border-radius: 8px; padding: 10px;">
+                                <!-- Added name="urgency" -->
+                                <select name="urgency" class="form-select" required style="border-radius: 8px; padding: 10px;">
                                     <option value="Routine">Routine (Turnaround Base)</option>
                                     <option value="Urgent">Urgent (Priority Buffer)</option>
                                     <option value="STAT">STAT (Immediate Interrupt Flags)</option>
@@ -98,11 +119,12 @@
                             </div>
                             <div class="col-md-8">
                                 <label class="form-label text-secondary small fw-semibold">Specimen Barcode Number(s) (Required)</label>
-                                <input type="text" class="form-control font-monospace fw-bold" placeholder="Scan or type vial barcodes (e.g. BAR-88192-01)" pattern="^[A-Za-z0-9\-, ]+$" title="Barcode inputs must only contain alphanumeric identifiers, hyphens, spaces, or commas" required style="border-radius: 8px; padding: 10px; border-left: 3px solid #0284c7;" />
+                                <input type="text" name="barcode" class="form-control font-monospace fw-bold" placeholder="Scan or type vial barcodes (e.g. BAR-88192-01)" pattern="^[A-Za-z0-9\-, ]+$" title="Barcode inputs must only contain alphanumeric identifiers, hyphens, spaces, or commas" required style="border-radius: 8px; padding: 10px; border-left: 3px solid #0284c7;" />
                             </div>
                             <div class="col-12">
                                 <label class="form-label text-secondary small fw-semibold">Clinical Symptoms / Directives Notes</label>
-                                <input type="text" class="form-control" placeholder="Append specific flags or clinical symptom details here..." style="border-radius: 8px; padding: 10px;" />
+                                <!-- Added name="clinicalNotes" -->
+                                <input type="text" name="clinicalNotes" class="form-control" placeholder="Append specific flags or clinical symptom details here..." style="border-radius: 8px; padding: 10px;" />
                             </div>
                         </div>
 
