@@ -111,8 +111,8 @@ public class LabManagerAccountService : ILabManagerAccountService
         if (!result.Succeeded) return result;
 
         var user = await _data.Accounts.GetUserByEmailAsync(form.Email!);
-        if (user is not null && user.IsActive
-            && string.Equals(user.Role, _auth.ManagerRole, StringComparison.OrdinalIgnoreCase))
+        // A laboratory manager = a user with a dbo.LabManager row (doesn't depend on how a role is spelled)
+        if (user is not null && user.IsActive && user.LabManagerId is not null)
         {
             var (token, tokenHash) = _passwords.GenerateResetToken();
             int minutes = _auth.ResetTokenLifetimeMinutes;

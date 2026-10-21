@@ -2,11 +2,9 @@
 using System;
 using System.Net;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using NMBHLabSys.LabManagerSubsystem.Infrastructure;
 using NMBHLabSys.LabManagerSubsystem.Models;
 using NMBHLabSys.LabManagerSubsystem.Services;
@@ -43,7 +41,7 @@ public partial class LabManagerController
         return RedirectToAction(nameof(Profile));
     }
 
-    // ChangePassword.cshtml. Also where a manager still on a temporary password is sent.
+    // ChangePassword.cshtml
     [HttpGet]
     public IActionResult ChangePassword() => View(new ChangePasswordModel());
 
@@ -120,14 +118,11 @@ public partial class LabManagerController
         return View();
     }
 
-    // AC-09-05 / TC-LM-09-05: end the session and go to the login page
+    // AC-09-05 / TC-LM-09-05: sign out of the group's login (its cookie) and go to the login page
     [HttpGet, HttpPost, LabManagerPublic]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> Logout()
     {
-        _currentUser.SignOut();
-
-        // If the group uses cookie authentication, sign that out too
         if (HttpContext.RequestServices.GetService<IAuthenticationSchemeProvider>() is { } schemes
             && await schemes.GetDefaultSignOutSchemeAsync() is not null)
         {
@@ -135,60 +130,5 @@ public partial class LabManagerController
         }
 
         return Redirect(_options.Auth.LoginPath);
-    }
-
-    // =================================================================
-    // DEVELOPMENT ONLY: sign in without the group's login page.
-    //   /LabManager/DevSignIn  (404 unless the app runs in Development)
-    // Uses the real password check, so "Invalid credentials" (TC-LM-09-02) and the
-    // first-login password change (TC-LM-06-04 / 07-04) can be tried too.
-    // =================================================================
-    [HttpGet, LabManagerPublic]
-    public IActionResult DevSignIn() => DevSignInAllowed ? DevSignInPage(null, null) : NotFound();
-
-    [HttpPost, LabManagerPublic]
-    public async Task<IActionResult> DevSignIn(string? email, string? password)
-    {
-        if (!DevSignInAllowed) return NotFound();
-
-        var result = await _login.CheckCredentialsAsync(email, password);
-        if (!result.Success) return DevSignInPage(result.Error, email);
-
-        _currentUser.SignIn(result.UserId, result.Role);
-
-        if (result.LabManagerId is not null)
-            return result.MustChangePassword ? RedirectToAction(nameof(ChangePassword)) : RedirectToAction(nameof(Dashboard));
-
-        string note = result.MustChangePassword
-            ? $"Signed in as a {result.Role} who is still on a temporary password ([User].IsFirstLogin = 1). The group's login must now send them " +
-              "to change their password before granting access (AC-06-03 / AC-07-05). LoginCheckResult.MustChangePassword = true."
-            : $"Signed in as a {result.Role}.";
-        return DevSignInPage(null, email, note + " Now open /LabManager/Dashboard to check that access is denied (TC-LM-09-06).");
-    }
-
-    private bool DevSignInAllowed => _env.IsDevelopment() && _options.Auth.EnableDevSignIn;
-
-    private ContentResult DevSignInPage(string? error, string? email, string? info = null)
-    {
-        var tokens = HttpContext.RequestServices.GetRequiredService<IAntiforgery>().GetAndStoreTokens(HttpContext);
-        string E(string? s) => WebUtility.HtmlEncode(s ?? "");
-
-        string html = $@"<!DOCTYPE html><html><head><meta charset=""utf-8""><title>Lab Manager - dev sign in</title>
-<style>body{{font-family:Segoe UI,Arial,sans-serif;background:#f1f5f9;display:flex;justify-content:center;padding-top:60px}}
-form{{background:#fff;padding:28px;border-radius:10px;width:380px;box-shadow:0 2px 10px #0001}}
-input{{width:100%;padding:9px;margin:6px 0 14px;box-sizing:border-box}}button{{padding:10px 18px;background:#1d3a6b;color:#fff;border:0;border-radius:6px}}
-.err{{color:#b91c1c}}.info{{color:#166534}}small{{color:#64748b}}</style></head><body>
-<form method=""post"" action=""{E(Url.Action(nameof(DevSignIn)))}"">
-<h3>Development sign-in</h3>
-<small>Only available while running in Development. Use the group's login page in the real project.</small>
-{(error is null ? "" : $"<p class=\"err\">{E(error)}</p>")}
-{(info is null ? "" : $"<p class=\"info\">{E(info)}</p>")}
-<input type=""hidden"" name=""{E(tokens.FormFieldName)}"" value=""{E(tokens.RequestToken)}"" />
-<label>Email</label><input name=""email"" type=""email"" value=""{E(email)}"" required />
-<label>Password</label><input name=""password"" type=""password"" required />
-<button type=""submit"">Sign in</button>
-</form></body></html>";
-
-        return Content(html, "text/html");
     }
 }

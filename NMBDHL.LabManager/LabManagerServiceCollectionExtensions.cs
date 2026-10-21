@@ -23,11 +23,8 @@ public static class LabManagerServiceCollectionExtensions
         // Settings from the "LabManager" section of appsettings.json
         services.Configure<LabManagerOptions>(configuration.GetSection(LabManagerOptions.SectionName));
 
-        // Used to read the logged-in user from the session / claims.
-        // These calls are safe if the group's Program.cs already makes them (they don't register twice).
+        // Used to read who the group's login signed in (its cookie claims). Safe if Program.cs also calls it.
         services.AddHttpContextAccessor();
-        services.AddDistributedMemoryCache();
-        services.AddSession();
 
         // Data access (Dapper)
         services.AddSingleton<ILabManagerDb, LabManagerDb>();
@@ -57,7 +54,6 @@ public static class LabManagerServiceCollectionExtensions
         services.AddSingleton<ILabManagerReportPdf, LabManagerReportPdf>();
         services.AddScoped<ILabManagerEmailService, LabManagerEmailService>();
         services.AddScoped<ILabManagerCurrentUser, LabManagerCurrentUser>();
-        services.AddScoped<ILabManagerLoginService, LabManagerLoginService>();
 
         return services;
     }

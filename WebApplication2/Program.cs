@@ -1,19 +1,51 @@
-using NMBHLabSys.LabManagerSubsystem;           //Lab manager subsystem refrence 
-
+using NMBHLabSys.LabManagerSubsystem;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using NMBDHL.Auth.Repository;
+using NMBDHL.DataAccess.SQLDataBaseAccess;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// MVC
 builder.Services.AddControllersWithViews();
+
+// Lab Manager subsystem
 builder.Services.AddLabManagerSubsystem(builder.Configuration);
+
+// Database access
+builder.Services.AddScoped<ISQLDataBaseAccess, SQLDataBaseAccess>();
+
+// Authentication repository
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+
+// Session support
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+// Cookie authentication
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Home/LoginPage";
+        options.AccessDeniedPath = "/Home/LoginPage";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.IsEssential = true;
+        options.SlidingExpiration = true;
+    });
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -22,8 +54,9 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseSession();                                                  // Lab Manager: reads the logged-in user
+app.UseSession();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

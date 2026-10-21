@@ -29,38 +29,30 @@ public class LabManagerOptions
 }
 
 /// <summary>
-/// How the subsystem finds out who is logged in. The group's login page owns
-/// the sign-in, so these must match whatever that login stores.
-/// Both the session and claims (cookie authentication) are checked.
+/// How the subsystem works with the GROUP'S login (Home/LoginPage, cookie sign-in).
+/// The Lab Manager subsystem has no login of its own.
 /// </summary>
 public class LabManagerAuthOptions
 {
-    /// <summary>Where users are sent when nobody is logged in (AC-09-07).</summary>
+    /// <summary>The group's login page: where users are sent when nobody is signed in.</summary>
     public string LoginPath { get; set; } = "/Home/LoginPage";
 
-    /// <summary>Session key the group's login uses for the logged-in user's [User].UserID.</summary>
-    public string SessionUserIdKey { get; set; } = "UserID";
-
-    /// <summary>Session key the group's login uses for the user's role.</summary>
-    public string SessionRoleKey { get; set; } = "Role";
+    /// <summary>
+    /// Role names the group's login may give a laboratory manager (its ClaimTypes.Role).
+    /// Compared without regard to case or surrounding spaces. The group's login uses "Lab Manager".
+    /// </summary>
+    public string[] ManagerRoleNames { get; set; } = { "Lab Manager", "Laboratory Manager", "LabManager", "Manager" };
 
     /// <summary>
-    /// Role names the backend reports (LoginCheckResult.Role). grp-04-14 has no Role column, so the role
-    /// comes from the table the user is in: LabManager -> ManagerRole, Doctor -> DoctorRole,
-    /// LabTechnician -> TechnicianRole. Access to manager pages is decided by the LabManager table itself.
+    /// Role labels this subsystem shows for staff (worked out from the LabManager / Doctor / LabTechnician tables),
+    /// spelled like the group's login.
     /// </summary>
-    public string ManagerRole { get; set; } = "Manager";
+    public string ManagerRole { get; set; } = "Lab Manager";
     public string DoctorRole { get; set; } = "Doctor";
-    public string TechnicianRole { get; set; } = "Technician";
+    public string TechnicianRole { get; set; } = "Lab Technician";
 
     /// <summary>Forgot-password links stop working after this many minutes.</summary>
     public int ResetTokenLifetimeMinutes { get; set; } = 60;
-
-    /// <summary>
-    /// Allows /LabManager/DevSignIn so you can test locally before the group's
-    /// login page is merged in. It ONLY works when the app runs in Development.
-    /// </summary>
-    public bool EnableDevSignIn { get; set; } = true;
 }
 
 public class LabManagerReportOptions

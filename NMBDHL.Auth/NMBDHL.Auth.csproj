@@ -20,7 +20,6 @@
     <ProjectReference Include="..\NMBDHL.LabTechnician\NMBDHL.LabTechnician.csproj" />
     <ProjectReference Include="..\NMBDHL.Patient\NMBDHL.Patient.csproj" />
     <ProjectReference Include="..\NMBDHL.Services\NMBDHL.Services.csproj" />
-    <ProjectReference Include="..\WebApplication2\WebApplication2.csproj" />
   </ItemGroup>
 
 </Project>

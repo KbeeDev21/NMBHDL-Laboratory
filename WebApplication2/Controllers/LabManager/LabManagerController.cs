@@ -1,7 +1,6 @@
 #nullable enable
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using NMBHLabSys.LabManagerSubsystem.Infrastructure;
@@ -22,7 +21,7 @@ namespace NMBHLabSys.LabManagerSubsystem.Controllers;
 ///   LabManagerController.Reports.cs    -> ILabManagerReportService     (dashboard, US-LM-08)
 ///   LabManagerController.Account.cs    -> ILabManagerAccountService    (US-LM-09)
 ///
-/// [LabManagerOnly] = only logged-in, active laboratory managers get in (AC-09-07).
+/// [LabManagerOnly] = only users the group's login signed in as "Lab Manager" get in (AC-09-07).
 /// [AutoValidateAntiforgeryToken] = every POST must carry the form's anti-forgery token.
 /// </summary>
 [LabManagerOnly]
@@ -36,9 +35,7 @@ public partial class LabManagerController : Controller
     private readonly ILabManagerReportService _reports;
     private readonly ILabManagerAccountService _account;
     private readonly ILabManagerCurrentUser _currentUser;
-    private readonly ILabManagerLoginService _login;
     private readonly LabManagerOptions _options;
-    private readonly IWebHostEnvironment _env;
 
     public LabManagerController(
         ILabManagerCatalogueService catalogue,
@@ -48,9 +45,7 @@ public partial class LabManagerController : Controller
         ILabManagerReportService reports,
         ILabManagerAccountService account,
         ILabManagerCurrentUser currentUser,
-        ILabManagerLoginService login,
-        IOptions<LabManagerOptions> options,
-        IWebHostEnvironment env)
+        IOptions<LabManagerOptions> options)
     {
         _catalogue = catalogue;
         _inventory = inventory;
@@ -59,9 +54,7 @@ public partial class LabManagerController : Controller
         _reports = reports;
         _account = account;
         _currentUser = currentUser;
-        _login = login;
         _options = options.Value;
-        _env = env;
     }
 
     // /LabManager -> /LabManager/Dashboard
@@ -76,7 +69,7 @@ public partial class LabManagerController : Controller
     // Helpers shared by the partial files
     // =================================================================
 
-    /// <summary>The access filter guarantees a manager is logged in on every non-public action.</summary>
+    /// <summary>[User].UserID from the group's login. The access filter guarantees a manager on every non-public action.</summary>
     private int CurrentUserId => _currentUser.UserId ?? 0;
 
     private void SetSuccess(string message) => TempData["Success"] = message;
