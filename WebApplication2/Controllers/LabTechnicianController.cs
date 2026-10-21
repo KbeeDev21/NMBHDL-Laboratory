@@ -1353,25 +1353,15 @@ namespace WebApplication2.Controllers
                     System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
 
-                if (!int.TryParse(userId, out var loggedInUserId))
+                if (!int.TryParse(userId, out var loggedInUserId)
+                     || loggedInUserId <= 0)
                 {
-                    var developmentUserId =
-                        _configuration.GetValue<int?>(
-                            "LabTechnician:DevelopmentUserId");
+                    TempData["ErrorMessage"] =
+                        "Your login could not be matched to a valid user.";
 
-                    if (!_environment.IsDevelopment()
-                        || developmentUserId is null
-                        || developmentUserId.Value <= 0)
-                    {
-                        TempData["ErrorMessage"] =
-                            "Your login could not be matched to a lab technician.";
-
-                        return RedirectToAction(
-                            nameof(VerifyResults),
-                            new { testResultId });
-                    }
-
-                    loggedInUserId = developmentUserId.Value;
+                    return RedirectToAction(
+                        nameof(VerifyResults),
+                        new { testResultId });
                 }
 
 

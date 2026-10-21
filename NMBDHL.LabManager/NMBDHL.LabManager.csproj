@@ -6,10 +6,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Model\" />
-    <Folder Include="Repository\" />
-  </ItemGroup>
+	<!-- Lab Manager backend uses ASP.NET Core (MVC filters, session, password hasher) -->
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.89" />
