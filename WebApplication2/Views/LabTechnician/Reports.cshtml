@@ -1,4 +1,6 @@
-﻿@{
+﻿@model WebApplication2.Controllers.TatPerformanceReportViewModel
+
+@{
     Layout = "~/Views/Shared/_LabTechLayout.cshtml";
     ViewData["Title"] = "TAT Performance Report";
 }
@@ -9,7 +11,6 @@
 <link href="~/css/dashboardstyles.css" rel="stylesheet" />
 
 <style>
-
     .page-container {
         padding: 0;
     }
@@ -32,7 +33,7 @@
     }
 
     .metric-number {
-        font-size: 2.2rem;
+        font-size: 2rem;
         font-weight: bold;
     }
 
@@ -47,10 +48,11 @@
         border: 1px solid #0d6efd;
         color: white !important;
         border-radius: 12px;
-        padding: 10px 20px;
+        padding: 10px 16px;
         text-decoration: none;
         transition: 0.2s ease;
         display: inline-block;
+        cursor: pointer;
     }
 
         .btn-dark-custom:hover {
@@ -62,8 +64,7 @@
         color: #1f2937 !important;
     }
 
-    th,
-    td {
+    th, td {
         border-color: #e2e8f0 !important;
         vertical-align: middle;
     }
@@ -76,241 +77,199 @@
         border: 1px solid #e2e8f0;
     }
 
-    .text-muted {
-        color: #6b7280 !important;
-    }
-
-    h1,
-    label {
+    h1, label {
         color: #1f2937;
     }
 </style>
 
-
 <div class="main-content">
-
     <div class="page-container">
-
         <div class="card-dark">
 
-            <!-- HEADER -->
             <div class="d-flex justify-content-between align-items-center mb-4">
-
                 <div>
-
-                    <h1>
-                        TAT Performance Report
-                    </h1>
-
+                    <h1>TAT Performance Report</h1>
                     <p class="text-muted mb-0">
                         Analyze turnaround time compliance and export results to PDF.
                     </p>
-
                 </div>
 
                 <a asp-controller="Home"
                    asp-action="LabTechnicianDashboard"
                    class="btn-dark-custom">
-
-                    ← Dashboard
-
+                    <i class="fa-solid fa-arrow-left"></i> Dashboard
                 </a>
-
             </div>
 
+            @if (TempData["ErrorMessage"] is string errorMessage)
+            {
+                <div class="alert alert-danger" role="alert">
+                    @errorMessage
+                </div>
+            }
 
-            <!-- KPI CARDS -->
-            <div class="row g-3 mb-4">
+            <div asp-validation-summary="ModelOnly"
+                 class="alert alert-warning"
+                 role="alert"></div>
 
-                <div class="col-md-3">
+            <form asp-controller="LabTechnician"
+                  asp-action="Reports"
+                  method="get">
 
-                    <div class="metric-card">
-
-                        <div class="metric-number text-success">
-                            94%
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="metric-card">
+                            <div class="metric-number text-success">
+                                @Model.CompliancePercent.ToString("0.0")%
+                            </div>
+                            <div>TAT Compliance</div>
                         </div>
-
-                        <div>
-                            TAT Compliance
-                        </div>
-
                     </div>
 
-                </div>
-
-                <div class="col-md-3">
-
-                    <div class="metric-card">
-
-                        <div class="metric-number text-primary">
-                            38m
+                    <div class="col-md-3">
+                        <div class="metric-card">
+                            <div class="metric-number text-primary">
+                                @(Model.AverageTatMinutes.HasValue
+                                                                ? $"{Model.AverageTatMinutes.Value:0.0}m"
+                                                                : "—")
+                            </div>
+                            <div>Average TAT</div>
                         </div>
-
-                        <div>
-                            Average TAT
-                        </div>
-
                     </div>
 
-                </div>
-
-                <div class="col-md-3">
-
-                    <div class="metric-card">
-
-                        <div class="metric-number text-danger">
-                            4
+                    <div class="col-md-3">
+                        <div class="metric-card">
+                            <div class="metric-number text-danger">
+                                @Model.BreachCount
+                            </div>
+                            <div>Completed TAT Breaches</div>
                         </div>
-
-                        <div>
-                            Breaches
-                        </div>
-
                     </div>
 
+                    <div class="col-md-3">
+                        <div class="metric-card">
+                            <div class="metric-number text-warning">
+                                @Model.AtRiskCount
+                            </div>
+                            <div>Outstanding Past Target</div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="col-md-3">
-
-                    <div class="metric-card">
-
-                        <div class="metric-number text-warning">
-                            3
-                        </div>
-
-                        <div>
-                            At Risk
-                        </div>
-
+                <div class="row g-3 mb-4 align-items-end">
+                    <div class="col-md-4">
+                        <label for="startDate" class="form-label">Start Date</label>
+                        <input id="startDate"
+                               name="startDate"
+                               type="date"
+                               class="form-control"
+                               value="@Model.StartDate.ToString("yyyy-MM-dd")"
+                               required />
                     </div>
 
+                    <div class="col-md-4">
+                        <label for="endDate" class="form-label">End Date</label>
+                        <input id="endDate"
+                               name="endDate"
+                               type="date"
+                               class="form-control"
+                               value="@Model.EndDate.ToString("yyyy-MM-dd")"
+                               required />
+                    </div>
+
+                    <div class="col-md-4 d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn-dark-custom">
+                            <i class="fa-solid fa-chart-column"></i>
+                            Generate Report
+                        </button>
+
+                        <button type="submit"
+                                class="btn-dark-custom"
+                                formaction="@Url.Action("ExportReportPdf", "LabTechnician")"
+                                formmethod="get">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            Export PDF
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                <div>
+                    <strong>Report period:</strong>
+                    @Model.StartDate.ToString("dd MMM yyyy")
+                    – @Model.EndDate.ToString("dd MMM yyyy")
                 </div>
 
+                <div class="text-muted small">
+                    @Model.TotalTests test instances ·
+                    @Model.CompletedTests completed
+                </div>
             </div>
 
+            <div class="table-responsive">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>Test Type</th>
+                            <th>Target TAT</th>
+                            <th>Average TAT</th>
+                            <th>Compliance</th>
+                            <th>Breaches</th>
+                            <th>Outstanding Past Target</th>
+                        </tr>
+                    </thead>
 
-            <!-- FILTERS -->
-            <div class="row g-3 mb-4">
+                    <tbody>
+                        @if (Model.Rows.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    No matching test records were found for this period.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var row in Model.Rows)
+                            {
+                                <tr>
+                                    <td>@row.TestName</td>
 
-                <div class="col-md-4">
+                                    <td>
+                                        @(row.TargetMinutes.HasValue
+                                                                        ? $"{row.TargetMinutes.Value} min"
+                                                                        : "Not configured")
+                                                                                       </td>
 
-                    <label class="form-label">
-                        Start Date
-                    </label>
+                                    <td>
+                                        @(row.AverageMinutes.HasValue
+                                                                        ? $"{row.AverageMinutes.Value:0.0} min"
+                                                                        : "—")
+                                                                          </td>
 
-                    <input type="date"
-                           class="form-control" />
+                                    <td>
+                                        @(row.CompletedTests > 0 &&
+                                                                        row.TargetMinutes.HasValue
+                                                                        ? $"{row.CompliancePercent:0.0}%"
+                                                                        : "—")
+                            </td>
 
-                </div>
-
-                <div class="col-md-4">
-
-                    <label class="form-label">
-                        End Date
-                    </label>
-
-                    <input type="date"
-                           class="form-control" />
-
-                </div>
-
-                <div class="col-md-4 d-flex align-items-end">
-
-                    <button type="button"
-                            class="btn-dark-custom me-2"
-                            onclick="generateReport()">
-
-                        <i class="fa-solid fa-chart-column"></i>
-                        Generate Report
-
-                    </button>
-
-                    <button type="button"
-                            class="btn-dark-custom"
-                            onclick="exportReport()">
-
-                        <i class="fa-solid fa-file-pdf"></i>
-                        Export PDF
-
-                    </button>
-
-                </div>
-
+                                    <td>@row.BreachCount</td>
+                                    <td>@row.AtRiskCount</td>
+                                </tr>
+                                                }
+                        }
+                    </tbody>
+                </table>
             </div>
 
-
-            <!-- PERFORMANCE TABLE -->
-            <table class="table table-dark table-hover">
-
-                <thead>
-
-                    <tr>
-
-                        <th>Test Type</th>
-                        <th>Target TAT</th>
-                        <th>Average TAT</th>
-                        <th>Compliance</th>
-                        <th>Breaches</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    <tr>
-
-                        <td>Full Blood Count</td>
-                        <td>90 min</td>
-                        <td>38 min</td>
-                        <td>96%</td>
-                        <td>1</td>
-
-                    </tr>
-
-                    <tr>
-
-                        <td>PT / INR</td>
-                        <td>60 min</td>
-                        <td>42 min</td>
-                        <td>92%</td>
-                        <td>2</td>
-
-                    </tr>
-
-                    <tr>
-
-                        <td>APTT</td>
-                        <td>60 min</td>
-                        <td>47 min</td>
-                        <td>89%</td>
-                        <td>1</td>
-
-                    </tr>
-
-                </tbody>
-
-            </table>
+            <p class="text-muted small mb-0">
+                Generated @Model.GeneratedAt.ToString("dd MMM yyyy HH:mm").
+                Report figures are based on the available database records
+                and configured turnaround targets.
+            </p>
 
         </div>
-
     </div>
-
 </div>
-
-
-<script>
-
-    function generateReport() {
-
-        alert("Report generated successfully.");
-
-    }
-
-    function exportReport() {
-
-        alert("Report exported as PDF.");
-
-    }
-
-</script>

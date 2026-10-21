@@ -1,6 +1,14 @@
 ﻿using Dapper;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.ComponentModel.DataAnnotations;
+using NMBDHL.Auth.Repository;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
+using NMBDHL.Auth.Model;
 using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NMBHDL.LabTechnician.Services;
@@ -15,9 +23,93 @@ using System.Threading;
 using System.Threading.Tasks;
 using WebApplication2.Models;
 using WebApplication2.Services;
+using static WebApplication2.Controllers.StatUrgentTestViewModel;
 
 namespace WebApplication2.Controllers
 {
+
+    public sealed class ReauthenticateViewModel
+    {
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Password { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required]
+        public string ReturnAction { get; set; } = string.Empty;
+    }
+
+
+    public sealed class EditLabTechnicianProfileViewModel
+    {
+        [Required, StringLength(100)]
+        public string Name { get; set; } = string.Empty;
+
+        [Required, StringLength(100)]
+        public string Surname { get; set; } = string.Empty;
+
+        [Required, EmailAddress, StringLength(255)]
+        public string Email { get; set; } = string.Empty;
+
+        [Phone, StringLength(30)]
+        public string? ContactNumber { get; set; }
+    }
+
+    public sealed class ChangeLabTechnicianPasswordViewModel
+    {
+        [Required, DataType(DataType.Password)]
+        public string CurrentPassword { get; set; } = string.Empty;
+
+        [Required, MinLength(8), MaxLength(128),
+         DataType(DataType.Password)]
+        public string NewPassword { get; set; } = string.Empty;
+
+        [Required, Compare(nameof(NewPassword)),
+         DataType(DataType.Password)]
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+
+    public sealed class LabTechnicianProfileViewModel
+    {
+        public int UserID { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Surname { get; set; } = string.Empty;
+        public string FullName => $"{Name} {Surname}".Trim();
+        public string EmployeeNumber { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string ContactNumber { get; set; } = string.Empty;
+        public string Role { get; set; } = "Lab Technician";
+        public bool IsActive { get; set; }
+    }
+
+
+    public sealed class TatPerformanceReportViewModel
+    {
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public DateTime GeneratedAt { get; set; } = DateTime.Now;
+
+        public int TotalTests { get; set; }
+        public int CompletedTests { get; set; }
+        public double CompliancePercent { get; set; }
+        public double? AverageTatMinutes { get; set; }
+        public int BreachCount { get; set; }
+        public int AtRiskCount { get; set; }
+
+        public List<TatPerformanceReportRow> Rows { get; set; } = new();
+    }
+
+    public sealed class TatPerformanceReportRow
+    {
+        public int TestTypeID { get; set; }
+        public string TestName { get; set; } = string.Empty;
+        public int? TargetMinutes { get; set; }
+        public double? AverageMinutes { get; set; }
+        public double CompliancePercent { get; set; }
+        public int BreachCount { get; set; }
+        public int AtRiskCount { get; set; }
+        public int TotalTests { get; set; }
+        public int CompletedTests { get; set; }
+    }
+
     public sealed class StatUrgentTestViewModel
     {
         public int TestRequestID { get; set; }
@@ -76,6 +168,12 @@ namespace WebApplication2.Controllers
         private readonly IWebHostEnvironment _environment;
         private readonly ILogger<LabTechnicianController> _logger;
         private readonly LabTechEmailService _labTechEmailService;
+        private readonly LabTechReportPdf _labTechReportPdf;
+        private readonly IDataProtector _reauthProtector;
+        private readonly IAuthRepository _authRepository;
+
+        private const string ReauthCookieName = ".LabTech.Reauth";
+        private const int ReauthMinutes = 5;
 
 
         public LabTechnicianController(
@@ -83,13 +181,19 @@ namespace WebApplication2.Controllers
             IConfiguration configuration,
             IWebHostEnvironment environment,
             ILogger<LabTechnicianController> logger,
-            LabTechEmailService labTechEmailService)
+            LabTechEmailService labTechEmailService,
+            LabTechReportPdf labTechReportPdf,
+            IDataProtectionProvider dataProtectionProvider,
+            IAuthRepository authRepository)
         {
             _labTechnicianData = labTechnicianData;
             _configuration = configuration;
             _environment = environment;
             _logger = logger;
             _labTechEmailService = labTechEmailService;
+            _labTechReportPdf = labTechReportPdf;
+            _reauthProtector = dataProtectionProvider.CreateProtector("NMBDHL.LabTechnician.ProfileReauthentication.v1");
+            _authRepository = authRepository;
         }
 
 
@@ -881,17 +985,664 @@ namespace WebApplication2.Controllers
         }
 
 
-        [HttpGet]
-        public IActionResult Reports() => View();
 
         [HttpGet]
-        public IActionResult Profile() => View();
+        public async Task<IActionResult> Reports(
+            DateTime? startDate,
+            DateTime? endDate,
+            CancellationToken cancellationToken)
+        {
+            var today = DateTime.Today;
+            var start = startDate?.Date ?? today.AddDays(-29);
+            var end = endDate?.Date ?? today;
+
+            if (start > end)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Start Date cannot be after End Date.");
+
+                start = end;
+            }
+
+            var connectionString =
+                _configuration.GetConnectionString("DefaultConnection");
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException(
+                    "The DefaultConnection connection string is missing.");
+            }
+
+            const string sql = """
+        WITH TestInstances AS
+        (
+            SELECT
+                sr.SampleReceiptID,
+                sr.DateTimeReceived,
+                tt.TestTypeID,
+                tt.TestName,
+                tt.TurnAroundMinutes AS TargetMinutes,
+                latest.CompletionDateTime
+            FROM dbo.SampleReceipt sr
+            INNER JOIN dbo.TestRequest tr
+                ON tr.TestRequestID = sr.TestRequestID
+            CROSS APPLY STRING_SPLIT(
+                REPLACE(
+                    REPLACE(
+                        REPLACE(
+                            REPLACE(COALESCE(tr.Type, ''), ';', ','),
+                            '+', ','),
+                        CHAR(13), ','),
+                    CHAR(10), ','),
+                ',') requested
+            INNER JOIN dbo.TestType tt
+                ON LTRIM(RTRIM(requested.value)) =
+                   LTRIM(RTRIM(tt.TestName))
+            OUTER APPLY
+            (
+                SELECT TOP (1)
+                    result.CompletionDateTime
+                FROM dbo.TestResult result
+                WHERE result.TestRequestID = tr.TestRequestID
+                  AND result.TestTypeID = tt.TestTypeID
+                ORDER BY
+                    result.CompletionDateTime DESC,
+                    result.TestResultID DESC
+            ) latest
+            WHERE sr.DateTimeReceived >= @StartDate
+              AND sr.DateTimeReceived < DATEADD(day, 1, @EndDate)
+              AND NOT EXISTS
+              (
+                  SELECT 1
+                  FROM dbo.SampleReceiptRejection rejected
+                  WHERE rejected.SampleReceiptID = sr.SampleReceiptID
+              )
+        ),
+        Measured AS
+        (
+            SELECT *,
+                CASE
+                    WHEN CompletionDateTime IS NOT NULL
+                    THEN DATEDIFF_BIG(
+                        SECOND, DateTimeReceived, CompletionDateTime
+                    ) / 60.0
+                    ELSE NULL
+                END AS ActualMinutes
+            FROM TestInstances
+        )
+        SELECT
+            TestTypeID,
+            TestName,
+            MAX(TargetMinutes) AS TargetMinutes,
+            AVG(ActualMinutes) AS AverageMinutes,
+            CAST(
+                100.0 * SUM(
+                    CASE
+                        WHEN ActualMinutes IS NOT NULL
+                         AND TargetMinutes IS NOT NULL
+                         AND ActualMinutes <= TargetMinutes
+                        THEN 1 ELSE 0
+                    END
+                ) / NULLIF(SUM(
+                    CASE
+                        WHEN ActualMinutes IS NOT NULL
+                         AND TargetMinutes IS NOT NULL
+                        THEN 1 ELSE 0
+                    END
+                ), 0)
+                AS float
+            ) AS CompliancePercent,
+            SUM(
+                CASE
+                    WHEN ActualMinutes IS NOT NULL
+                     AND TargetMinutes IS NOT NULL
+                     AND ActualMinutes > TargetMinutes
+                    THEN 1 ELSE 0
+                END
+            ) AS BreachCount,
+            SUM(
+                CASE
+                    WHEN CompletionDateTime IS NULL
+                     AND TargetMinutes > 0
+                     AND DATEDIFF(
+                         MINUTE, DateTimeReceived, GETDATE()
+                     ) > TargetMinutes
+                    THEN 1 ELSE 0
+                END
+            ) AS AtRiskCount,
+            COUNT(*) AS TotalTests,
+            SUM(
+                CASE WHEN ActualMinutes IS NOT NULL
+                     THEN 1 ELSE 0 END
+            ) AS CompletedTests
+        FROM Measured
+        GROUP BY TestTypeID, TestName
+        ORDER BY TestName;
+        """;
+
+            await using var connection = new SqlConnection(connectionString);
+
+            var rows = (await connection.QueryAsync<TatPerformanceReportRow>(
+                new CommandDefinition(
+                    sql,
+                    new { StartDate = start, EndDate = end },
+                    cancellationToken: cancellationToken))).ToList();
+
+            var report = new TatPerformanceReportViewModel
+            {
+                StartDate = start,
+                EndDate = end,
+                GeneratedAt = DateTime.Now,
+                Rows = rows,
+                TotalTests = rows.Sum(row => row.TotalTests),
+                CompletedTests = rows.Sum(row => row.CompletedTests),
+                BreachCount = rows.Sum(row => row.BreachCount),
+                AtRiskCount = rows.Sum(row => row.AtRiskCount)
+            };
+
+            var completedWithTargets = rows
+                .Where(row => row.TargetMinutes.HasValue)
+                .Sum(row => row.CompletedTests);
+
+            report.AverageTatMinutes = rows
+                .Where(row => row.AverageMinutes.HasValue)
+                .Sum(row => row.AverageMinutes!.Value *
+                            row.CompletedTests) /
+                Math.Max(1, rows.Sum(row =>
+                    row.AverageMinutes.HasValue ? row.CompletedTests : 0));
+
+            report.CompliancePercent = completedWithTargets == 0
+                ? 0
+                : rows.Sum(row =>
+                    row.CompliancePercent * row.CompletedTests / 100.0) /
+                  completedWithTargets * 100.0;
+
+            return View(report);
+        }
+
 
         [HttpGet]
-        public IActionResult EditProfile() => View();
+        public async Task<IActionResult> ExportReportPdf(
+            DateTime? startDate,
+            DateTime? endDate,
+            CancellationToken cancellationToken)
+        {
+            var result = await Reports(startDate, endDate, cancellationToken);
 
+            if (result is not ViewResult viewResult ||
+                viewResult.Model is not TatPerformanceReportViewModel report)
+            {
+                return BadRequest("Could not generate the report.");
+            }
+
+            var pdfRows = report.Rows.Select(row => new LabTechReportPdfRow
+            {
+                TestName = row.TestName,
+                TargetMinutes = row.TargetMinutes ?? 0,
+                AverageMinutes = row.AverageMinutes,
+                CompliancePercent = row.CompliancePercent,
+                BreachCount = row.BreachCount
+            }).ToList();
+
+            var pdf = _labTechReportPdf.Build(
+                "NMBH Laboratory",
+                report.StartDate,
+                report.EndDate,
+                report.GeneratedAt,
+                pdfRows);
+
+            return File(
+                pdf,
+                "application/pdf",
+                $"TAT-Performance-{report.StartDate:yyyyMMdd}-{report.EndDate:yyyyMMdd}.pdf");
+        }
+
+
+
+
+        [Authorize(Roles = "Lab Technician")]
         [HttpGet]
-        public IActionResult ChangePassword() => View();
+        public async Task<IActionResult> Profile(
+            CancellationToken cancellationToken)
+        {
+            var userIdValue = User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (!int.TryParse(userIdValue, out var userId))
+                return Challenge();
+
+            var connectionString =
+                _configuration.GetConnectionString("DefaultConnection");
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new InvalidOperationException(
+                    "The DefaultConnection connection string is missing.");
+
+            const string sql = """
+        SELECT
+            u.UserID,
+            u.Name,
+            u.Surname,
+            COALESCE(lt.EmployeeNumber, '') AS EmployeeNumber,
+            u.Email,
+            COALESCE(u.ContactNumber, '') AS ContactNumber,
+            u.Role,
+            u.IsActive
+        FROM dbo.[User] u
+        LEFT JOIN dbo.LabTechnician lt
+            ON lt.UserID = u.UserID
+        WHERE u.UserID = @UserID;
+        """;
+
+            await using var connection = new SqlConnection(connectionString);
+
+            var profile = await connection.QuerySingleOrDefaultAsync
+                <LabTechnicianProfileViewModel>(
+                    new CommandDefinition(
+                        sql,
+                        new { UserID = userId },
+                        cancellationToken: cancellationToken));
+
+            if (profile == null)
+                return NotFound("Your user profile could not be found.");
+
+            return View(profile);
+        }
+
+
+        [Authorize(Roles = "Lab Technician")]
+        [HttpGet]
+        public async Task<IActionResult> EditProfile(
+          CancellationToken cancellationToken)
+        {
+
+            if (!TryGetAuthenticatedUserId(out var userId))
+                return Challenge();
+
+            if (!HasValidReauthenticationTicket(userId, nameof(EditProfile)))
+            {
+                return RedirectToAction(
+                    nameof(Profile),
+                    new { reauth = nameof(EditProfile) });
+            }
+
+
+            const string sql = """
+        SELECT Name, Surname, Email, ContactNumber
+        FROM dbo.[User]
+        WHERE UserID = @UserID
+          AND Role = 'Lab Technician';
+        """;
+
+            await using var connection = new SqlConnection(
+                _configuration.GetConnectionString("DefaultConnection"));
+
+            var model = await connection.QuerySingleOrDefaultAsync
+                <EditLabTechnicianProfileViewModel>(
+                    new CommandDefinition(
+                        sql, new { UserID = userId },
+                        cancellationToken: cancellationToken));
+
+            if (model == null)
+                return NotFound("Your technician account was not found.");
+
+            return View(model);
+        }
+
+        [Authorize(Roles = "Lab Technician")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditProfile(
+            EditLabTechnicianProfileViewModel model,
+            CancellationToken cancellationToken)
+        {
+
+
+            if (!TryGetAuthenticatedUserId(out var userId))
+                return Challenge();
+
+            if (!HasValidReauthenticationTicket(userId, nameof(EditProfile)))
+            {
+                return RedirectToAction(
+                    nameof(Profile),
+                    new { reauth = nameof(EditProfile) });
+            }
+
+            model.Name = model.Name?.Trim() ?? string.Empty;
+            model.Surname = model.Surname?.Trim() ?? string.Empty;
+            model.Email = model.Email?.Trim() ?? string.Empty;
+            model.ContactNumber = string.IsNullOrWhiteSpace(model.ContactNumber)
+                ? null
+                : model.ContactNumber.Trim();
+
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var connectionString =
+                _configuration.GetConnectionString("DefaultConnection");
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new InvalidOperationException(
+                    "The DefaultConnection connection string is missing.");
+
+            await using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync(cancellationToken);
+
+            const string duplicateEmailSql = """
+        SELECT COUNT(1)
+        FROM dbo.[User]
+        WHERE Email = @Email
+          AND UserID <> @UserID;
+        """;
+
+            var duplicateEmail = await connection.ExecuteScalarAsync<int>(
+                new CommandDefinition(
+                    duplicateEmailSql,
+                    new { model.Email, UserID = userId },
+                    cancellationToken: cancellationToken));
+
+            if (duplicateEmail > 0)
+            {
+                ModelState.AddModelError(
+                    nameof(model.Email),
+                    "That email address is already in use.");
+                return View(model);
+            }
+
+            const string updateSql = """
+        UPDATE dbo.[User]
+        SET Name = @Name,
+            Surname = @Surname,
+            Email = @Email,
+            ContactNumber = @ContactNumber
+        WHERE UserID = @UserID
+          AND Role = 'Lab Technician';
+        """;
+
+            var updated = await connection.ExecuteAsync(
+                new CommandDefinition(
+                    updateSql,
+                    new
+                    {
+                        model.Name,
+                        model.Surname,
+                        model.Email,
+                        model.ContactNumber,
+                        UserID = userId
+                    },
+                    cancellationToken: cancellationToken));
+
+            if (updated != 1)
+                return NotFound("Your technician account was not found.");
+
+            TempData["SuccessMessage"] = "Your profile was updated successfully.";
+            return RedirectToAction(nameof(Profile));
+        }
+
+        [Authorize(Roles = "Lab Technician")]
+        [HttpGet]
+        public IActionResult ChangePassword()
+        {
+            if (!TryGetAuthenticatedUserId(out var userId))
+                return Challenge();
+
+            if (!HasValidReauthenticationTicket(
+                userId, nameof(ChangePassword)))
+            {
+                return RedirectToAction(
+                    nameof(Profile),
+                    new { reauth = nameof(ChangePassword) });
+            }
+
+            return View(new ChangeLabTechnicianPasswordViewModel());
+        }
+
+        [Authorize(Roles = "Lab Technician")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(
+            ChangeLabTechnicianPasswordViewModel model,
+            CancellationToken cancellationToken)
+        {
+            if (!TryGetAuthenticatedUserId(out var userId))
+                return Challenge();
+
+            if (!HasValidReauthenticationTicket(
+                userId, nameof(ChangePassword)))
+            {
+                return RedirectToAction(
+                    nameof(Profile),
+                    new { reauth = nameof(ChangePassword) });
+            }
+
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var connectionString =
+                _configuration.GetConnectionString("DefaultConnection");
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new InvalidOperationException(
+                    "The DefaultConnection connection string is missing.");
+
+            await using var connection = new SqlConnection(connectionString);
+
+            const string getHashSql = """
+            SELECT PasswaordHash
+            FROM dbo.[User]
+            WHERE UserID = @UserID
+              AND Role = 'Lab Technician'
+              AND IsActive = 1;
+            """;
+
+            var storedHash = await connection.QuerySingleOrDefaultAsync<string>(
+                new CommandDefinition(
+                    getHashSql,
+                    new { UserID = userId },
+                    cancellationToken: cancellationToken));
+
+            if (string.IsNullOrWhiteSpace(storedHash))
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Your account could not be verified.");
+                return View(model);
+            }
+
+            var currentHash = AuthRepository.HashPassword(model.CurrentPassword);
+
+            if (!string.Equals(
+                currentHash, storedHash.Trim(),
+                StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError(
+                    nameof(model.CurrentPassword),
+                    "The current password is incorrect.");
+                return View(model);
+            }
+
+            if (string.Equals(
+                model.CurrentPassword, model.NewPassword,
+                StringComparison.Ordinal))
+            {
+                ModelState.AddModelError(
+                    nameof(model.NewPassword),
+                    "Your new password must differ from your current password.");
+                return View(model);
+            }
+
+            var newHash = AuthRepository.HashPassword(model.NewPassword);
+
+            const string updatePasswordSql = """
+            UPDATE dbo.[User]
+            SET PasswaordHash = @PasswordHash
+            WHERE UserID = @UserID
+              AND Role = 'Lab Technician'
+              AND IsActive = 1;
+            """;
+
+            var updated = await connection.ExecuteAsync(
+                new CommandDefinition(
+                    updatePasswordSql,
+                    new { PasswordHash = newHash, UserID = userId },
+                    cancellationToken: cancellationToken));
+
+            if (updated != 1)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "The password could not be updated. Please try again.");
+                return View(model);
+            }
+
+            TempData["SuccessMessage"] = "Your password was changed successfully.";
+            return RedirectToAction(nameof(Profile));
+        }
+
+        private bool TryGetAuthenticatedUserId(out int userId)
+        {
+            var value = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return int.TryParse(value, out userId);
+        }
+
+        private void CreateReauthenticationTicket(int userId, string action)
+        {
+            var expiresAt = DateTimeOffset.UtcNow.AddMinutes(ReauthMinutes)
+                .ToUnixTimeSeconds();
+
+            var ticket = $"{userId}|{expiresAt}|{action}";
+            var protectedTicket = _reauthProtector.Protect(ticket);
+
+            Response.Cookies.Append(
+                ReauthCookieName,
+                protectedTicket,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = Request.IsHttps,
+                    SameSite = SameSiteMode.Strict,
+                    IsEssential = true,
+                    Expires = DateTimeOffset.UtcNow.AddMinutes(ReauthMinutes),
+                    Path = "/LabTechnician"
+                });
+        }
+
+        private bool HasValidReauthenticationTicket(int userId, string action)
+        {
+            if (!Request.Cookies.TryGetValue(ReauthCookieName, out var cookieValue)
+                || string.IsNullOrWhiteSpace(cookieValue))
+            {
+                return false;
+            }
+
+            try
+            {
+                var ticket = _reauthProtector.Unprotect(cookieValue);
+                var parts = ticket.Split('|');
+
+                if (parts.Length != 3)
+                    return false;
+
+                if (!int.TryParse(parts[0], out var ticketUserId)
+                    || !long.TryParse(parts[1], out var expiresAt))
+                {
+                    return false;
+                }
+
+                var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+                return ticketUserId == userId
+                    && expiresAt > now
+                    && parts[2] == action;
+            }
+            catch (System.Security.Cryptography.CryptographicException)
+            {
+                return false;
+            }
+        }
+
+
+
+        [Authorize(Roles = "Lab Technician")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyProfileAccess(
+            ReauthenticateViewModel model,
+            CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Enter your current password.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            if (model.ReturnAction != nameof(EditProfile) &&
+                model.ReturnAction != nameof(ChangePassword))
+            {
+                return BadRequest();
+            }
+
+            if (!TryGetAuthenticatedUserId(out var userId))
+                return Challenge();
+
+            var connectionString =
+    _configuration.GetConnectionString("DefaultConnection");
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new InvalidOperationException(
+                    "The DefaultConnection connection string is missing.");
+
+            await using var connection = new SqlConnection(connectionString);
+
+            const string emailSql = """
+            SELECT Email
+            FROM dbo.[User]
+            WHERE UserID = @UserID
+              AND Role = 'Lab Technician'
+              AND IsActive = 1;
+            """;
+
+            var email = await connection.QuerySingleOrDefaultAsync<string>(
+                new CommandDefinition(
+                    emailSql,
+                    new { UserID = userId },
+                    cancellationToken: cancellationToken));
+
+            if (string.IsNullOrWhiteSpace(email))
+                return Challenge();
+
+            var login = new Login
+            {
+                Email = email,
+                Password = model.Password
+            };
+
+            var authenticatedUser = await _authRepository.ValidateUser(login);
+
+            if (authenticatedUser == null ||
+                authenticatedUser.UserID != userId ||
+                !authenticatedUser.IsActive ||
+                !string.Equals(
+                    authenticatedUser.Role?.Trim(),
+                    "Lab Technician",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["ErrorMessage"] =
+                    "Incorrect password. Please try again.";
+
+                return RedirectToAction(
+                    nameof(Profile),
+                    new { reauth = model.ReturnAction });
+            }
+
+            CreateReauthenticationTicket(userId, model.ReturnAction);
+
+            return RedirectToAction(model.ReturnAction);
+        }
+
+
+
 
         // Sample receipt and test selection
 

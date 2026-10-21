@@ -1,8 +1,9 @@
-﻿@{
+﻿@model WebApplication2.Controllers.LabTechnicianProfileViewModel
+
+@{
     Layout = "~/Views/Shared/_LabTechLayout.cshtml";
     ViewData["Title"] = "My Profile";
 }
-
 <link rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
@@ -27,12 +28,25 @@
             <span class="badge bg-primary-subtle text-primary px-3 py-2 fw-semibold border border-primary-subtle"
                   style="font-size: 0.82rem;">
                 <i class="fa-solid fa-id-card me-1"></i>
-                Laboratory Technician
+                @Model.Role
             </span>
         </div>
 
     </div>
 
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="alert alert-success mb-3" role="alert">
+            @successMessage
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] is string errorMessage)
+    {
+        <div class="alert alert-danger mb-3" role="alert">
+            @errorMessage
+        </div>
+    }
 
     <div class="row g-4">
 
@@ -70,7 +84,7 @@
 
 
                         <h4 class="fw-bold text-dark mb-1">
-                            Keenen James
+                            @Model.FullName
                         </h4>
 
                         <p class="text-muted small mb-3">
@@ -91,7 +105,7 @@
                                 </span>
 
                                 <span class="text-dark font-monospace fw-bold">
-                                    LT-001
+                                    @Model.EmployeeNumber
                                 </span>
 
                             </div>
@@ -117,7 +131,7 @@
                                 </span>
 
                                 <span class="text-dark text-end">
-                                    Laboratory Technician
+                                    @Model.Role
                                 </span>
 
                             </div>
@@ -127,35 +141,26 @@
                     </div>
 
 
-                    <!-- Existing Actions -->
+                   
+                    <!-- Profile Actions -->
                     <div class="w-100">
-
-                        <a asp-controller="LabTechnician"
-                           asp-action="EditProfile"
-                           class="btn btn-outline-secondary btn-sm w-100 py-2 fw-semibold mb-2"
-                           style="border-radius: 8px;">
-
+                        <button type="button"
+                                class="btn btn-outline-secondary btn-sm w-100 py-2 fw-semibold mb-2"
+                                style="border-radius: 8px;"
+                                onclick="openReauthModal('EditProfile')">
                             <i class="fa-solid fa-user-pen me-2"></i>
                             Edit Profile
+                        </button>
 
-                        </a>
-
-
-                        <a asp-controller="LabTechnician"
-                           asp-action="ChangePassword"
-                           class="btn btn-primary btn-sm w-100 py-2 fw-semibold"
-                           style="
-                                border-radius: 8px;
-                                background-color: #0284c7;
-                                border-color: #0284c7;
-                           ">
-
+                        <button type="button"
+                                class="btn btn-primary btn-sm w-100 py-2 fw-semibold"
+                                style="border-radius: 8px; background-color: #0284c7; border-color: #0284c7;"
+                                onclick="openReauthModal('ChangePassword')">
                             <i class="fa-solid fa-key me-2"></i>
                             Change Password
-
-                        </a>
-
+                        </button>
                     </div>
+
 
                 </div>
 
@@ -196,7 +201,7 @@
 
                             <input type="text"
                                    class="form-control"
-                                   value="Keenen James"
+                                   value="@Model.FullName"
                                    readonly
                                    style="border-radius: 8px; padding: 10px;" />
 
@@ -212,7 +217,7 @@
 
                             <input type="text"
                                    class="form-control"
-                                   value="LT-001"
+                                   value="@Model.EmployeeNumber"
                                    readonly
                                    style="border-radius: 8px; padding: 10px;" />
 
@@ -228,7 +233,7 @@
 
                             <input type="email"
                                    class="form-control"
-                                   value="james.keenen@nmbhlab.co.za"
+                                   value="@Model.Email"
                                    readonly
                                    style="border-radius: 8px; padding: 10px;" />
 
@@ -244,7 +249,7 @@
 
                             <input type="tel"
                                    class="form-control"
-                                   value="082 123 4567"
+                                   value="@Model.ContactNumber"
                                    readonly
                                    style="border-radius: 8px; padding: 10px;" />
 
@@ -260,7 +265,7 @@
 
                             <input type="text"
                                    class="form-control bg-light text-muted"
-                                   value="Laboratory Technician"
+                                   value="@Model.Role"
                                    readonly
                                    style="border-radius: 8px; padding: 10px;" />
 
@@ -284,7 +289,7 @@
 
                     <div class="row g-3">
 
-                        <div class="col-sm-6">
+                       <!-- <div class="col-sm-6">
 
                             <label class="form-label text-secondary small fw-semibold">
                                 Password
@@ -296,7 +301,7 @@
                                    readonly
                                    style="border-radius: 8px; padding: 10px;" />
 
-                        </div>
+                        </div>-->
 
 
                         <div class="col-sm-6">
@@ -307,7 +312,7 @@
 
                             <input type="text"
                                    class="form-control bg-light text-success fw-semibold"
-                                   value="Active"
+                                   value="@(Model.IsActive ? "Active" : "Inactive")"
                                    readonly
                                    style="border-radius: 8px; padding: 10px;" />
 
@@ -351,3 +356,113 @@
         background-color: #ffffff;
     }
 </style>
+
+
+<div id="reauthOverlay"
+     style="display:none; position:fixed; inset:0; z-index:9999;
+            align-items:center; justify-content:center; padding:20px;
+            background:rgba(0,0,0,.6);"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="reauthTitle">
+
+    <div style="background:#fff; width:100%; max-width:440px;
+                padding:28px; border-radius:16px;
+                box-shadow:0 20px 60px rgba(0,0,0,.25);">
+
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+                <h4 id="reauthTitle">Confirm your password</h4>
+                <p id="reauthDescription" class="text-muted mb-0">
+                    Enter your current password to continue.
+                </p>
+            </div>
+            <button type="button" class="btn-close"
+                    aria-label="Close"
+                    onclick="closeReauthModal()"></button>
+        </div>
+
+        <form asp-controller="LabTechnician"
+              asp-action="VerifyProfileAccess"
+              method="post">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" id="returnAction"
+                   name="ReturnAction" value="EditProfile" />
+
+            <div class="mb-3">
+                <label for="reauthPassword" class="form-label">
+                    Current password
+                </label>
+                <input id="reauthPassword"
+                       name="Password"
+                       type="password"
+                       class="form-control"
+                       autocomplete="current-password"
+                       maxlength="128"
+                       required />
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        onclick="closeReauthModal()">
+                    Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    Verify and continue
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openReauthModal(action) {
+        if (action !== "EditProfile" && action !== "ChangePassword") {
+            return;
+        }
+
+        document.getElementById("returnAction").value = action;
+
+        document.getElementById("reauthTitle").textContent =
+            action === "EditProfile"
+                ? "Confirm password to edit profile"
+                : "Confirm password to change password";
+
+        document.getElementById("reauthDescription").textContent =
+            "Enter your current password to continue.";
+
+        const overlay = document.getElementById("reauthOverlay");
+        overlay.style.display = "flex";
+
+        const password = document.getElementById("reauthPassword");
+        password.value = "";
+        password.focus();
+    }
+
+    function closeReauthModal() {
+        document.getElementById("reauthOverlay").style.display = "none";
+        document.getElementById("reauthPassword").value = "";
+    }
+
+    document.getElementById("reauthOverlay").addEventListener("click", function (event) {
+        if (event.target === this) {
+            closeReauthModal();
+        }
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeReauthModal();
+        }
+    });
+
+    const requestedAction =
+        new URLSearchParams(window.location.search).get("reauth");
+
+    if (requestedAction === "EditProfile" ||
+        requestedAction === "ChangePassword") {
+        openReauthModal(requestedAction);
+    }
+</script>
