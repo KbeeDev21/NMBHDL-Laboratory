@@ -46,7 +46,7 @@ namespace WebApplication2.Controllers
                         var dbRecent = await _doctorRepo.GetRecentRequestsAsync(doctorId);
                         var dbAlerts = await _doctorRepo.GetAbnormalAlertsAsync(doctorId);
 
-                        if (dbAlerts != null && dbAlerts.Any())
+                        if (dbAlerts != null && dbAlerts.Any() && dbRecent != null && dbRecent.Any())
                         {
                             ViewBag.RecentRequests = dbRecent;
                             return PartialView("~/Views/Doctor/_AbnormalAlertsPartial.cshtml", dbAlerts);
@@ -78,7 +78,7 @@ namespace WebApplication2.Controllers
                         var dbPatients = await _doctorRepo.GetManagePatientsAsync(doctorId);
                         if (dbPatients != null && dbPatients.Any())
                         {
-                            return PartialView("~/Views/Doctor/_ManagePatientsPartial.cshtml", dbPatients);
+                            return PartialView("~/Views/Doctor/_ManagePatientsPartial.cshtml", dbPatients.Select(x => (dynamic)x).ToList());
                         }
                     }
                     catch { }
@@ -98,9 +98,9 @@ namespace WebApplication2.Controllers
                     {
                         var dbDropdown = await _doctorRepo.GetPatientsDropdownAsync();
                         var dbPanels = await _doctorRepo.GetTestPanelsAsync();
-                        if (dbDropdown != null && dbDropdown.Any())
+                        if (dbDropdown != null && dbDropdown.Any() && dbPanels != null && dbPanels.Any())
                         {
-                            ViewBag.PatientsList = dbDropdown;
+                            ViewBag.PatientsList = dbDropdown.Select(x => (dynamic)x).ToList();
                             ViewBag.TestPanels = dbPanels.ToList();
                             return PartialView("~/Views/Doctor/_CreateRequestPartial.cshtml");
                         }
@@ -133,7 +133,7 @@ namespace WebApplication2.Controllers
                         var dbTrack = await _doctorRepo.GetTrackProgressAsync(doctorId);
                         if (dbTrack != null && dbTrack.Any())
                         {
-                            return PartialView("~/Views/Doctor/_TrackProgressPartial.cshtml", dbTrack);
+                            return PartialView("~/Views/Doctor/_TrackProgressPartial.cshtml", dbTrack.Select(x => (dynamic)x).ToList());
                         }
                     }
                     catch { }
