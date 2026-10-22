@@ -65,6 +65,7 @@ public static class LabTechnicianServiceCollectionExtensions
 
         services.AddSingleton(options);
         services.AddScoped<LabTechEmailService>();
+        services.AddScoped<LabTechReportPdf>();
 
         return services;
     }

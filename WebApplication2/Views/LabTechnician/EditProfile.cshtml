@@ -1,153 +1,232 @@
-﻿@{
+﻿@model WebApplication2.Controllers.EditLabTechnicianProfileViewModel
+@{
     Layout = "~/Views/Shared/_LabTechLayout.cshtml";
-    ViewData["Title"] = "Edit Profile";
+    ViewData["Title"] = "Profile";
 }
 
 <link rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
 <link href="~/css/dashboardstyles.css" rel="stylesheet" />
 
 <style>
-
-    .page-container {
+    .profile-container {
         max-width: 900px;
-        margin: 50px auto;
+        margin: 40px auto;
     }
 
-    .card-dark {
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 35px;
+    .profile-card {
+        background: #fff;
         border: 1px solid #dbe3ec;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border-radius: 20px;
+        padding: 32px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.05);
     }
 
-    .form-control,
-    .form-control:focus {
-        background: #ffffff;
+    .profile-field {
+        padding: 14px 0;
+        border-bottom: 1px solid #edf0f4;
+    }
+
+    .profile-label {
+        display: block;
+        color: #6b7280;
+        font-size: .9rem;
+        margin-bottom: 4px;
+    }
+
+    .profile-value {
         color: #1f2937;
-        border: 1px solid #d1d5db;
-        box-shadow: none;
+        overflow-wrap: anywhere;
     }
 
-        .form-control:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 0.15rem rgba(59,130,246,0.15);
+    .reauth-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(15, 23, 42, .65);
+    }
+
+        .reauth-overlay.is-open {
+            display: flex;
         }
 
-    .btn-dark-custom {
-        background: #0d6efd;
-        border: 1px solid #0d6efd;
-        color: white !important;
-        border-radius: 12px;
-        padding: 10px 20px;
-        text-decoration: none;
-        transition: 0.2s ease;
+    .reauth-dialog {
+        width: 100%;
+        max-width: 440px;
+        background: #fff;
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 20px 60px rgba(0,0,0,.25);
     }
 
-        .btn-dark-custom:hover {
-            background: #0b5ed7;
-            border-color: #0b5ed7;
+        .reauth-dialog h3 {
+            color: #1f2937;
+            margin-bottom: 8px;
         }
 
-    label {
-        margin-bottom: 6px;
-        color: #374151;
-        font-weight: 500;
-    }
-
-    h1 {
-        color: #1f2937;
-        font-weight: 700;
-    }
-
-    .text-muted {
-        color: #6b7280 !important;
-    }
-
+        .reauth-dialog .form-control {
+            color: #1f2937;
+            background: #fff;
+        }
 </style>
 
-<div class="page-container">
+<div class="container-fluid p-4">
+    <div class="profile-container">
+        <div class="profile-card">
 
-    <div class="card-dark">
+            <form asp-controller="LabTechnician"
+             asp-action="EditProfile"
+             method="post">
+             @Html.AntiForgeryToken()
 
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-
-            <div>
-
-                <h1>Edit Profile</h1>
-
-                <p class="text-muted">
-                    Update technician profile information.
-                </p>
-
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                <div>
+                    <h2 class="mb-1">My Profile</h2>
+                    <p class="text-muted mb-0">View your account information and manage your security.</p>
+                </div>
             </div>
 
-            <a asp-controller="LabTechnician"
-               asp-action="Profile"
-               class="btn-dark-custom">
+            @if (TempData["SuccessMessage"] is string successMessage)
+            {
+                <div class="alert alert-success" role="status">@successMessage</div>
+            }
 
-                ← Profile
+            @if (TempData["ErrorMessage"] is string errorMessage)
+            {
+                <div class="alert alert-danger" role="alert">@errorMessage</div>
+            }
 
-            </a>
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label">First Name</label>
+                <input asp-for="Name" class="form-control" maxlength="100" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
 
-        </div>
+            <div class="mb-3">
+                <label asp-for="Surname" class="form-label">Surname</label>
+                <input asp-for="Surname" class="form-control" maxlength="100" />
+                <span asp-validation-for="Surname" class="text-danger"></span>
+            </div>
 
-        <!-- Form -->
-        <div class="mb-3">
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label">Email Address</label>
+                <input asp-for="Email" type="email" class="form-control" maxlength="255" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
 
-            <label class="form-label">
-                Full Name
-            </label>
+            <div class="mb-4">
+                <label asp-for="ContactNumber" class="form-label">Contact Number</label>
+                <input asp-for="ContactNumber" type="tel" class="form-control" maxlength="30" />
+                <span asp-validation-for="ContactNumber" class="text-danger"></span>
+            </div>
 
-            <input class="form-control"
-                   value="Keenen James" />
-
-        </div>
-
-        <div class="mb-3">
-
-            <label class="form-label">
-                Email Address
-            </label>
-
-            <input class="form-control"
-                   value="james.keenen@nmbhlab.co.za" />
-
-        </div>
-
-        <div class="mb-4">
-
-            <label class="form-label">
-                Contact Number
-            </label>
-
-            <input class="form-control"
-                   value="082 123 4567" />
-
-        </div>
-
-        <!-- Actions -->
-        <div>
-
-            <button class="btn-dark-custom me-2">
-
-                Save Changes
-
+            <button type="submit" class="btn btn-primary me-2">
+                <i class="fa-solid fa-floppy-disk me-1"></i> Save Changes
             </button>
 
-            <a asp-controller="LabTechnician"
-               asp-action="Profile"
-               class="btn-dark-custom">
+            <a asp-action="Profile" class="btn btn-outline-secondary">Cancel</a>
 
-                Cancel
+            </form>
+            <hr class="my-4" />
 
-            </a>
-
+            
         </div>
-
     </div>
 
 </div>
+
+<div id="reauthOverlay" class="reauth-overlay"
+     role="dialog" aria-modal="true" aria-labelledby="reauthTitle"
+     aria-hidden="true">
+    <div class="reauth-dialog">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+                <h3 id="reauthTitle">Confirm your password</h3>
+                <p id="reauthDescription" class="text-muted mb-0">
+                    Enter your current password to continue.
+                </p>
+            </div>
+            <button type="button" class="btn-close" aria-label="Close"
+                    onclick="closeReauthModal()"></button>
+        </div>
+
+        <form asp-controller="LabTechnician"
+              asp-action="VerifyProfileAccess"
+              method="post">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" id="returnAction" name="ReturnAction" value="EditProfile" />
+
+            <div class="mb-3">
+                <label for="reauthPassword" class="form-label">Current password</label>
+                <input id="reauthPassword" name="Password" type="password"
+                       class="form-control" autocomplete="current-password"
+                       required maxlength="128" />
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-outline-secondary"
+                        onclick="closeReauthModal()">
+                    Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    Verify and continue
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        const reauthOverlay = document.getElementById("reauthOverlay");
+        const reauthPassword = document.getElementById("reauthPassword");
+        const returnActionInput = document.getElementById("returnAction");
+        const reauthTitle = document.getElementById("reauthTitle");
+        const reauthDescription = document.getElementById("reauthDescription");
+
+            function openReauthModal(action) {
+                if (action !== "EditProfile" && action !== "ChangePassword") return;
+
+                returnActionInput.value = action;
+                reauthTitle.textContent = action === "EditProfile"
+                    ? "Confirm password to edit profile"
+                    : "Confirm password to change password";
+
+                reauthDescription.textContent = action === "EditProfile"
+                    ? "Enter your current password to edit your account information."
+                    : "Enter your current password to change your account password.";
+
+                reauthOverlay.classList.add("is-open");
+                reauthOverlay.setAttribute("aria-hidden", "false");
+                reauthPassword.value = "";
+                reauthPassword.focus();
+            }
+
+            function closeReauthModal() {
+                reauthOverlay.classList.remove("is-open");
+                reauthOverlay.setAttribute("aria-hidden", "true");
+                reauthPassword.value = "";
+            }
+
+            reauthOverlay.addEventListener("click", function (event) {
+                if (event.target === reauthOverlay) closeReauthModal();
+            });
+
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape") closeReauthModal();
+            });
+
+            const requestedAction = new URLSearchParams(window.location.search).get("reauth");
+
+            if (requestedAction === "EditProfile" || requestedAction === "ChangePassword") {
+                openReauthModal(requestedAction);
+            }
+    </script>
+
+}
